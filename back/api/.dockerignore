@@ -1,7 +1,6 @@
 # Directorios de datos / runtime
 /tests/
 /transactions/
-/books/
 /tmp/
 
 # Credenciales y variables de entorno
