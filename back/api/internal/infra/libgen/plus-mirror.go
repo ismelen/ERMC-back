@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -73,9 +72,6 @@ func (p PlusMirror) Search(query string) ([]book.Book, error) {
 		if err != nil {
 			return
 		}
-		if pages == 0 {
-			return
-		}
 
 		title := ""
 		tds.Eq(1).Find("a[href*='edition.php']").Each(func(_ int, a *goquery.Selection) {
@@ -126,10 +122,6 @@ func (p PlusMirror) Search(query string) ([]book.Book, error) {
 			Pages:     pages,
 		}
 		books = append(books, b)
-	})
-
-	slices.SortFunc(books, func(a, b book.Book) int {
-		return a.Pages - b.Pages
 	})
 
 	return books, nil
