@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"ismelen/inkomi/internal/domain/convert"
 	"ismelen/inkomi/internal/domain/manga"
-	"ismelen/inkomi/internal/infra/cloud"
 	"log"
 	"os"
 	"path/filepath"
@@ -20,6 +19,7 @@ type MangaTransactionUC struct {
 	tranStore     convert.TransactionStore
 	bookBuilder   manga.BookBuilder
 	imgProcessor  manga.ImageProcessor
+	cloud         convert.CloudStorage
 }
 
 func NewMangaTransactionUC(
@@ -27,6 +27,7 @@ func NewMangaTransactionUC(
 	tranStore convert.TransactionStore,
 	bookBuilder manga.BookBuilder,
 	imgProcessor manga.ImageProcessor,
+	cloud convert.CloudStorage,
 ) *MangaTransactionUC {
 	return &MangaTransactionUC{
 		imageSettings: manga.NewDefaultImageSettings(),
@@ -34,6 +35,7 @@ func NewMangaTransactionUC(
 		tranStore:     tranStore,
 		bookBuilder:   bookBuilder,
 		imgProcessor:  imgProcessor,
+		cloud:         cloud,
 	}
 }
 
@@ -71,10 +73,9 @@ func (m *MangaTransactionUC) Execute(chapters []*manga.Chapter, config *convert.
 		tran.SetResultPath(resultPath)
 
 		if config.Cloud {
-			cld, _ := cloud.NewDropboxCloud(config.CloudToken, config.CloudFolder)
 			m.pushNotifier.Send(config.NotifyToken, "Success", fmt.Sprintf("Sending %s to cloud", filepath.Base(resultPath)))
 
-			if err := cld.Upload(resultPath); err != nil {
+			if err := m.cloud.Upload(resultPath, config.CloudToken, config.CloudFolder); err != nil {
 				m.pushNotifier.Send(config.NotifyToken, "Error", fmt.Sprintf("Cannot send %s to cloud", filepath.Base(resultPath)))
 				tran.SetError(err)
 				return

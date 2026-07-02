@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"ismelen/inkomi/internal/domain/book"
 	"ismelen/inkomi/internal/domain/convert"
-	"ismelen/inkomi/internal/infra/cloud"
 	"ismelen/inkomi/internal/infra/fs"
 	"os"
 	"path/filepath"
@@ -14,17 +13,20 @@ type RemoteTransactionUC struct {
 	pushNotifier convert.PushNotifier
 	tranStore    convert.TransactionStore
 	libgenServ   book.LibgenService
+	cloud        convert.CloudStorage
 }
 
 func NewRemoteTransactionUC(
 	pushNotifier convert.PushNotifier,
 	tranStore convert.TransactionStore,
 	libgenServ book.LibgenService,
+	cloud convert.CloudStorage,
 ) *RemoteTransactionUC {
 	return &RemoteTransactionUC{
 		pushNotifier: pushNotifier,
 		tranStore:    tranStore,
 		libgenServ:   libgenServ,
+		cloud:        cloud,
 	}
 }
 
@@ -68,9 +70,8 @@ func (e *RemoteTransactionUC) Execute(md5 string, config *convert.TransactionCon
 
 	if config.Cloud {
 		e.pushNotifier.Send(config.NotifyToken, "Success", fmt.Sprintf("Sending %s to cloud", filepath.Base(src)))
-		cld, _ := cloud.NewDropboxCloud(config.CloudToken, config.CloudFolder)
 
-		if err := cld.Upload(src); err != nil {
+		if err := e.cloud.Upload(src, config.CloudToken, config.CloudFolder); err != nil {
 			e.pushNotifier.Send(config.NotifyToken, "Error", fmt.Sprintf("Cannot send %s to cloud", filepath.Base(src)))
 			tran.SetError(err)
 			return

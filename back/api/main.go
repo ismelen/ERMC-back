@@ -4,6 +4,7 @@ import (
 	"context"
 	"ismelen/inkomi/internal/infra/api/handlers"
 	"ismelen/inkomi/internal/infra/api/routes"
+	"ismelen/inkomi/internal/infra/cloud"
 	"ismelen/inkomi/internal/infra/epub"
 	infraImage "ismelen/inkomi/internal/infra/image"
 	"ismelen/inkomi/internal/infra/libgen"
@@ -36,11 +37,9 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// — Libgen —
 	libgenServ := libgen.New()
 	libgenServ.StartDiscovery(ctx, 12*time.Hour)
 
-	// — Infrastructure —
 	pushNotifier := &push.FirebasePushNotifier{}
 	pushNotifier.Init()
 
@@ -48,13 +47,12 @@ func main() {
 
 	imgProcessor := infraImage.NewPageProcessor()
 	bookBuilder := epub.New()
+	dropbox := &cloud.DropboxCloud{}
 
-	// — Usecases —
-	epubUC := usecases.NewEpubTransactionUC(pushNotifier, tranStore)
-	mangaUC := usecases.NewMangaTransactionUC(pushNotifier, tranStore, bookBuilder, imgProcessor)
-	remoteUC := usecases.NewRemoteTransactionUC(pushNotifier, tranStore, libgenServ)
+	epubUC := usecases.NewEpubTransactionUC(pushNotifier, tranStore, dropbox)
+	mangaUC := usecases.NewMangaTransactionUC(pushNotifier, tranStore, bookBuilder, imgProcessor, dropbox)
+	remoteUC := usecases.NewRemoteTransactionUC(pushNotifier, tranStore, libgenServ, dropbox)
 
-	// — Handlers & Routes —
 	convertHandler := handlers.NewConvertHandler(mangaUC, epubUC, remoteUC)
 	routes.SetupConvertRoutes(api, convertHandler)
 

@@ -9,23 +9,13 @@ import (
 	"path/filepath"
 )
 
-type DropboxCloud struct {
-	folder string
-	token  string
-}
+type DropboxCloud struct{}
 
-func NewDropboxCloud(accessToken, folder string) (*DropboxCloud, error) {
-	if folder == "" || accessToken == "" {
-		return nil, fmt.Errorf("No folder or access token ")
+func (d *DropboxCloud) Upload(path, token, folder string) error {
+	if folder == "" || token == "" {
+		return fmt.Errorf("No folder or access token ")
 	}
 
-	return &DropboxCloud{
-		folder: folder,
-		token:  accessToken,
-	}, nil
-}
-
-func (d *DropboxCloud) Upload(path string) error {
 	filename := filepath.Base(path)
 
 	file, err := os.Open(path)
@@ -34,7 +24,7 @@ func (d *DropboxCloud) Upload(path string) error {
 	}
 	defer file.Close()
 
-	dstPath := fmt.Sprintf("%s/%s", d.folder, filename)
+	dstPath := fmt.Sprintf("%s/%s", folder, filename)
 
 	apiArg, err := json.Marshal(map[string]any{
 		"path":       dstPath,
@@ -55,7 +45,7 @@ func (d *DropboxCloud) Upload(path string) error {
 		return err
 	}
 
-	req.Header.Set("Authorization", "Bearer "+d.token)
+	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/octet-stream")
 	req.Header.Set("Dropbox-API-Arg", string(apiArg))
 
