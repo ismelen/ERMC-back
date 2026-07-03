@@ -7,16 +7,15 @@ export default function STextInput({ style, ...props }: TextInputProps) {
     <TextInput
       style={[
         {
-          borderColor: hexToRgba(colors.outline_variant, 0.2),
-          borderWidth: 1,
           borderRadius: 8,
           backgroundColor: colors.surface_container_low,
-          color: colors.on_primary,
+          color: colors.on_background,
+          paddingHorizontal: 12,
         },
         style,
       ]}
       {...props}
-      placeholderTextColor={colors.on_surface_variant}
+      placeholderTextColor={hexToRgba(colors.on_background, 0.3)}
     />
   );
 }
