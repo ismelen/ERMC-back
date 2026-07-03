@@ -110,6 +110,7 @@ func (ch *TransactionHandler) HandleConvert(r *http.Request) (any, error) {
 	}
 
 	children, ext, err := ch.getFilesToProcess(r)
+	defer os.RemoveAll(filepath.Dir(children[0]))
 	if err != nil {
 		return nil, err
 	}
@@ -269,8 +270,6 @@ func (ch *TransactionHandler) handleMangaTransaction(files []string, config *con
 
 	transactions := make(map[string]*TransactionInfo)
 	id := uid.GetRandomID(6)
-
-	defer os.RemoveAll(filepath.Dir(files[0]))
 
 	for _, file := range files {
 		if !config.Merge {
