@@ -17,7 +17,7 @@ export default function UploadCard({ data, onRetry }: Props) {
 
   if (!data.libgenMode) {
     titles = (
-      data.request.mode === 'files'
+      data.request.sourceMode === 'files'
         ? data.request.sources
         : (data.request.sources[0].children ?? [])
     ).map((e) => e.name);

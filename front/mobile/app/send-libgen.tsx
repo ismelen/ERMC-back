@@ -1,7 +1,7 @@
 import { useShallow } from 'zustand/react/shallow';
 import { useQueue } from '../src/hooks/useQueue';
 import { useSettings } from '../src/hooks/useSettings';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TransactionRequest } from '../src/models/transaction-request';
 import { router, Stack } from 'expo-router';
 import { colors } from '../src/theme/colors';
@@ -16,8 +16,13 @@ import { ScrollView } from 'react-native-gesture-handler';
 import SearchedBookCard from '../src/components/search/searched-book-card';
 import { useLibgen } from '../src/hooks/useLibgen';
 import { LibgenTransactionRequest } from '../src/models/libgen-transaction-request';
+import { useObjectNavigation } from '../src/hooks/useObjectNavigation';
 
 export default function SendLibgen() {
+  const { clearObject, initData } = useObjectNavigation(
+    useShallow((s) => ({ clearObject: s.clear, initData: s.object }))
+  );
+
   const send = useQueue((s) => s.send);
   const { model, setModel } = useSettings(
     useShallow((s) => ({ model: s.model, setModel: s.setModel }))
@@ -26,11 +31,13 @@ export default function SendLibgen() {
     deleteOrigin: false,
     merge: false,
     destination: 'local',
-    mode: 'no-select',
+    sourceMode: 'no-select',
     sources: [],
     author: '',
     title: '',
     books: [],
+    ...initData,
+    type: 'remote',
   });
 
   const { selectedBooks, onDelete, clear } = useLibgen(
@@ -40,6 +47,10 @@ export default function SendLibgen() {
       clear: s.clear,
     }))
   );
+
+  useEffect(() => {
+    if (initData) clearObject();
+  }, []);
 
   return (
     <>

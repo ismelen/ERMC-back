@@ -1,13 +1,9 @@
-import { Source } from './source';
-import { Destination } from './transaction-request';
+import { TransactionRequest } from './transaction-request';
 
-export interface QueueElement {
+export interface QueueElement extends TransactionRequest {
   timestamp: number;
   filename: string;
   id: string;
-  title: string;
-  destination: Destination;
   progress: number;
   error?: string;
-  sources: Source[];
 }

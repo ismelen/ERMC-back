@@ -6,15 +6,21 @@ import { colors } from '../../src/theme/colors';
 import QueueItemCard from '../../src/components/queue/queue-item-card';
 import { ScrollView } from 'react-native-gesture-handler';
 import UploadCard from '../../src/components/queue/upload-card';
+import { useObjectNavigation } from '../../src/hooks/useObjectNavigation';
+import { Upload } from '../../src/models/upload';
+import { TransactionRequest, TransactionType } from '../../src/models/transaction-request';
 
 export default function QueuePage() {
-  const { transactions, completedTransactions, uploads } = useQueue(
+  const { transactions, completedTransactions, uploads, cancel } = useQueue(
     useShallow((s) => ({
       transactions: s.transactions,
       completedTransactions: s.completedTransactions,
       uploads: s.uploads,
+      cancel: s.cancel,
     }))
   );
+
+  const navigate = useObjectNavigation((s) => s.navigate);
 
   return (
     <ScrollView style={{ flex: 1, paddingHorizontal: 24 }}>
@@ -34,7 +40,11 @@ export default function QueuePage() {
 
           <View style={{ marginTop: 16, gap: 10 }}>
             {uploads.map((e, i) => (
-              <UploadCard key={e.id} data={e} onRetry={() => {}} /> //TODO: Navigate to send book or comic page
+              <UploadCard
+                key={e.id}
+                data={e}
+                onRetry={() => navigate(getPath(e.request.type), e.request)}
+              />
             ))}
           </View>
         </>
@@ -49,7 +59,7 @@ export default function QueuePage() {
 
           <View style={{ marginTop: 16, gap: 10 }}>
             {transactions.map((e, i) => (
-              <QueueItemCard key={e.id} data={e} idx={i} autoCheck />
+              <QueueItemCard key={e.id} data={e} idx={i} autoCheck onTap={() => cancel(e.id)} />
             ))}
           </View>
         </>
@@ -64,13 +74,29 @@ export default function QueuePage() {
 
           <View style={{ marginTop: 16, gap: 10 }}>
             {completedTransactions.map((e, i) => (
-              <QueueItemCard key={i + e.id} data={e} idx={i} />
+              <QueueItemCard
+                key={i + e.id}
+                data={e}
+                idx={i}
+                onTap={() => navigate(getPath(e.type), e)}
+              />
             ))}
           </View>
         </>
       )}
     </ScrollView>
   );
+}
+
+function getPath(type: TransactionType) {
+  switch (type) {
+    case 'comic':
+      return '/send-comic';
+    case 'epub':
+      return '/send-book';
+    case 'remote':
+      return '/send-libgen';
+  }
 }
 
 const styles = StyleSheet.create({

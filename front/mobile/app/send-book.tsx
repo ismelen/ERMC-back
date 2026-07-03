@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import SText from '../src/components/shared/SText';
 import { router, Stack } from 'expo-router';
@@ -13,8 +13,13 @@ import SSelect from '../src/components/shared/SSelect';
 import { useSettings } from '../src/hooks/useSettings';
 import { useShallow } from 'zustand/react/shallow';
 import { eReaderProfiles } from '../src/constants';
+import { useObjectNavigation } from '../src/hooks/useObjectNavigation';
 
 export default function SendBookPage() {
+  const { clear, initData } = useObjectNavigation(
+    useShallow((s) => ({ clear: s.clear, initData: s.object }))
+  );
+
   const send = useQueue((s) => s.send);
   const { model, setModel } = useSettings(
     useShallow((s) => ({ model: s.model, setModel: s.setModel }))
@@ -23,11 +28,17 @@ export default function SendBookPage() {
     deleteOrigin: false,
     merge: false,
     destination: 'local',
-    mode: 'no-select',
+    sourceMode: 'no-select',
     sources: [],
     author: '',
     title: '',
+    ...initData,
+    type: 'book',
   });
+
+  useEffect(() => {
+    if (initData) clear();
+  }, []);
 
   return (
     <>
@@ -50,7 +61,7 @@ export default function SendBookPage() {
             <SourceSelector
               initSources={req.sources}
               onChange={(srcs) => setReq((s) => ({ ...s, sources: srcs }))}
-              onModeChange={(mode) => setReq((s) => ({ ...s, mode: mode }))}
+              onModeChange={(mode) => setReq((s) => ({ ...s, sourceMode: mode }))}
             />
           </View>
 

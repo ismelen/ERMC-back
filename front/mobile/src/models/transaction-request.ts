@@ -8,7 +8,9 @@ export interface TransactionRequest {
   destination: Destination;
   merge?: boolean;
   deleteOrigin: boolean;
-  mode: SourceMode;
+  sourceMode: SourceMode;
+  type: TransactionType;
 }
 
 export type Destination = 'local' | 'cloud';
+export type TransactionType = 'epub' | 'comic' | 'remote';

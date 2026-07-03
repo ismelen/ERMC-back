@@ -12,6 +12,7 @@ import { useShallow } from 'zustand/react/shallow';
 import SButton from '../../src/components/shared/SButton';
 import { router } from 'expo-router';
 import SearchedBookCardSkeleton from '../../src/components/search/search-book-card-skeleton';
+import STextInput from '../../src/components/shared/STextInput';
 
 export default function Search() {
   const { search, selectBook, selectedBooks } = useLibgen(
@@ -63,7 +64,7 @@ export default function Search() {
           }}
         >
           <SIcon name="search" color={colors.on_surface_variant} size={26} type="outlined" />
-          <TextInput
+          <STextInput
             placeholder="Search by title, author or genere..."
             onChangeText={setQuery}
             style={{

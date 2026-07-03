@@ -13,9 +13,10 @@ interface Props {
   data: QueueElement;
   autoCheck?: boolean;
   idx: number;
+  onTap?(): void;
 }
 
-export default function QueueItemCard({ data, idx, autoCheck = false }: Props) {
+export default function QueueItemCard({ data, idx, onTap, autoCheck = false }: Props) {
   const checkProgress = useQueue((s) => s.checkProgress);
   const intervalRef = useRef<number | undefined>(undefined);
 
@@ -28,7 +29,7 @@ export default function QueueItemCard({ data, idx, autoCheck = false }: Props) {
     };
 
     intervalRef.current = setInterval(run, 2000);
-    run(); // primera ejecución inmediata, pero el ref ya está asignado
+    run();
 
     return () => clearInterval(intervalRef.current);
   }, [autoCheck, data.id]);
@@ -53,28 +54,50 @@ export default function QueueItemCard({ data, idx, autoCheck = false }: Props) {
       </View>
 
       {data.error && <ErrorMessage error={data.error} />}
-      {!data.error && <LoadingSection data={data} idx={idx} />}
+      {!data.error && <LoadingSection data={data} idx={idx} onTap={onTap} />}
     </View>
   );
 }
 
-function LoadingSection({ data, idx }: { data: QueueElement; idx: number }) {
+function LoadingSection({ data, idx, onTap }: { data: QueueElement; idx: number; onTap?(): void }) {
   const download = useQueue((s) => s.download);
 
   return (
     <>
       {!data.error && data.progress === 100 ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <SIcon name="check_circle" color={colors.ok} size={16} />
-          <SText style={{ fontSize: 14, fontFamily: 'medium', color: colors.ok }}>Completed</SText>
+        <View
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+        >
+          <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+            <SIcon name="check_circle" color={colors.ok} size={16} />
+            <SText style={{ fontSize: 14, fontFamily: 'medium', color: colors.ok }}>
+              Completed
+            </SText>
+          </View>
+          <SButton
+            onPress={onTap}
+            style={{ padding: 2, borderRadius: 8, backgroundColor: colors.primary_container }}
+          >
+            <SIcon name="close" color={colors.primary} size={16} type="outlined" />
+          </SButton>
         </View>
       ) : (
         <View style={{ gap: 8 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <SIcon name="autorenew" color={colors.primary} size={16} />
-            <SText style={{ fontSize: 14, color: colors.primary }}>
-              Converting ({data.progress}%)
-            </SText>
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+          >
+            <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+              <SIcon name="autorenew" color={colors.primary} size={16} />
+              <SText style={{ fontSize: 14, color: colors.primary }}>
+                Converting ({data.progress}%)
+              </SText>
+            </View>
+            <SButton
+              onPress={onTap}
+              style={{ padding: 2, borderRadius: 8, backgroundColor: colors.primary_container }}
+            >
+              <SIcon name="repeat" color={colors.primary} size={16} type="outlined" />
+            </SButton>
           </View>
           <PulseProgressBar progress={data.progress / 100} />
         </View>

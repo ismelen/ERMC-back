@@ -14,6 +14,7 @@ import RNBlobUtil from 'react-native-blob-util';
 import { useCloud } from './useCloud';
 import { LibgenTransactionRequest } from '../models/libgen-transaction-request';
 import { LinearGradient } from 'react-native-svg';
+import { useSettings } from './useSettings';
 
 interface State {
   uploads: Upload[];
@@ -23,6 +24,7 @@ interface State {
   checkProgress(idx: number, id: string): Promise<boolean>;
   download(idx: number, id: string): Promise<boolean>;
   init(): Promise<void>;
+  cancel(id: string): Promise<void>;
 }
 
 const TRANSACTIONS_KEY = 'transactions';
@@ -47,6 +49,24 @@ export const useQueue = create<State>((set, get) => ({
       transactions: trans,
       completedTransactions: completedTransactions,
     });
+  },
+
+  async cancel(id: string) {
+    let elems = get().transactions;
+
+    const idx = elems.findIndex((e) => e.id === id);
+    if (idx === -1) return;
+
+    const resp = await fetch(`${BACKENDD_URL}/transaction/cancel/${id}`, {
+      method: 'GET',
+    });
+
+    if (!resp.ok) return;
+
+    elems = elems.filter((e) => e.id !== id);
+    StorageService.SetAsync(TRANSACTIONS_KEY, elems);
+
+    set({ transactions: [...elems] });
   },
 
   async download(idx: number, id: string): Promise<boolean> {
@@ -100,9 +120,9 @@ export const useQueue = create<State>((set, get) => ({
 
   async send(req: TransactionRequest, libgenMode?: boolean): Promise<boolean> {
     if (!(libgenMode ?? false)) {
-      if (req.mode === 'no-select') return false;
+      if (req.sourceMode === 'no-select') return false;
       if (req.sources.length === 0) return false;
-      if (req.mode === 'folder' && (req.sources[0].children?.length ?? 0) === 0) return false;
+      if (req.sourceMode === 'folder' && (req.sources[0].children?.length ?? 0) === 0) return false;
     }
     const form = new FormData();
 
@@ -111,11 +131,11 @@ export const useQueue = create<State>((set, get) => ({
       form.append('md5s', books.map((e) => e.md5).join(','));
     } else {
       let files: Source[] = [];
-      if (req.mode === 'files') {
+      if (req.sourceMode === 'files') {
         //TODO: Divide by size
         files = req.sources;
       }
-      if (req.mode === 'folder') {
+      if (req.sourceMode === 'folder') {
         files = req.sources[0].children ?? [];
       }
       if (files.length === 0) return false;
@@ -131,7 +151,7 @@ export const useQueue = create<State>((set, get) => ({
 
     const toCloud = req.destination === 'cloud';
 
-    form.append('profile', 'KoCC'); //TODO: settings
+    form.append('profile', useSettings.getState().model ?? '');
     form.append('title', req.title ?? '');
     form.append('author', req.author ?? '');
     form.append('cloud', String(toCloud));
@@ -173,8 +193,13 @@ export const useQueue = create<State>((set, get) => ({
 
           const data: QueueElement[] = await resp.json();
           data.forEach((e) => {
-            e.destination = req.destination;
-            e.timestamp = Date.now();
+            e = {
+              ...req,
+              timestamp: Date.now(),
+              filename: e.filename,
+              id: e.id,
+              progress: e.progress,
+            };
           });
 
           if (libgenMode) {

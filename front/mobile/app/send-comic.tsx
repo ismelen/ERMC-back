@@ -1,5 +1,5 @@
 import { router, Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { colors } from '../src/theme/colors';
 import SText from '../src/components/shared/SText';
@@ -14,8 +14,13 @@ import SSelect from '../src/components/shared/SSelect';
 import { useSettings } from '../src/hooks/useSettings';
 import { useShallow } from 'zustand/react/shallow';
 import { eReaderProfiles } from '../src/constants';
+import { useObjectNavigation } from '../src/hooks/useObjectNavigation';
 
 export default function SendComicPage() {
+  const { clear, initData } = useObjectNavigation(
+    useShallow((s) => ({ clear: s.clear, initData: s.object }))
+  );
+
   const [req, setReq] = useState<TransactionRequest>({
     deleteOrigin: false,
     merge: true,
@@ -23,7 +28,9 @@ export default function SendComicPage() {
     author: '',
     destination: 'local',
     sources: [],
-    mode: 'no-select',
+    sourceMode: 'no-select',
+    ...initData,
+    type: 'comic',
   });
   const send = useQueue((s) => s.send);
   const { model, setModel } = useSettings(
@@ -31,6 +38,10 @@ export default function SendComicPage() {
   );
 
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (initData) clear();
+  }, []);
 
   if (sending) return <View style={{ flex: 1, backgroundColor: 'red' }}></View>;
 
@@ -55,7 +66,7 @@ export default function SendComicPage() {
             <SourceSelector
               initSources={req.sources ?? []}
               onChange={(srcs) => setReq((s) => ({ ...s, sources: srcs }))}
-              onModeChange={(mode) => setReq((s) => ({ ...s, mode: mode }))}
+              onModeChange={(mode) => setReq((s) => ({ ...s, sourceMode: mode }))}
             />
           </View>
 
@@ -105,8 +116,8 @@ export default function SendComicPage() {
         </View>
       </ScrollView>
       <SButton
-        // disabled={!req.sources || req.sources.length == 0}
         onPress={async () => {
+          if (!req.sources || req.sources.length == 0) return;
           setSending(true);
           const done = await send(req);
           setSending(false);
