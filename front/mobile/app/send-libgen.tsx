@@ -17,6 +17,7 @@ import SearchedBookCard from '../src/components/search/searched-book-card';
 import { useLibgen } from '../src/hooks/useLibgen';
 import { LibgenTransactionRequest } from '../src/models/libgen-transaction-request';
 import { useObjectNavigation } from '../src/hooks/useObjectNavigation';
+import LoadingScreen from '../src/components/shared/loading-screen';
 
 export default function SendLibgen() {
   const { clearObject, initData } = useObjectNavigation(
@@ -48,9 +49,19 @@ export default function SendLibgen() {
     }))
   );
 
+  const [sending, setSending] = useState(false);
+
   useEffect(() => {
     if (initData) clearObject();
   }, []);
+
+  if (sending)
+    return (
+      <LoadingScreen
+        title="Sending your book…"
+        subtitle="Optimizing for your e-reader. This won't take long."
+      />
+    );
 
   return (
     <>
@@ -104,7 +115,10 @@ export default function SendLibgen() {
             req.books = Object.values(selectedBooks);
             if (req.books.length === 0) return;
 
+            setSending(true);
             const done = await send(req, true);
+            setSending(false);
+
             if (done) {
               clear();
               router.navigate('/(tabs)/queue');

@@ -1,4 +1,4 @@
-import { router, Stack } from 'expo-router';
+import { router, SplashScreen, Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { colors } from '../src/theme/colors';
@@ -15,6 +15,7 @@ import { useSettings } from '../src/hooks/useSettings';
 import { useShallow } from 'zustand/react/shallow';
 import { eReaderProfiles } from '../src/constants';
 import { useObjectNavigation } from '../src/hooks/useObjectNavigation';
+import LoadingScreen from '../src/components/shared/loading-screen';
 
 export default function SendComicPage() {
   const { clear, initData } = useObjectNavigation(
@@ -39,11 +40,13 @@ export default function SendComicPage() {
 
   const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    if (initData) clear();
-  }, []);
-
-  if (sending) return <View style={{ flex: 1, backgroundColor: 'red' }}></View>;
+  if (sending)
+    return (
+      <LoadingScreen
+        title="Sending your book…"
+        subtitle="Optimizing for your e-reader. This won't take long."
+      />
+    );
 
   return (
     <>

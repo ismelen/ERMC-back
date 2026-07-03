@@ -14,6 +14,7 @@ import { useSettings } from '../src/hooks/useSettings';
 import { useShallow } from 'zustand/react/shallow';
 import { eReaderProfiles } from '../src/constants';
 import { useObjectNavigation } from '../src/hooks/useObjectNavigation';
+import LoadingScreen from '../src/components/shared/loading-screen';
 
 export default function SendBookPage() {
   const { clear, initData } = useObjectNavigation(
@@ -36,9 +37,19 @@ export default function SendBookPage() {
     type: 'book',
   });
 
+  const [sending, setSending] = useState(false);
+
   useEffect(() => {
     if (initData) clear();
   }, []);
+
+  if (sending)
+    return (
+      <LoadingScreen
+        title="Sending your book…"
+        subtitle="Optimizing for your e-reader. This won't take long."
+      />
+    );
 
   return (
     <>
@@ -95,7 +106,9 @@ export default function SendBookPage() {
 
         <SButton
           onPress={async () => {
+            setSending(true);
             const done = await send(req);
+            setSending(false);
             if (done) router.navigate('/(tabs)/queue');
           }}
           style={{
