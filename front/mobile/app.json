@@ -52,8 +52,7 @@
       "./plugins/withManageExternalStorage.js",
       "./plugins/withForegroundService.js",
       "expo-web-browser",
-      "expo-secure-store",
-      "@react-native-google-signin/google-signin"
+      "expo-secure-store"
     ]
   }
 }
