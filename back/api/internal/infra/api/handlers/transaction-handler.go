@@ -148,7 +148,6 @@ func (ch *TransactionHandler) getFilesToProcess(r *http.Request) ([]string, stri
 
 	ctxId := uid.GetRandomID(6)
 	tempSavePath := filepath.Join(ch.basePath, "tmp", ctxId)
-	defer os.RemoveAll(tempSavePath)
 
 	_, children, err := saveConvertFiles(ext, files, tempSavePath)
 	if err != nil {
@@ -270,6 +269,8 @@ func (ch *TransactionHandler) handleMangaTransaction(files []string, config *con
 
 	transactions := make(map[string]*TransactionInfo)
 	id := uid.GetRandomID(6)
+
+	defer os.RemoveAll(filepath.Dir(files[0]))
 
 	for _, file := range files {
 		if !config.Merge {

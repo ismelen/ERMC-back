@@ -28,7 +28,7 @@ func NewTransaction(id, path string, pages int) *Transaction {
 
 func (t *Transaction) AddProcessedPages(pages int) bool {
 	t.ProcessedPages += pages
-	return t.Canceled
+	return !t.Canceled
 }
 
 func (t *Transaction) GetProgress() int {
