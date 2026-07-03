@@ -48,14 +48,7 @@ func (e *RemoteTransactionUC) Execute(md5 string, config *convert.TransactionCon
 		return
 	}
 
-	profile, err := convert.NewProfile(config.Profile)
-	if err != nil {
-		e.handleError(config, err)
-		tran.SetError(err)
-		return
-	}
-
-	if profile.IsKepub {
+	if config.ProfileData.IsKepub {
 		kSrc, err := ConvertToKepub(src, dstPath, result.Title)
 		if err != nil {
 			e.handleError(config, err)

@@ -32,14 +32,7 @@ func NewEpubTransactionUC(
 func (e *EpubTransactionUC) Execute(src string, config *convert.TransactionConfig, dstPath string) {
 	tran := e.tranStore.StartTransaction(config.Id, dstPath, 1)
 
-	profile, err := convert.NewProfile(config.Profile)
-	if err != nil {
-		e.handleError(config, err)
-		tran.SetError(err)
-		return
-	}
-
-	if profile.IsKepub {
+	if config.ProfileData.IsKepub {
 		kSrc, err := ConvertToKepub(src, dstPath, config.Title)
 		if err != nil {
 			e.handleError(config, err)

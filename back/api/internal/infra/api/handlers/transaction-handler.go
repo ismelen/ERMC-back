@@ -179,7 +179,10 @@ func (ch *TransactionHandler) handleRemoteTransaction(md5s []string, config *con
 
 	for _, md5 := range md5s {
 		id := uid.GetRandomID(6)
-		newConfig := config.WithId(id)
+		newConfig, err := config.WithId(id)
+		if err != nil {
+			return nil, err
+		}
 
 		dstPath := filepath.Join(ch.basePath, id)
 		if err := os.MkdirAll(dstPath, os.ModePerm); err != nil {
@@ -216,7 +219,10 @@ func (ch *TransactionHandler) handleEpubTransaction(files []string, config *conv
 
 	for _, file := range files {
 		id := uid.GetRandomID(6)
-		newConfig := config.WithId(id)
+		newConfig, err := config.WithId(id)
+		if err != nil {
+			return nil, err
+		}
 
 		dstPath := filepath.Join(ch.basePath, id)
 		if err := os.MkdirAll(dstPath, os.ModePerm); err != nil {
@@ -226,9 +232,16 @@ func (ch *TransactionHandler) handleEpubTransaction(files []string, config *conv
 		filenameWithExt := filepath.Base(file)
 		newConfig.Title = strings.TrimSuffix(filenameWithExt, filepath.Ext(filenameWithExt))
 
+		if strings.Contains(newConfig.Title, ".kepub") {
+			config.ProfileData.IsKepub = false
+
+			filenameWithExt := filepath.Base(newConfig.Title)
+			newConfig.Title = strings.TrimSuffix(filenameWithExt, filepath.Ext(filenameWithExt))
+		}
+
 		file, err := fs.CopyFile(file, dstPath)
 		if err != nil {
-			os.RemoveAll(dstPath)
+			os.RemoveAll(filepath.Dir(dstPath))
 			return nil, err
 		}
 
@@ -239,6 +252,7 @@ func (ch *TransactionHandler) handleEpubTransaction(files []string, config *conv
 		})
 
 		filename := filepath.Base(file)
+
 		if config.ProfileData.IsKepub {
 			ext := filepath.Ext(file)
 			name := strings.TrimSuffix(filename, ext)
@@ -283,8 +297,13 @@ func (ch *TransactionHandler) handleMangaTransaction(files []string, config *con
 
 		tran, ok := transactions[id]
 		if !ok {
+			newConfig, err := config.WithId(id)
+			if err != nil {
+				os.RemoveAll(filepath.Dir(chapter.Path))
+				return nil, err
+			}
 			tran = &TransactionInfo{
-				config:   config.WithId(id),
+				config:   newConfig,
 				dstPath:  dstPath,
 				chapters: []*manga.Chapter{},
 			}

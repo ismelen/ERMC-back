@@ -19,10 +19,17 @@ type TransactionConfig struct {
 	ProfileData *manga.Profile
 }
 
-func (t *TransactionConfig) WithId(id string) *TransactionConfig {
+func (t *TransactionConfig) WithId(id string) (*TransactionConfig, error) {
 	trans := *t
 	trans.Id = id
-	return &trans
+
+	profileData, err := NewProfile(t.Profile)
+	if err != nil {
+		return nil, err
+	}
+
+	trans.ProfileData = profileData
+	return &trans, nil
 }
 
 func (t *TransactionConfig) UpdateTitle(chapters []*manga.Chapter) {
