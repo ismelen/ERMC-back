@@ -8,6 +8,9 @@ import { ScrollView } from 'react-native-gesture-handler';
 import UploadCard from '../../src/components/queue/upload-card';
 import { useObjectNavigation } from '../../src/hooks/useObjectNavigation';
 import { TransactionType } from '../../src/models/transaction-request';
+import SText from '../../src/components/shared/SText';
+import SButton from '../../src/components/shared/SButton';
+import { router } from 'expo-router';
 
 export default function QueuePage() {
   const { transactions, completedTransactions, uploads, cancel } = useQueue(
@@ -21,11 +24,53 @@ export default function QueuePage() {
 
   const navigate = useObjectNavigation((s) => s.navigate);
 
+  const areUploads = uploads.length !== 0;
+  const areActive = transactions.length !== 0;
+  const areCompleted = completedTransactions.length !== 0;
+
   return (
     <ScrollView style={{ flex: 1, paddingHorizontal: 24 }}>
       <Text style={{ fontFamily: 'bold', fontSize: 28 }}>Transaction queue</Text>
 
-      {uploads.length !== 0 && (
+      {!areActive && !areUploads && !areCompleted && (
+        <View
+          style={{
+            alignItems: 'center',
+            gap: 35,
+            flex: 1,
+            justifyContent: 'center',
+            marginTop: 50,
+          }}
+        >
+          <View style={{ backgroundColor: colors.primary_fixed, borderRadius: 999, padding: 15 }}>
+            <SIcon name="cloud_off" color={colors.primary} size={60} type="outlined" />
+          </View>
+          <View>
+            <SText style={{ fontSize: 16, textAlign: 'center', fontFamily: 'semibold' }}>
+              Your queue is empty
+            </SText>
+            <SText style={{ fontSize: 16, textAlign: 'center' }}>Start by sending something.</SText>
+            <SText style={{ fontSize: 16, textAlign: 'center' }}>
+              Your active and compltede uploads will appear here.
+            </SText>
+          </View>
+          <SButton
+            onPress={() => router.navigate('/(tabs)/')}
+            style={{
+              backgroundColor: colors.primary_container,
+              paddingVertical: 14,
+              paddingHorizontal: 30,
+              borderRadius: 12,
+            }}
+          >
+            <SText style={{ color: colors.on_primary, fontFamily: 'semibold', fontSize: 16 }}>
+              Send something
+            </SText>
+          </SButton>
+        </View>
+      )}
+
+      {areUploads && (
         <>
           <View style={styles.section}>
             <SIcon
@@ -49,7 +94,7 @@ export default function QueuePage() {
         </>
       )}
 
-      {transactions.length !== 0 && (
+      {areActive && (
         <>
           <View style={styles.section}>
             <SIcon name="pending_actions" color={colors.primary} size={24} />
@@ -64,7 +109,7 @@ export default function QueuePage() {
         </>
       )}
 
-      {completedTransactions.length !== 0 && (
+      {areCompleted && (
         <>
           <View style={[styles.section, { marginTop: 20 }]}>
             <SIcon name="check_circle" color={colors.ok} size={24} type="outlined" />

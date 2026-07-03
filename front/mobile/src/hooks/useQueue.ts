@@ -44,9 +44,13 @@ export const useQueue = create<State>((set, get) => ({
     }
 
     set({
-      transactions: trans,
-      completedTransactions: completedTransactions,
+      transactions: [],
+      completedTransactions: [],
     });
+    // set({
+    //   transactions: trans,
+    //   completedTransactions: completedTransactions,
+    // });
   },
 
   async cancel(id: string) {
