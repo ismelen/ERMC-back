@@ -7,8 +7,7 @@ import QueueItemCard from '../../src/components/queue/queue-item-card';
 import { ScrollView } from 'react-native-gesture-handler';
 import UploadCard from '../../src/components/queue/upload-card';
 import { useObjectNavigation } from '../../src/hooks/useObjectNavigation';
-import { Upload } from '../../src/models/upload';
-import { TransactionRequest, TransactionType } from '../../src/models/transaction-request';
+import { TransactionType } from '../../src/models/transaction-request';
 
 export default function QueuePage() {
   const { transactions, completedTransactions, uploads, cancel } = useQueue(

@@ -1,19 +1,17 @@
-import { cacheDirectory, documentDirectory, downloadAsync } from 'expo-file-system/legacy';
+import { randomUUID } from 'expo-crypto';
+import BackgroundService from 'react-native-background-actions';
+import RNBlobUtil from 'react-native-blob-util';
 import { create } from 'zustand';
 import { BACKENDD_URL } from '../constants';
+import { LibgenTransactionRequest } from '../models/libgen-transaction-request';
 import { QueueElement } from '../models/queue-element';
-import { TransactionRequest } from '../models/transaction-request';
-import { StorageService } from '../services/storage-service';
 import { Source } from '../models/source';
-import BackgroundService from 'react-native-background-actions';
+import { TransactionRequest } from '../models/transaction-request';
+import { Upload } from '../models/upload';
 import { FilesystemService } from '../services/filesystem-service';
 import { NotificationService } from '../services/notification-service';
-import { Upload } from '../models/upload';
-import { randomUUID } from 'expo-crypto';
-import RNBlobUtil from 'react-native-blob-util';
+import { StorageService } from '../services/storage-service';
 import { useCloud } from './useCloud';
-import { LibgenTransactionRequest } from '../models/libgen-transaction-request';
-import { LinearGradient } from 'react-native-svg';
 import { useSettings } from './useSettings';
 
 interface State {
@@ -21,7 +19,7 @@ interface State {
   transactions: QueueElement[];
   completedTransactions: QueueElement[];
   send(req: Partial<TransactionRequest>, libgenMode?: boolean): Promise<boolean>;
-  checkProgress(idx: number, id: string): Promise<boolean>;
+  checkProgress(id: string): Promise<boolean>;
   download(idx: number, id: string): Promise<boolean>;
   init(): Promise<void>;
   cancel(id: string): Promise<void>;
@@ -58,7 +56,7 @@ export const useQueue = create<State>((set, get) => ({
     if (idx === -1) return;
 
     const resp = await fetch(`${BACKENDD_URL}/transaction/cancel/${id}`, {
-      method: 'GET',
+      method: 'PUT',
     });
 
     if (!resp.ok) return;
@@ -92,28 +90,32 @@ export const useQueue = create<State>((set, get) => ({
     return true;
   },
 
-  async checkProgress(idx: number, id: string): Promise<boolean> {
-    let progress = 0;
-    const elem = get().transactions.find((e) => e.id === id);
+  async checkProgress(id: string): Promise<boolean> {
+    const transactions = get().transactions;
+    const transaction = transactions.find((e) => e.id === id);
 
-    if (!elem) return true; // ya fue procesado, detener el intervalo
+    if (!transaction) return true;
 
     try {
-      progress = await fetchStatus(id);
-      elem.progress = progress;
+      const progress = await fetchStatus(id);
+      transaction.progress = progress;
     } catch (e: any) {
-      elem.error = e.message;
+      transaction.error = e.message;
     }
 
-    if (elem.progress === 100 || elem.error) {
+    if (transaction.progress === 100 || transaction.error) {
       set((s) => ({
         transactions: s.transactions.filter((e) => e.id !== id),
-        completedTransactions: [elem, ...s.completedTransactions],
+        completedTransactions: [transaction, ...s.completedTransactions],
       }));
       StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
       StorageService.SetAsync(COMPLETE_TRANSACTIONS_KEY, get().completedTransactions);
-      return true; // completado, detener el intervalo
+      return true;
     }
+
+    set({
+      transactions: [...transactions],
+    });
 
     return false;
   },
@@ -191,16 +193,14 @@ export const useQueue = create<State>((set, get) => ({
             return;
           }
 
-          const data: QueueElement[] = await resp.json();
-          data.forEach((e) => {
-            e = {
-              ...req,
-              timestamp: Date.now(),
-              filename: e.filename,
-              id: e.id,
-              progress: e.progress,
-            };
-          });
+          const raw: QueueElement[] = await resp.json();
+          const data = raw.map((e) => ({
+            ...req,
+            timestamp: Date.now(),
+            filename: e.filename,
+            id: e.id,
+            progress: 0,
+          }));
 
           if (libgenMode) {
             const books = (req as LibgenTransactionRequest).books;

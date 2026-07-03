@@ -15,8 +15,6 @@ export default function PulseProgressBar({ progress }: ProgressBarProps) {
   const sweepAnim = useRef(new Animated.Value(0)).current;
   const containerWidthRef = useRef(0);
 
-  // Cuando el contenedor es medido: posicionamos la barra al valor actual
-  // de forma instantánea (sin animación) para evitar la carrera cold-mount.
   const handleLayout = (e: any) => {
     const w = e.nativeEvent.layout.width;
     if (w <= 0 || w === containerWidthRef.current) return;
@@ -24,7 +22,6 @@ export default function PulseProgressBar({ progress }: ProgressBarProps) {
     animatedWidth.setValue(clamp(progress) * w);
   };
 
-  // Cuando cambia el progress: animamos al nuevo valor en píxeles reales
   useEffect(() => {
     if (containerWidthRef.current === 0) return;
     Animated.timing(animatedWidth, {
@@ -34,14 +31,13 @@ export default function PulseProgressBar({ progress }: ProgressBarProps) {
     }).start();
   }, [progress]);
 
-  // Loop del sweep (brillo)
   useEffect(() => {
     Animated.loop(
       Animated.timing(sweepAnim, {
         toValue: 1,
         duration: 1400,
         useNativeDriver: true,
-      }),
+      })
     ).start();
   }, []);
 
@@ -62,7 +58,7 @@ export default function PulseProgressBar({ progress }: ProgressBarProps) {
 const styles = StyleSheet.create({
   container: {
     height: 4,
-    width: '100%',
+    flex: 1,
     backgroundColor: colors.primary_fixed,
     borderRadius: 6,
     overflow: 'hidden',
