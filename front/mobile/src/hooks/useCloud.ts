@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { StorageService } from '../services/storage-service';
-import { BACKENDD_URL, DROPBOX_API_KEY, WEB_CLIENT_ID, WEB_CLIENT_SECRET } from '../constants';
+import { DROPBOX_API_KEY } from '../constants';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import {
@@ -33,8 +33,8 @@ export const useCloud = create<State>((set, get) => ({
 
   async init() {
     const json = await StorageService.GetSecureAsync(OAUTH_KEY);
-    const { refresh, token, expiresAt, email }: OAuthData = JSON.parse(json ?? '');
     const folderPath = await StorageService.GetSecureAsync(FOLDER_PATH_KEY);
+    const { refresh, token, expiresAt, email }: OAuthData = json ? JSON.parse(json) : {};
 
     set({ refresh, token, expiresAt, email, folderPath });
   },
