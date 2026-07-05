@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View } from 'react-native';
 import SText from '../../src/components/shared/SText';
 import { colors, hexToRgba } from '../../src/theme/colors';
-import { ScrollView, TextInput } from 'react-native-gesture-handler';
+import { ScrollView } from 'react-native-gesture-handler';
 import SIcon from '../../src/components/icons/SIcon';
 import { useLibgen } from '../../src/hooks/useLibgen';
-import { useDebounce } from '../../src/hooks/useDebouncer';
 import { LibgenBook } from '../../src/models/book';
 import SearchedBookCard from '../../src/components/search/searched-book-card';
 import { useShallow } from 'zustand/react/shallow';
@@ -26,52 +25,42 @@ export default function Search() {
   const selectedCant = Object.entries(selectedBooks).length;
 
   const [query, setQuery] = useState('');
-  const debouncedQuery = useDebounce<string>(query, 500);
 
   const [results, setResults] = useState<LibgenBook[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  useEffect(() => {
-    if (!debouncedQuery) {
-      setResults([]);
-      return;
-    }
+  const handleSearch = async () => {
     setIsSearching(true);
-    search(debouncedQuery)
-      .then((res) => {
-        if (!res) return;
-        setResults(res);
-      })
-      .finally(() => setIsSearching(false));
-  }, [debouncedQuery]);
+    const res = await search(query);
+    setIsSearching(false);
+    setResults((s) => res ?? s);
+  };
 
   return (
     <View style={{ flex: 1 }}>
       <View style={{ paddingHorizontal: 24 }}>
         <SText style={{ fontFamily: 'bold', fontSize: 28 }}>Search</SText>
 
-        <View
-          style={{
-            borderColor: hexToRgba(colors.outline_variant, 0.2),
-            borderWidth: 1,
-            borderRadius: 12,
-            backgroundColor: colors.surface_container_low,
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingHorizontal: 15,
-            paddingVertical: 5,
-            gap: 5,
-          }}
-        >
-          <SIcon name="search" color={colors.on_surface_variant} size={26} type="outlined" />
+        <View style={{ flexDirection: 'row', gap: 8 }}>
           <STextInput
             placeholder="Search by title, author or genere..."
             onChangeText={setQuery}
+            onSubmitEditing={handleSearch}
             style={{
               fontSize: 16,
               flex: 1,
+              borderColor: hexToRgba(colors.outline_variant, 0.2),
+              borderWidth: 1,
+              borderRadius: 12,
+              backgroundColor: colors.surface_container_low,
             }}
           />
+          <SButton
+            onPress={handleSearch}
+            style={{ backgroundColor: colors.primary_container, borderRadius: 12, padding: 10 }}
+          >
+            <SIcon name="search" color={colors.on_primary_container} size={26} type="outlined" />
+          </SButton>
         </View>
       </View>
       <ScrollView style={{ paddingHorizontal: 24, marginTop: 10 }} bounces>

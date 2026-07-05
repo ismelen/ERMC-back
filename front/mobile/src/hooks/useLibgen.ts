@@ -20,6 +20,8 @@ export const useLibgen = create<State>((set, get) => ({
       method: 'GET',
     });
 
+    console.log(resp);
+
     if (!resp.ok || resp.status !== 200) return;
     return await resp.json();
   },

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { LibgenBook } from '../../models/book';
 import { colors, hexToRgba } from '../../theme/colors';
 import SText from '../shared/SText';
 import SButton from '../shared/SButton';
 import SIcon from '../icons/SIcon';
+import PulseBlock from '../shared/pulse-block';
 
 interface Props {
   book: LibgenBook;
@@ -19,6 +20,8 @@ export default function SearchedBookCard({
   onSelect,
   deleteMode = false,
 }: Props) {
+  const [imgStatus, setImgStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+
   return (
     <SButton
       disabled={deleteMode}
@@ -37,18 +40,33 @@ export default function SearchedBookCard({
         outlineWidth: selected ? 1 : 0,
       }}
     >
-      <Image
-        source={{
-          uri: book.cover_url,
-          headers: {
-            Referer: 'https://libgen.bz/',
-            'User-Agent': 'Mozilla/5.0',
-          },
-        }}
-        resizeMode="cover"
-        style={{ height: 100, borderRadius: 8, aspectRatio: 0.67 }}
-        onError={(err) => console.log('Image load error:', book.cover_url, err.nativeEvent.error)}
-      />
+      {imgStatus !== 'error' && (
+        <View style={{ borderRadius: 8, overflow: 'hidden' }}>
+          {imgStatus === 'loading' && (
+            <PulseBlock
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                backgroundColor: hexToRgba(colors.on_surface_variant, 0.25),
+              }}
+            />
+          )}
+          <Image
+            source={{
+              uri: book.cover_url,
+              headers: {
+                Referer: 'https://libgen.bz/',
+                'User-Agent': 'Mozilla/5.0',
+              },
+            }}
+            resizeMode="cover"
+            style={{ height: 100, aspectRatio: 0.67 }}
+            onError={() => setImgStatus('error')}
+            onLoad={() => setImgStatus('loaded')}
+          />
+        </View>
+      )}
       <View style={{ flex: 1, overflow: 'hidden' }}>
         <SText
           ellipsizeMode="tail"
@@ -58,7 +76,7 @@ export default function SearchedBookCard({
           {book.title}
         </SText>
 
-        <View style={{ justifyContent: 'space-between' }}>
+        <View style={{ justifyContent: 'space-between', marginTop: 6 }}>
           <SText
             ellipsizeMode="tail"
             numberOfLines={1}
