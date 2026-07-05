@@ -1,45 +1,20 @@
 import { useShallow } from 'zustand/react/shallow';
-import { useQueue } from '../src/hooks/useQueue';
-import { useSettings } from '../src/hooks/useSettings';
-import { useEffect, useState } from 'react';
-import { TransactionRequest } from '../src/models/transaction-request';
-import { router, Stack } from 'expo-router';
 import { colors } from '../src/theme/colors';
 import { StyleSheet, View } from 'react-native';
 import SText from '../src/components/shared/SText';
 import SSelect from '../src/components/shared/SSelect';
 import { eReaderProfiles } from '../src/constants';
 import DestinationSelector from '../src/components/senders/destination-selector';
-import OptionCardChecker from '../src/components/senders/option-card-checker';
 import SButton from '../src/components/shared/SButton';
 import { ScrollView } from 'react-native-gesture-handler';
 import SearchedBookCard from '../src/components/search/searched-book-card';
 import { useLibgen } from '../src/hooks/useLibgen';
-import { LibgenTransactionRequest } from '../src/models/libgen-transaction-request';
-import { useObjectNavigation } from '../src/hooks/useObjectNavigation';
 import LoadingScreen from '../src/components/shared/loading-screen';
+import { useSender } from '../src/hooks/useSender';
+import { Stack } from 'expo-router';
 
 export default function SendLibgen() {
-  const { clearObject, initData } = useObjectNavigation(
-    useShallow((s) => ({ clearObject: s.clear, initData: s.object }))
-  );
-
-  const send = useQueue((s) => s.send);
-  const { model, setModel } = useSettings(
-    useShallow((s) => ({ model: s.model, setModel: s.setModel }))
-  );
-  const [req, setReq] = useState<LibgenTransactionRequest>({
-    deleteOrigin: false,
-    merge: false,
-    destination: 'local',
-    sourceMode: 'no-select',
-    sources: [],
-    author: '',
-    title: '',
-    books: [],
-    ...initData,
-    type: 'remote',
-  });
+  const { sending, req, setReq, handleSend } = useSender('remote');
 
   const { selectedBooks, onDelete, clear } = useLibgen(
     useShallow((s) => ({
@@ -48,12 +23,6 @@ export default function SendLibgen() {
       clear: s.clear,
     }))
   );
-
-  const [sending, setSending] = useState(false);
-
-  useEffect(() => {
-    if (initData) clearObject();
-  }, []);
 
   if (sending)
     return (
@@ -92,12 +61,12 @@ export default function SendLibgen() {
             ))}
           </View>
 
-          <View style={styles.section}>
+          <View>
             <SText style={styles.title}>READER MODEL</SText>
             <SSelect
-              value={model}
+              value={req.model}
               options={eReaderProfiles}
-              onOptionChange={(opt) => setModel(opt.value)}
+              onOptionChange={(opt) => setReq((s) => ({ ...s, model: opt.value }))}
             />
           </View>
 
@@ -115,14 +84,8 @@ export default function SendLibgen() {
             req.books = Object.values(selectedBooks);
             if (req.books.length === 0) return;
 
-            setSending(true);
-            const done = await send(req, true);
-            setSending(false);
-
-            if (done) {
-              clear();
-              router.navigate('/(tabs)/queue');
-            }
+            setReq((s) => ({ ...s, books: req.books }));
+            await handleSend();
           }}
           style={{
             backgroundColor: colors.primary_container,

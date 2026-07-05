@@ -1,4 +1,5 @@
 import { SourceMode } from '../hooks/useSource';
+import { LibgenBook } from './book';
 import { Source } from './source';
 
 export interface TransactionRequest {
@@ -10,6 +11,8 @@ export interface TransactionRequest {
   deleteOrigin: boolean;
   sourceMode: SourceMode;
   type: TransactionType;
+  model: string;
+  books: LibgenBook[];
 }
 
 export type Destination = 'local' | 'cloud';

@@ -12,8 +12,8 @@ import { useCloud } from '../../src/hooks/useCloud';
 import SButton from '../../src/components/shared/SButton';
 
 export default function SettingsPage() {
-  const { model, setModel } = useSettings(
-    useShallow((s) => ({ model: s.model, setModel: s.setModel }))
+  const { config, setModel } = useSettings(
+    useShallow((s) => ({ config: s.baseConfig, setModel: s.setModel }))
   );
 
   const { email, getToken, getFolder, folder, logout } = useCloud(
@@ -32,7 +32,7 @@ export default function SettingsPage() {
       <View style={{ marginTop: 14, gap: 4 }}>
         <SText style={styles.title}>READER MODEL</SText>
         <SSelect
-          value={model}
+          value={config.model}
           options={eReaderProfiles}
           onOptionChange={(opt) => setModel(opt.value)}
         />

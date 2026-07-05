@@ -61,7 +61,7 @@ export default function QueueItemCard({ data, idx, onTap, autoCheck = false }: P
         <DestinationIndicator dest={data.destination} />
       </View>
 
-      {data.error && <ErrorMessage error={data.error} />}
+      {data.error && <ErrorMessage error={data.error} onTap={onTap} />}
       {!data.error && <LoadingSection data={data} idx={idx} onTap={onTap} />}
     </View>
   );
@@ -127,11 +127,16 @@ function LoadingSection({ data, idx, onTap }: { data: QueueElement; idx: number;
   );
 }
 
-function ErrorMessage({ error }: { error: string }) {
+function ErrorMessage({ error, onTap }: { error: string; onTap?(): void }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-      <SIcon name="info" color={colors.error} size={16} type="outlined" />
-      <SText style={{ fontSize: 14, fontFamily: 'medium', color: colors.error }}>{error}</SText>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <SIcon name="info" color={colors.error} size={16} type="outlined" />
+        <SText style={{ fontSize: 14, fontFamily: 'medium', color: colors.error }}>{error}</SText>
+      </View>
+      <SButton onPress={onTap} style={{ padding: 2, borderRadius: 8 }}>
+        <SIcon name="repeat" color={colors.primary} size={24} type="outlined" />
+      </SButton>
     </View>
   );
 }

@@ -3,7 +3,6 @@ import BackgroundService from 'react-native-background-actions';
 import RNBlobUtil from 'react-native-blob-util';
 import { create } from 'zustand';
 import { BACKENDD_URL } from '../constants';
-import { LibgenTransactionRequest } from '../models/libgen-transaction-request';
 import { QueueElement } from '../models/queue-element';
 import { Source } from '../models/source';
 import { TransactionRequest } from '../models/transaction-request';
@@ -44,13 +43,9 @@ export const useQueue = create<State>((set, get) => ({
     }
 
     set({
-      transactions: [],
-      completedTransactions: [],
+      transactions: trans,
+      completedTransactions: completedTransactions,
     });
-    // set({
-    //   transactions: trans,
-    //   completedTransactions: completedTransactions,
-    // });
   },
 
   async cancel(id: string) {
@@ -104,6 +99,7 @@ export const useQueue = create<State>((set, get) => ({
       const progress = await fetchStatus(id);
       transaction.progress = progress;
     } catch (e: any) {
+      console.log(e);
       transaction.error = e.message;
     }
 
@@ -133,8 +129,7 @@ export const useQueue = create<State>((set, get) => ({
     const form = new FormData();
 
     if (libgenMode ?? false) {
-      const books = (req as LibgenTransactionRequest).books;
-      form.append('md5s', books.map((e) => e.md5).join(','));
+      form.append('md5s', req.books.map((e) => e.md5).join(','));
     } else {
       let files: Source[] = [];
       if (req.sourceMode === 'files') {
@@ -157,7 +152,7 @@ export const useQueue = create<State>((set, get) => ({
 
     const toCloud = req.destination === 'cloud';
 
-    form.append('profile', useSettings.getState().model ?? '');
+    form.append('profile', req.model ?? '');
     form.append('title', req.title ?? '');
     form.append('author', req.author ?? '');
     form.append('cloud', String(toCloud));
@@ -207,9 +202,8 @@ export const useQueue = create<State>((set, get) => ({
           }));
 
           if (libgenMode) {
-            const books = (req as LibgenTransactionRequest).books;
             data.forEach((e) => {
-              e.title = books.find((b) => b.md5 === e.filename)?.title ?? e.filename;
+              e.title = req.books.find((b) => b.md5 === e.filename)?.title ?? e.filename;
             });
           }
 

@@ -1,5 +1,5 @@
-import { router, SplashScreen, Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { router, Stack } from 'expo-router';
+import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { colors } from '../src/theme/colors';
 import SText from '../src/components/shared/SText';
@@ -8,37 +8,13 @@ import DestinationSelector from '../src/components/senders/destination-selector'
 import OptionCardChecker from '../src/components/senders/option-card-checker';
 import SButton from '../src/components/shared/SButton';
 import MetadataSection from '../src/components/senders/metadata-section';
-import { TransactionRequest } from '../src/models/transaction-request';
-import { useQueue } from '../src/hooks/useQueue';
 import SSelect from '../src/components/shared/SSelect';
-import { useSettings } from '../src/hooks/useSettings';
-import { useShallow } from 'zustand/react/shallow';
 import { eReaderProfiles } from '../src/constants';
-import { useObjectNavigation } from '../src/hooks/useObjectNavigation';
 import LoadingScreen from '../src/components/shared/loading-screen';
+import { useSender } from '../src/hooks/useSender';
 
 export default function SendComicPage() {
-  const { clear, initData } = useObjectNavigation(
-    useShallow((s) => ({ clear: s.clear, initData: s.object }))
-  );
-
-  const [req, setReq] = useState<TransactionRequest>({
-    deleteOrigin: false,
-    merge: true,
-    title: '',
-    author: '',
-    destination: 'local',
-    sources: [],
-    sourceMode: 'no-select',
-    ...initData,
-    type: 'comic',
-  });
-  const send = useQueue((s) => s.send);
-  const { model, setModel } = useSettings(
-    useShallow((s) => ({ model: s.model, setModel: s.setModel }))
-  );
-
-  const [sending, setSending] = useState(false);
+  const { sending, req, setReq, handleSend } = useSender('comic');
 
   if (sending)
     return (
@@ -76,9 +52,9 @@ export default function SendComicPage() {
           <View>
             <SText style={styles.title}>READER MODEL</SText>
             <SSelect
-              value={model}
+              value={req.model}
               options={eReaderProfiles}
-              onOptionChange={(opt) => setModel(opt.value)}
+              onOptionChange={(opt) => setReq((s) => ({ ...s, model: opt.value }))}
             />
           </View>
 
@@ -109,23 +85,17 @@ export default function SendComicPage() {
               text="Combine multiple chapters into a single volume"
               onChange={(checked) => setReq((s) => ({ ...s, merge: checked }))}
             />
-            <OptionCardChecker
+            {/* <OptionCardChecker
               initialChecked={req.deleteOrigin ?? false}
               label="Delete source"
               text="Remove original after successful upload"
               onChange={(checked) => setReq((s) => ({ ...s, deleteOrigin: checked }))}
-            />
+            /> */}
           </View>
         </View>
       </ScrollView>
       <SButton
-        onPress={async () => {
-          if (!req.sources || req.sources.length == 0) return;
-          setSending(true);
-          const done = await send(req);
-          setSending(false);
-          if (done) router.navigate('/(tabs)/queue');
-        }}
+        onPress={handleSend}
         style={{
           backgroundColor: colors.primary_container,
           margin: 24,
