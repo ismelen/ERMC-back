@@ -8,16 +8,27 @@ export class FilesystemService {
       const dir = await pickDirectory();
       if (!dir || !dir.uri) return;
 
-      const files = new Directory(dir.uri).list();
       const source: Source = {
         name: decodeURIComponent(dir.uri).split('/').pop() ?? '',
         path: dir.uri,
-        children: [],
+        children: await FilesystemService.filesFromFolder(dir.uri),
       };
+
+      return source;
+    } catch {
+      return;
+    }
+  }
+
+  static async filesFromFolder(uri: string): Promise<Source[]> {
+    try {
+      const files = new Directory(uri).list();
+
+      const sources: Source[] = [];
 
       files.forEach((file) => {
         if (file instanceof Directory) return;
-        source.children!.push({
+        sources.push({
           name: file.name,
           path: file.uri,
           size: file.size,
@@ -25,9 +36,9 @@ export class FilesystemService {
         });
       });
 
-      return source;
+      return sources;
     } catch {
-      return;
+      return [];
     }
   }
 

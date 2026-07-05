@@ -47,6 +47,14 @@ export default function SendComicPage() {
               onChange={(srcs) => setReq((s) => ({ ...s, sources: srcs }))}
               onModeChange={(mode) => setReq((s) => ({ ...s, sourceMode: mode }))}
             />
+            {req.sourceMode === 'folder' && (
+              <OptionCardChecker
+                initialChecked={req.monitorize ?? false}
+                label="Monitorize folder"
+                text="Monitor changes in this folder"
+                onChange={(checked) => setReq((s) => ({ ...s, monitorize: checked }))}
+              />
+            )}
           </View>
 
           <View>

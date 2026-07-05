@@ -26,6 +26,7 @@ export default function MetadataSection({ initialMetadata, onChange }: Props) {
             borderColor: hexToRgba(colors.outline_variant, 0.2),
             borderWidth: 1,
           }}
+          value={initialMetadata?.title}
           placeholder="Title"
           onChangeText={(e) => setMetadata((s) => ({ ...s, title: e }))}
         />
@@ -34,6 +35,7 @@ export default function MetadataSection({ initialMetadata, onChange }: Props) {
       <View style={styles.section}>
         <SText style={styles.label}>Author</SText>
         <STextInput
+          value={initialMetadata?.author}
           style={{
             borderWidth: 1,
             borderColor: hexToRgba(colors.outline_variant, 0.2),

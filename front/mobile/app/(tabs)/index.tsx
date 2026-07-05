@@ -1,13 +1,20 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 import ActionCard from '../../src/components/home/action-card';
 import SText from '../../src/components/shared/SText';
-import { colors } from '../../src/theme/colors';
-import SButton from '../../src/components/shared/SButton';
 import { router, Tabs } from 'expo-router';
 import AppHeader from '../../src/components/app-header';
+import { useMonitoredFolders } from '../../src/hooks/useMonitoredFolders';
+import { colors } from '../../src/theme/colors';
+import SButton from '../../src/components/shared/SButton';
+import SIcon from '../../src/components/icons/SIcon';
+import { useObjectNavigation } from '../../src/hooks/useObjectNavigation';
+import { TransactionType } from '../../src/models/transaction-request';
 
 export default function HomePage() {
+  const folders = useMonitoredFolders((s) => s.folders);
+  const navigate = useObjectNavigation((s) => s.navigate);
+
   return (
     <>
       <Tabs.Screen options={{ headerShown: true, header: () => <AppHeader /> }} />
@@ -29,30 +36,56 @@ export default function HomePage() {
           />
         </View>
 
-        <View>
-          <MonitoredFoldersTitle onClick={() => {}} />
-        </View>
+        {folders.length !== 0 && (
+          <View style={{ gap: 8 }}>
+            <SText style={{ fontFamily: 'semibold', fontSize: 20 }}>Monitored folders</SText>
+
+            {folders.map((e, i) => (
+              <SButton
+                key={i}
+                onPress={() => {
+                  e.monitoredIdx = i;
+                  navigate(getPath(e.type), e);
+                }}
+                style={{
+                  boxShadow: colors.boxShadow,
+                  backgroundColor: colors.surface_container_lowest,
+                  borderRadius: 12,
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <SText style={{ fontFamily: 'semibold' }}>{e.title}</SText>
+                  <SText
+                    style={{
+                      color: e.diff !== 0 ? colors.ok : colors.secondary_fixed_dim,
+                      fontFamily: 'semibold',
+                      fontSize: 12,
+                    }}
+                  >
+                    {e.diff !== 0 ? `${e.diff} NEW FILES` : 'SYNCED'}
+                  </SText>
+                </View>
+                <SIcon name="chevron_right" size={32} color={colors.primary} type={'outlined'} />
+              </SButton>
+            ))}
+          </View>
+        )}
       </View>
     </>
   );
 }
 
-function MonitoredFoldersTitle({ onClick }: { onClick(): void }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-      <SText style={{ fontFamily: 'semibold', fontSize: 20 }}>Monitored folders</SText>
-      <SButton
-        onPress={onClick}
-        style={{
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          borderRadius: 8,
-        }}
-      >
-        <SText style={{ color: colors.primary, fontFamily: 'semibold', fontSize: 12 }}>
-          + ADD FOLDER
-        </SText>
-      </SButton>
-    </View>
-  );
+function getPath(type: TransactionType) {
+  switch (type) {
+    case 'comic':
+      return '/send-comic';
+    case 'epub':
+      return '/send-book';
+    case 'remote':
+      return '/send-libgen';
+  }
 }

@@ -139,7 +139,10 @@ export const useQueue = create<State>((set, get) => ({
       if (req.sourceMode === 'folder') {
         files = req.sources[0].children ?? [];
       }
-      if (files.length === 0) return false;
+      if (files.length === 0) {
+        alert('No files');
+        return false;
+      }
 
       for (const file of files) {
         form.append('files', {

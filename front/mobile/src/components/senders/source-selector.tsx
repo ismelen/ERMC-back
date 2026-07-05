@@ -11,9 +11,15 @@ interface Props {
   initSources: Source[];
   onChange(sources: Source[]): void;
   onModeChange(mode: SourceMode): void;
+  enabled?: boolean;
 }
 
-export default function SourceSelector({ initSources, onChange, onModeChange }: Props) {
+export default function SourceSelector({
+  initSources,
+  onChange,
+  onModeChange,
+  enabled = true,
+}: Props) {
   const { addFiles, addFolder, mode, sources, deleteSource } = useSource(initSources);
 
   useEffect(() => {
@@ -34,7 +40,14 @@ export default function SourceSelector({ initSources, onChange, onModeChange }: 
       );
 
     case 'folder':
-      return <SourcesViewer sources={sources} deleteSource={deleteSource} mode={mode} />;
+      return (
+        <SourcesViewer
+          sources={sources}
+          deleteSource={deleteSource}
+          mode={mode}
+          enabled={enabled}
+        />
+      );
   }
 
   return (
@@ -49,10 +62,12 @@ function SourcesViewer({
   sources,
   deleteSource,
   mode,
+  enabled = true,
 }: {
   sources: Source[];
   deleteSource(index: number): void;
   mode: 'files' | 'folder' | 'no-select';
+  enabled?: boolean;
 }) {
   return (
     <View
@@ -95,9 +110,11 @@ function SourcesViewer({
               {src.name}
             </SText>
           </View>
-          <SButton onPress={() => deleteSource(idx)}>
-            <SIcon name="delete" size={24} color={colors.primary} type="outlined" />
-          </SButton>
+          {enabled && (
+            <SButton onPress={() => deleteSource(idx)}>
+              <SIcon name="delete" size={24} color={colors.primary} type="outlined" />
+            </SButton>
+          )}
         </View>
       ))}
     </View>

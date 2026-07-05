@@ -5,12 +5,15 @@ import { useSettings } from './useSettings';
 import { useEffect, useState } from 'react';
 import { TransactionRequest, TransactionType } from '../models/transaction-request';
 import { router } from 'expo-router';
+import { useMonitoredFolders } from './useMonitoredFolders';
 
 export function useSender(type: TransactionType) {
   const { clear, initData } = useObjectNavigation(
     useShallow((s) => ({ clear: s.clear, initData: s.object }))
   );
   const [hasOrigin, setHasOrigin] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [monitoredIdx] = useState<number>(initData?.monitoredIdx ?? -1);
 
   const send = useQueue((s) => s.send);
   const { config, updateConfig } = useSettings(
@@ -21,12 +24,11 @@ export function useSender(type: TransactionType) {
     sources: [],
     author: '',
     title: '',
+    monitorize: false,
     ...config,
     ...initData,
     type: type,
   });
-
-  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     if (!initData) return;
@@ -48,6 +50,18 @@ export function useSender(type: TransactionType) {
           merge: req.merge,
           model: req.model,
         });
+      }
+      const isMonitored = monitoredIdx !== -1;
+      const isFolder = req.sourceMode === 'folder';
+
+      if (isMonitored) {
+        if (req.monitorize && isFolder) {
+          useMonitoredFolders.getState().update(req, monitoredIdx);
+        } else {
+          useMonitoredFolders.getState().remove(monitoredIdx);
+        }
+      } else if (req.monitorize && !isFolder) {
+        useMonitoredFolders.getState().add(req);
       }
     }
   };

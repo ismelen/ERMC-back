@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { colors } from '../../theme/colors';
 import SSwitch from '../shared/SSwitch';
@@ -13,6 +13,10 @@ interface Props {
 
 export default function OptionCardChecker({ initialChecked, onChange, label, text }: Props) {
   const [checked, setChecked] = useState(initialChecked);
+
+  useEffect(() => {
+    onChange(checked);
+  }, [checked]);
 
   return (
     <View

@@ -13,6 +13,8 @@ export interface TransactionRequest {
   type: TransactionType;
   model: string;
   books: LibgenBook[];
+  monitorize: boolean;
+  monitoredIdx?: number;
 }
 
 export type Destination = 'local' | 'cloud';
