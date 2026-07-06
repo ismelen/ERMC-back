@@ -25,6 +25,8 @@ func main() {
 	godotenv.Load()
 
 	api := chi.NewRouter()
+	public := chi.NewRouter()
+	public.Mount("/api", api)
 
 	api.Use(
 		middleware.RequestID,
@@ -61,8 +63,11 @@ func main() {
 	libgenHandler := handlers.NewLibgenHandler(libgenServ)
 	routes.SetupLibgenRoutes(api, libgenHandler)
 
+	apphandler := handlers.NewAppHandler()
+	routes.SetupAppRoutes(api, public, apphandler)
+
 	log.Println("Starting at port 3000")
-	if err := http.ListenAndServe(":3000", api); err != nil {
+	if err := http.ListenAndServe(":3000", public); err != nil {
 		log.Fatal(err)
 	}
 }

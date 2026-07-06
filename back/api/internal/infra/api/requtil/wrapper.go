@@ -36,6 +36,10 @@ func Wrap(f func(r *http.Request) (any, error)) http.HandlerFunc {
 
 			w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, v.Name))
 			w.Header().Set("Content-Type", "application/octet-stream")
+
+			for key, header := range v.Headers {
+				w.Header().Set(key, header)
+			}
 			http.ServeFile(w, r, v.Path)
 		default:
 			render.Status(r, http.StatusOK)

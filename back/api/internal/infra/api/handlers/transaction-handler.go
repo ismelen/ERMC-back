@@ -129,7 +129,7 @@ func (ch *TransactionHandler) HandleConvert(r *http.Request) (any, error) {
 }
 
 func (ch *TransactionHandler) getFilesToProcess(r *http.Request) ([]string, string, error) {
-	files, err := GetFormFiles(r, "files")
+	files, err := requtil.GetFormFiles(r, "files")
 	if err != nil {
 		return nil, "", err
 	}

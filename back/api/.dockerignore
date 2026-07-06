@@ -18,3 +18,4 @@
 .git/
 .gitignore
 /credentials/
+/resources/
