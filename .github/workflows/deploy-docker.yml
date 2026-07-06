@@ -22,7 +22,8 @@ jobs:
           username: ${{ secrets.ORACLE_USERNAME }}
           key: ${{ secrets.ORACLE_PRIVATE_KEY }}
           script: |
-            rm -rf ~/inkomi/back/api
+            rm -rf ~/inkomi/back/api/internal
+            rm -f ~/inkomi/back/api/main.go
             mkdir -p ~/inkomi/back/api
 
       - name: Copy files via SSH
@@ -31,7 +32,7 @@ jobs:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USERNAME }}
           key: ${{ secrets.ORACLE_PRIVATE_KEY }}
-          source: "back/api/*"
+          source: "back/api/internal,back/api/main.go"
           target: "~/inkomi"
 
       - name: Deploy via SSH
