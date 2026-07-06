@@ -24,8 +24,8 @@ interface State {
   cancel(id: string): Promise<void>;
 }
 
-const TRANSACTIONS_KEY = 'transactions';
-const COMPLETE_TRANSACTIONS_KEY = 'complete_transactions';
+export const TRANSACTIONS_KEY = 'transactions';
+export const COMPLETE_TRANSACTIONS_KEY = 'complete_transactions';
 
 export const useQueue = create<State>((set, get) => ({
   uploads: [],
@@ -160,7 +160,11 @@ export const useQueue = create<State>((set, get) => ({
     form.append('author', req.author ?? '');
     form.append('cloud', String(toCloud));
     form.append('merge', String(req.merge));
-    // form.append('notify_token', ''); //TODO: settings
+
+    const permissionGranted = await NotificationService.requestNotificationPermission();
+    if (permissionGranted) {
+      form.append('notify_token', await NotificationService.getToken());
+    }
 
     if (toCloud) {
       const token = (await useCloud.getState().getToken()) ?? '';
@@ -177,7 +181,6 @@ export const useQueue = create<State>((set, get) => ({
     };
     set((s) => ({ uploads: [...s.uploads, upload] }));
 
-    await NotificationService.requestNotificationPermission();
     await BackgroundService.start(
       async () => {
         try {
