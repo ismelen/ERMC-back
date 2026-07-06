@@ -15,6 +15,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download .env from server
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ORACLE_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.ORACLE_HOST }} >> ~/.ssh/known_hosts
+          scp -i ~/.ssh/id_rsa ${{ secrets.ORACLE_USERNAME }}@${{ secrets.ORACLE_HOST }}:~/inkomi/back/api/.env ./back/api/.env || true
+
       - name: Clean old files on server
         uses: appleboy/ssh-action@v1.0.3
         with:

@@ -41,7 +41,7 @@ jobs:
           echo "${{ secrets.ORACLE_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.ORACLE_HOST }} >> ~/.ssh/known_hosts
-          scp -i ~/.ssh/id_rsa ${{ secrets.ORACLE_USERNAME }}@${{ secrets.ORACLE_HOST }}:~/inkomi/front/mobile/.env ./front/mobile/.env
+          scp -i ~/.ssh/id_rsa ${{ secrets.ORACLE_USERNAME }}@${{ secrets.ORACLE_HOST }}:~/inkomi/front/mobile/.env ./front/mobile/.env || true
 
       - name: Install dependencies
         working-directory: ./front/mobile
