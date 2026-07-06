@@ -70,7 +70,10 @@ jobs:
           username: ${{ secrets.ORACLE_USERNAME }}
           key: ${{ secrets.ORACLE_PRIVATE_KEY }}
           script: |
+            sudo chown -R $USER:$USER ~/inkomi/back/api/resources || true
             mkdir -p ~/inkomi/back/api/resources
+            chmod u+w ~/inkomi/back/api/resources || true
+            rm -f ~/inkomi/back/api/resources/inkomi.apk || true
 
       - name: Copy APK to server
         uses: appleboy/scp-action@v0.1.7
@@ -79,8 +82,9 @@ jobs:
           username: ${{ secrets.ORACLE_USERNAME }}
           key: ${{ secrets.ORACLE_PRIVATE_KEY }}
           source: "build-output/inkomi.apk"
-          target: "~/inkomi/back/api/resources"
+          target: "inkomi/back/api/resources"
           strip_components: 1
+          overwrite: true
 
       - name: Update version file in resources
         uses: appleboy/ssh-action@v1.0.3
