@@ -1,7 +1,6 @@
 package usecases
 
 import (
-	"fmt"
 	"ismelen/inkomi/internal/domain/book"
 	"ismelen/inkomi/internal/domain/convert"
 	"ismelen/inkomi/internal/infra/fs"
@@ -10,10 +9,9 @@ import (
 )
 
 type RemoteTransactionUC struct {
-	pushNotifier convert.PushNotifier
-	tranStore    convert.TransactionStore
-	libgenServ   book.LibgenService
-	cloud        convert.CloudStorage
+	BaseTransaction
+	tranStore  convert.TransactionStore
+	libgenServ book.LibgenService
 }
 
 func NewRemoteTransactionUC(
@@ -23,10 +21,12 @@ func NewRemoteTransactionUC(
 	cloud convert.CloudStorage,
 ) *RemoteTransactionUC {
 	return &RemoteTransactionUC{
-		pushNotifier: pushNotifier,
-		tranStore:    tranStore,
-		libgenServ:   libgenServ,
-		cloud:        cloud,
+		BaseTransaction: BaseTransaction{
+			pushNotifier: pushNotifier,
+			cloud:        cloud,
+		},
+		tranStore:  tranStore,
+		libgenServ: libgenServ,
 	}
 }
 
@@ -36,14 +36,14 @@ func (e *RemoteTransactionUC) Execute(md5 string, config *convert.TransactionCon
 	result, err := e.libgenServ.Download(md5)
 	if err != nil {
 		result.Stream.Close()
-		e.handleError(config, err)
+		e.NotifyError(config, err)
 		return
 	}
 	defer result.Stream.Close()
 
 	src, err := fs.CopyFromStream(result.Stream, filepath.Join(dstPath, result.Filename))
 	if err != nil {
-		e.handleError(config, err)
+		e.NotifyError(config, err)
 		os.RemoveAll(src)
 		return
 	}
@@ -51,7 +51,7 @@ func (e *RemoteTransactionUC) Execute(md5 string, config *convert.TransactionCon
 	if config.ProfileData.IsKepub {
 		kSrc, err := ConvertToKepub(src, dstPath, result.Title)
 		if err != nil {
-			e.handleError(config, err)
+			e.NotifyError(config, err)
 			tran.SetError(err)
 			return
 		}
@@ -60,22 +60,7 @@ func (e *RemoteTransactionUC) Execute(md5 string, config *convert.TransactionCon
 	}
 
 	tran.SetResultPath(src)
-
-	if config.Cloud {
-		e.pushNotifier.Send(config.NotifyToken, "Success", fmt.Sprintf("Sending %s to cloud", filepath.Base(src)))
-
-		if err := e.cloud.Upload(src, config.CloudToken, config.CloudFolder); err != nil {
-			e.pushNotifier.Send(config.NotifyToken, "Error", fmt.Sprintf("Cannot send %s to cloud", filepath.Base(src)))
-			tran.SetError(err)
-			return
-		}
-	} else {
-		e.pushNotifier.Send(config.NotifyToken, "Success", fmt.Sprintf("%s transaction ready", filepath.Base(src)))
-	}
+	e.SendAndNotify(config, tran, src)
 
 	tran.SetDone()
-}
-
-func (e *RemoteTransactionUC) handleError(config *convert.TransactionConfig, err error) {
-	e.pushNotifier.Send(config.NotifyToken, "Error", err.Error())
 }

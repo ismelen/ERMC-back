@@ -2,6 +2,7 @@ package push
 
 import (
 	"context"
+	"ismelen/inkomi/internal/domain/convert"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/messaging"
@@ -15,7 +16,7 @@ type FirebasePushNotifier struct {
 
 func (f *FirebasePushNotifier) Init() error {
 	ctx := context.Background()
-	opt := option.WithAuthCredentialsFile(option.AuthorizedUser, "")
+	opt := option.WithAuthCredentialsFile(option.AuthorizedUser, "credentials/firebase.json")
 
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {
@@ -33,17 +34,17 @@ func (f *FirebasePushNotifier) Init() error {
 	return nil
 }
 
-func (f *FirebasePushNotifier) Send(token, title, message string) error {
+func (f *FirebasePushNotifier) Send(token string, data convert.PushMessage) error {
 	if token == "" {
 		return nil
 	}
 
 	firebaseMessage := &messaging.Message{
-		Notification: &messaging.Notification{
-			Title: title,
-			Body:  message,
-		},
 		Token: token,
+		Data:  data.ToMap(),
+		Android: &messaging.AndroidConfig{
+			Priority: "high",
+		},
 	}
 
 	_, err := f.client.Send(*f.ctx, firebaseMessage)

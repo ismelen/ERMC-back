@@ -14,12 +14,11 @@ import (
 )
 
 type MangaTransactionUC struct {
+	BaseTransaction
 	imageSettings *manga.ImageSettings
-	pushNotifier  convert.PushNotifier
 	tranStore     convert.TransactionStore
 	bookBuilder   manga.BookBuilder
 	imgProcessor  manga.ImageProcessor
-	cloud         convert.CloudStorage
 }
 
 func NewMangaTransactionUC(
@@ -30,12 +29,14 @@ func NewMangaTransactionUC(
 	cloud convert.CloudStorage,
 ) *MangaTransactionUC {
 	return &MangaTransactionUC{
+		BaseTransaction: BaseTransaction{
+			pushNotifier: pushNotifier,
+			cloud:        cloud,
+		},
 		imageSettings: manga.NewDefaultImageSettings(),
-		pushNotifier:  pushNotifier,
 		tranStore:     tranStore,
 		bookBuilder:   bookBuilder,
 		imgProcessor:  imgProcessor,
-		cloud:         cloud,
 	}
 }
 
@@ -62,27 +63,16 @@ func (m *MangaTransactionUC) Execute(chapters []*manga.Chapter, config *convert.
 		resultPath, err := m.runConversion(ctx, chapters, config, profile, dstPath, progressChan)
 		if err != nil {
 			if canceled := ctx.Err(); canceled != nil {
-				m.pushNotifier.Send(config.NotifyToken, "Canceled", fmt.Sprintf("%s conversion canceled", config.Title))
+				m.pushNotifier.Send(config.NotifyToken, convert.NewCancelMessage(config))
 				m.tranStore.DeleteTransaction(config.Id)
 			} else {
-				m.pushNotifier.Send(config.NotifyToken, "Error", fmt.Sprintf("Error: %s", err.Error()))
+				m.NotifyError(config, err)
 				tran.SetError(err)
 			}
 			return
 		}
 		tran.SetResultPath(resultPath)
-
-		if config.Cloud {
-			m.pushNotifier.Send(config.NotifyToken, "Success", fmt.Sprintf("Sending %s to cloud", filepath.Base(resultPath)))
-
-			if err := m.cloud.Upload(resultPath, config.CloudToken, config.CloudFolder); err != nil {
-				m.pushNotifier.Send(config.NotifyToken, "Error", fmt.Sprintf("Cannot send %s to cloud", filepath.Base(resultPath)))
-				tran.SetError(err)
-				return
-			}
-		} else {
-			m.pushNotifier.Send(config.NotifyToken, "Success", fmt.Sprintf("%s transaction ready", filepath.Base(resultPath)))
-		}
+		m.SendAndNotify(config, tran, resultPath)
 	}()
 
 	for range progressChan {

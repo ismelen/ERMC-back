@@ -3,7 +3,6 @@ package usecases
 import (
 	"archive/zip"
 	"context"
-	"fmt"
 	"ismelen/inkomi/internal/domain/convert"
 	"os"
 	"path/filepath"
@@ -12,9 +11,8 @@ import (
 )
 
 type EpubTransactionUC struct {
-	pushNotifier convert.PushNotifier
-	tranStore    convert.TransactionStore
-	cloud        convert.CloudStorage
+	BaseTransaction
+	tranStore convert.TransactionStore
 }
 
 func NewEpubTransactionUC(
@@ -23,9 +21,11 @@ func NewEpubTransactionUC(
 	cloud convert.CloudStorage,
 ) *EpubTransactionUC {
 	return &EpubTransactionUC{
-		pushNotifier: pushNotifier,
-		tranStore:    tranStore,
-		cloud:        cloud,
+		BaseTransaction: BaseTransaction{
+			pushNotifier: pushNotifier,
+			cloud:        cloud,
+		},
+		tranStore: tranStore,
 	}
 }
 
@@ -35,7 +35,7 @@ func (e *EpubTransactionUC) Execute(src string, config *convert.TransactionConfi
 	if config.ProfileData.IsKepub {
 		kSrc, err := ConvertToKepub(src, dstPath, config.Title)
 		if err != nil {
-			e.handleError(config, err)
+			e.NotifyError(config, err)
 			tran.SetError(err)
 			return
 		}
@@ -44,24 +44,9 @@ func (e *EpubTransactionUC) Execute(src string, config *convert.TransactionConfi
 	}
 
 	tran.SetResultPath(src)
-
-	if config.Cloud {
-		e.pushNotifier.Send(config.NotifyToken, "Success", fmt.Sprintf("Sending %s to cloud", filepath.Base(src)))
-
-		if err := e.cloud.Upload(src, config.CloudToken, config.CloudFolder); err != nil {
-			e.pushNotifier.Send(config.NotifyToken, "Error", fmt.Sprintf("Cannot send %s to cloud", filepath.Base(src)))
-			tran.SetError(err)
-			return
-		}
-	} else {
-		e.pushNotifier.Send(config.NotifyToken, "Success", fmt.Sprintf("%s transaction ready", filepath.Base(src)))
-	}
+	e.SendAndNotify(config, tran, src)
 
 	tran.SetDone()
-}
-
-func (e *EpubTransactionUC) handleError(config *convert.TransactionConfig, err error) {
-	e.pushNotifier.Send(config.NotifyToken, "Error", err.Error())
 }
 
 func ConvertToKepub(src, outBase, filename string) (string, error) {

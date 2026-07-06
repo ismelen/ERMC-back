@@ -30,7 +30,7 @@ func main() {
 		middleware.RequestID,
 		middleware.Logger,
 		middleware.Recoverer,
-		middleware.RequestSize(250<<20),
+		middleware.RequestSize(210<<20),
 		cors.AllowAll().Handler,
 	)
 
@@ -41,7 +41,9 @@ func main() {
 	libgenServ.StartDiscovery(ctx, 12*time.Hour)
 
 	pushNotifier := &push.FirebasePushNotifier{}
-	pushNotifier.Init()
+	if err := pushNotifier.Init(); err != nil {
+		panic(err)
+	}
 
 	tranStore := store.GetManager()
 
