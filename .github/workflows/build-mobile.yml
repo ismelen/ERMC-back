@@ -35,13 +35,14 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Download .env from server
+      - name: Download .env and google-services.json from server
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.ORACLE_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.ORACLE_HOST }} >> ~/.ssh/known_hosts
           scp -i ~/.ssh/id_rsa ${{ secrets.ORACLE_USERNAME }}@${{ secrets.ORACLE_HOST }}:~/inkomi/front/mobile/.env ./front/mobile/.env || true
+          scp -i ~/.ssh/id_rsa ${{ secrets.ORACLE_USERNAME }}@${{ secrets.ORACLE_HOST }}:~/inkomi/front/mobile/google-services.json ./front/mobile/google-services.json || true
 
       - name: Install dependencies
         working-directory: ./front/mobile

@@ -5,5 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: inkomi-api
     restart: unless-stopped
+    volumes:
+      - ./resources:/app/resources
     ports:
       - "3000:3000"

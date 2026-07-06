@@ -16,7 +16,7 @@ type FirebasePushNotifier struct {
 
 func (f *FirebasePushNotifier) Init() error {
 	ctx := context.Background()
-	opt := option.WithAuthCredentialsFile(option.AuthorizedUser, "credentials/firebase.json")
+	opt := option.WithAuthCredentialsFile(option.AuthorizedUser, "firebase.json")
 
 	app, err := firebase.NewApp(ctx, nil, opt)
 	if err != nil {

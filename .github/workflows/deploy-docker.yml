@@ -40,7 +40,7 @@ jobs:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USERNAME }}
           key: ${{ secrets.ORACLE_PRIVATE_KEY }}
-          source: "back/api/internal,back/api/main.go"
+          source: "back/api/internal,back/api/main.go,back/api/Dockerfile,back/api/docker-compose.yml,back/api/go.mod,back/api/go.sum,back/api/.dockerignore"
           target: "~/inkomi"
 
       - name: Deploy via SSH
