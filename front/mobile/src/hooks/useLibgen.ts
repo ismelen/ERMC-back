@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { BACKENDD_URL } from '../constants';
+import { BACKEND_API_URL } from '../constants';
 import { LibgenBook } from '../models/book';
 
 interface State {
@@ -16,7 +16,7 @@ export const useLibgen = create<State>((set, get) => ({
   async search(query?: string): Promise<LibgenBook[] | undefined> {
     if (!query) return;
 
-    const resp = await fetch(`${BACKENDD_URL}/books/search?q=${query ?? ''}`, {
+    const resp = await fetch(`${BACKEND_API_URL}/books/search?q=${query ?? ''}`, {
       method: 'GET',
     });
 

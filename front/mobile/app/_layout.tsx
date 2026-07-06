@@ -26,6 +26,7 @@ import {
 import { defineTask } from 'expo-task-manager';
 import { StorageService } from '../src/services/storage-service';
 import { QueueElement } from '../src/models/queue-element';
+import { useVersionChecker } from '../src/hooks/useVersionhecker';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -89,12 +90,14 @@ export default function RootLayout() {
   const initCloud = useCloud((s) => s.init);
   const initSettings = useSettings((s) => s.init);
   const initMonitoredFolders = useMonitoredFolders((s) => s.init);
+  const initVersionChecker = useVersionChecker((s) => s.init);
 
   useEffect(() => {
+    initVersionChecker();
+    initMonitoredFolders();
+    initSettings();
     initQueue();
     initCloud();
-    initSettings();
-    initMonitoredFolders();
   }, []);
 
   useEffect(() => {

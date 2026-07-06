@@ -1,6 +1,9 @@
-export const BACKENDD_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+import Constants from 'expo-constants';
 
+export const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+export const BACKEND_API_URL = BACKEND_URL + '/api';
 export const DROPBOX_API_KEY = process.env.EXPO_PUBLIC_DROPBOX_API_KEY;
+export const APP_VERSION = Constants.expoConfig?.version;
 
 export const eReaderProfiles = [
   { value: 'K1', label: 'Kindle 1' },

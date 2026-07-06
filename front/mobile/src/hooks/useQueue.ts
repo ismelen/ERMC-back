@@ -2,7 +2,7 @@ import { randomUUID } from 'expo-crypto';
 import BackgroundService from 'react-native-background-actions';
 import RNBlobUtil from 'react-native-blob-util';
 import { create } from 'zustand';
-import { BACKENDD_URL } from '../constants';
+import { BACKEND_API_URL } from '../constants';
 import { QueueElement } from '../models/queue-element';
 import { Source } from '../models/source';
 import { TransactionRequest } from '../models/transaction-request';
@@ -54,7 +54,7 @@ export const useQueue = create<State>((set, get) => ({
     const idx = elems.findIndex((e) => e.id === id);
     if (idx === -1) return;
 
-    const resp = await fetch(`${BACKENDD_URL}/transaction/cancel/${id}`, {
+    const resp = await fetch(`${BACKEND_API_URL}/transaction/cancel/${id}`, {
       method: 'PUT',
     });
 
@@ -80,7 +80,7 @@ export const useQueue = create<State>((set, get) => ({
           mediaScannable: true,
           path: `${RNBlobUtil.fs.dirs.DownloadDir}/${elem.filename}`,
         },
-      }).fetch('GET', `${BACKENDD_URL}/transaction/download/${id}`);
+      }).fetch('GET', `${BACKEND_API_URL}/transaction/download/${id}`);
     } catch (e: any) {
       alert(e.message);
       return false;
@@ -185,7 +185,7 @@ export const useQueue = create<State>((set, get) => ({
       async () => {
         try {
           const resp = await fetch(
-            `${BACKENDD_URL}/transaction/convert${(libgenMode ?? false) ? '?remote=true' : ''}`,
+            `${BACKEND_API_URL}/transaction/convert${(libgenMode ?? false) ? '?remote=true' : ''}`,
             {
               method: 'POST',
               body: form,
@@ -252,7 +252,7 @@ export const useQueue = create<State>((set, get) => ({
 }));
 
 async function fetchStatus(id: string): Promise<number> {
-  const resp = await fetch(`${BACKENDD_URL}/transaction/status/${id}`, { method: 'GET' });
+  const resp = await fetch(`${BACKEND_API_URL}/transaction/status/${id}`, { method: 'GET' });
 
   const json = await resp.json();
 
