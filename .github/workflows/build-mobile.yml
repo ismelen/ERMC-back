@@ -11,15 +11,53 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to create GitHub Releases
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ─── Version Guard ────────────────────────────────────────────────────────
       - name: Get App Version
         id: app_version
         run: |
           VERSION=$(jq -r '.expo.version' front/mobile/app.json)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get latest GitHub Release version
+        id: latest_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // "0.0.0"' 2>/dev/null || echo "0.0.0")
+          # Strip leading 'v' if present
+          LATEST="${LATEST#v}"
+          echo "version=$LATEST" >> $GITHUB_OUTPUT
+
+      - name: Check version is bumped
+        id: version_check
+        run: |
+          CURRENT="${{ steps.app_version.outputs.version }}"
+          LATEST="${{ steps.latest_release.outputs.version }}"
+          echo "Current version : $CURRENT"
+          echo "Latest release  : $LATEST"
+
+          # Compare using sort -V (version-aware sort)
+          HIGHER=$(printf '%s\n%s\n' "$LATEST" "$CURRENT" | sort -V | tail -n1)
+          if [ "$HIGHER" = "$CURRENT" ] && [ "$CURRENT" != "$LATEST" ]; then
+            echo "bumped=true" >> $GITHUB_OUTPUT
+            echo "✅ Version $CURRENT is higher than $LATEST — proceeding."
+          else
+            echo "bumped=false" >> $GITHUB_OUTPUT
+            echo "⛔ Version $CURRENT is NOT higher than $LATEST — skipping build."
+          fi
+
+      - name: Abort if version not bumped
+        if: steps.version_check.outputs.bumped == 'false'
+        run: |
+          echo "Version has not been bumped. Aborting workflow."
+          exit 1
+      # ─────────────────────────────────────────────────────────────────────────
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -95,3 +133,17 @@ jobs:
           script: |
             VERSION_FILE=~/inkomi/back/api/resources/app-version.txt
             echo "${{ steps.app_version.outputs.version }}" > "$VERSION_FILE"
+
+      # ─── GitHub Release ───────────────────────────────────────────────────────
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.app_version.outputs.version }}"
+          TAG="v${VERSION}"
+          gh release create "$TAG" \
+            build-output/inkomi.apk \
+            --title "Inkomi Mobile $TAG" \
+            --notes "Release automática de la versión $VERSION del APK de Inkomi." \
+            --latest
+      # ─────────────────────────────────────────────────────────────────────────
