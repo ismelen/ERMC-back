@@ -7,5 +7,6 @@ services:
     restart: unless-stopped
     volumes:
       - ./resources:/app/resources
+      - ./firebase.json:/app/firebase.json
     ports:
       - "3000:3000"

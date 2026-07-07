@@ -13,7 +13,7 @@ type AppHandler struct{}
 func NewAppHandler() (_ *AppHandler) { return }
 
 func (a *AppHandler) HandleVersion(r *http.Request) (any, error) {
-	file, err := os.Open("./resources/version.txt")
+	file, err := os.Open("./resources/app-version.txt")
 	if err != nil {
 		return nil, err
 	}

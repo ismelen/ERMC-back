@@ -23,8 +23,6 @@ WORKDIR /app
 
 COPY --from=builder /inkomi-api .
 
-# VOLUME ["/app/credentials"]
-
 EXPOSE 3000
 
 ENTRYPOINT ["/app/inkomi-api"]
