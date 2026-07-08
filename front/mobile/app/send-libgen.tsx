@@ -85,7 +85,7 @@ export default function SendLibgen() {
             if (req.books.length === 0) return;
 
             setReq((s) => ({ ...s, books: req.books }));
-            await handleSend();
+            await handleSend(true);
           }}
           style={{
             backgroundColor: colors.primary_container,

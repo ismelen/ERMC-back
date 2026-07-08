@@ -11,22 +11,40 @@ import { TransactionType } from '../../src/models/transaction-request';
 import SText from '../../src/components/shared/SText';
 import SButton from '../../src/components/shared/SButton';
 import { router } from 'expo-router';
+import { useEffect, useRef } from 'react';
 
 export default function QueuePage() {
-  const { transactions, completedTransactions, uploads, cancel } = useQueue(
+  const { active, completed, uploads, cancel, checkProgress } = useQueue(
     useShallow((s) => ({
-      transactions: s.transactions,
-      completedTransactions: s.completedTransactions,
+      active: s.transactions,
+      completed: s.completedTransactions,
       uploads: s.uploads,
       cancel: s.cancel,
+      checkProgress: s.checkProgress,
     }))
   );
 
   const navigate = useObjectNavigation((s) => s.navigate);
+  const intervalRef = useRef<number | undefined>(undefined);
 
   const areUploads = uploads.length !== 0;
-  const areActive = transactions.length !== 0;
-  const areCompleted = completedTransactions.length !== 0;
+  const areActive = active.length !== 0;
+  const areCompleted = completed.length !== 0;
+
+  useEffect(() => {
+    if (!active) return;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = setInterval(() => {
+      for (const tran of active) {
+        checkProgress(tran.id);
+      }
+    }, 2000);
+
+    return () => clearInterval(intervalRef.current);
+  }, [active]);
 
   return (
     <ScrollView style={{ flex: 1, paddingHorizontal: 24 }}>
@@ -102,8 +120,8 @@ export default function QueuePage() {
           </View>
 
           <View style={{ marginTop: 16, gap: 10 }}>
-            {transactions.map((e, i) => (
-              <QueueItemCard key={e.id} data={e} idx={i} autoCheck onTap={() => cancel(e.id)} />
+            {active.map((e, i) => (
+              <QueueItemCard key={e.id} data={e} idx={i} onTap={() => cancel(e.id)} />
             ))}
           </View>
         </>
@@ -117,7 +135,7 @@ export default function QueuePage() {
           </View>
 
           <View style={{ marginTop: 16, gap: 10 }}>
-            {completedTransactions.map((e, i) => (
+            {completed.map((e, i) => (
               <QueueItemCard
                 key={i + e.id}
                 data={e}

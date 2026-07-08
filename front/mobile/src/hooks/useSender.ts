@@ -36,9 +36,9 @@ export function useSender(type: TransactionType) {
     clear();
   }, []);
 
-  const handleSend = async () => {
+  const handleSend = async (isLibgen?: boolean) => {
     setSending(true);
-    const done = await send(req);
+    const done = await send(req, isLibgen ?? false);
     setSending(false);
 
     if (done) {

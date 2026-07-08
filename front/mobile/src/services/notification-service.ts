@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import messaging from '@react-native-firebase/messaging';
+import { getMessaging, getToken } from '@react-native-firebase/messaging';
 
 export class NotificationService {
   static async requestNotificationPermission(): Promise<boolean> {
@@ -11,6 +11,7 @@ export class NotificationService {
   }
 
   static async getToken(): Promise<string> {
-    return await messaging().getToken();
+    const inst = getMessaging();
+    return await getToken(inst);
   }
 }
