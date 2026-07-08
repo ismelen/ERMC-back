@@ -110,10 +110,10 @@ func (ch *TransactionHandler) HandleConvert(r *http.Request) (any, error) {
 	}
 
 	children, ext, err := ch.getFilesToProcess(r)
-	defer os.RemoveAll(filepath.Dir(children[0]))
 	if err != nil {
 		return nil, err
 	}
+	defer os.RemoveAll(filepath.Dir(children[0]))
 
 	switch ext {
 	case ".zip":

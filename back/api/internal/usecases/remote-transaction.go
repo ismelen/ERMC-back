@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"fmt"
 	"ismelen/inkomi/internal/domain/book"
 	"ismelen/inkomi/internal/domain/convert"
 	"ismelen/inkomi/internal/infra/fs"
@@ -32,6 +33,10 @@ func NewRemoteTransactionUC(
 
 func (e *RemoteTransactionUC) Execute(md5 string, config *convert.TransactionConfig, dstPath string) {
 	tran := e.tranStore.StartTransaction(config.Id, dstPath, 1)
+	if e.libgenServ == nil {
+		tran.SetError(fmt.Errorf("Service unavailable"))
+		return
+	}
 
 	result, err := e.libgenServ.Download(md5)
 	if err != nil {
