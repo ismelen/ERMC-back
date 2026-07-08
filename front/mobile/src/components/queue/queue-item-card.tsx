@@ -11,37 +11,11 @@ import PulseProgressBar from './pulse-progress-bar';
 
 interface Props {
   data: QueueElement;
-  autoCheck?: boolean;
   idx: number;
   onTap?(): void;
 }
 
-export default function QueueItemCard({ data, idx, onTap, autoCheck = false }: Props) {
-  const checkProgress = useQueue((s) => s.checkProgress);
-  const intervalRef = useRef<number | undefined>(undefined);
-
-  useEffect(() => {
-    if (!autoCheck) return;
-
-    let isRunning = false;
-
-    const run = async () => {
-      if (isRunning) return;
-      isRunning = true;
-      try {
-        const done = await checkProgress(data.id);
-        if (done) clearInterval(intervalRef.current);
-      } finally {
-        isRunning = false;
-      }
-    };
-
-    intervalRef.current = setInterval(run, 2000);
-    run();
-
-    return () => clearInterval(intervalRef.current);
-  }, [autoCheck]);
-
+export default function QueueItemCard({ data, idx, onTap }: Props) {
   return (
     <View
       style={{
