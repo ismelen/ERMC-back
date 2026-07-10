@@ -7,6 +7,12 @@ export default function STextInput({ style, value: init, onChangeText, ...props 
   const [value, setValue] = useState(init ?? '');
 
   useEffect(() => {
+    if (init !== undefined && init !== value) {
+      setValue(init);
+    }
+  }, [init]);
+
+  useEffect(() => {
     onChangeText?.(value);
   }, [value]);
 

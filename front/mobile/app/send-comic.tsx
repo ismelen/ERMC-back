@@ -44,7 +44,13 @@ export default function SendComicPage() {
             <SText style={styles.title}>SOURCE</SText>
             <SourceSelector
               initSources={req.sources ?? []}
-              onChange={(srcs) => setReq((s) => ({ ...s, sources: srcs }))}
+              onChange={(srcs) =>
+                setReq((s) => ({
+                  ...s,
+                  sources: srcs,
+                  title: s.title === '' ? (srcs[0]?.name ?? s.title) : s.title,
+                }))
+              }
               onModeChange={(mode) => setReq((s) => ({ ...s, sourceMode: mode }))}
             />
             {req.sourceMode === 'folder' && (
@@ -69,10 +75,7 @@ export default function SendComicPage() {
           <View style={styles.section}>
             <SText style={styles.title}>METADATA</SText>
             <MetadataSection
-              initialMetadata={{
-                title: req.title,
-                author: req.author,
-              }}
+              initialMetadata={{ title: req.title, author: req.author }}
               onChange={(meta) => setReq((s) => ({ ...s, author: meta.author, title: meta.title }))}
             />
           </View>

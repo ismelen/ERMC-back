@@ -17,6 +17,12 @@ export default function MetadataSection({ initialMetadata, onChange }: Props) {
     onChange(metadata);
   }, [metadata]);
 
+  useEffect(() => {
+    if (initialMetadata?.title !== undefined) {
+      setMetadata((s) => ({ ...s, title: initialMetadata.title }));
+    }
+  }, [initialMetadata?.title]);
+
   return (
     <View style={{ boxShadow: colors.boxShadow, borderRadius: 12, padding: 15, gap: 8 }}>
       <View style={styles.section}>
