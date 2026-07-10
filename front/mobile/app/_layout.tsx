@@ -27,6 +27,7 @@ import { defineTask } from 'expo-task-manager';
 import { StorageService } from '../src/services/storage-service';
 import { QueueElement } from '../src/models/queue-element';
 import { useVersionChecker } from '../src/hooks/useVersionhecker';
+import firebase from '@react-native-firebase/app';
 
 SplashScreen.preventAutoHideAsync();
 

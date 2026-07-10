@@ -103,7 +103,7 @@ export default function SendComicPage() {
         </View>
       </ScrollView>
       <SButton
-        onPress={handleSend}
+        onPress={() => handleSend(false)}
         style={{
           backgroundColor: colors.primary_container,
           margin: 24,

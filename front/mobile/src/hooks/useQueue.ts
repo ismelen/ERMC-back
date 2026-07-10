@@ -2,7 +2,7 @@ import { randomUUID } from 'expo-crypto';
 import BackgroundService from 'react-native-background-actions';
 import RNBlobUtil from 'react-native-blob-util';
 import { create } from 'zustand';
-import { BACKEND_API_URL } from '../constants';
+import { BACKEND_API_URL, MAX_CHUNK_SIZE } from '../constants';
 import { QueueElement } from '../models/queue-element';
 import { Source } from '../models/source';
 import { TransactionRequest } from '../models/transaction-request';
@@ -22,6 +22,11 @@ interface State {
   download(idx: number, id: string): Promise<boolean>;
   init(): Promise<void>;
   cancel(id: string): Promise<void>;
+  sendUnique(
+    req: Partial<TransactionRequest>,
+    form: FormData,
+    libgenMode?: boolean
+  ): Promise<boolean>;
 }
 
 export const TRANSACTIONS_KEY = 'transactions';
@@ -120,41 +125,12 @@ export const useQueue = create<State>((set, get) => ({
     return false;
   },
 
-  async send(req: TransactionRequest, libgenMode?: boolean): Promise<boolean> {
-    if (!(libgenMode ?? false)) {
-      if (req.sourceMode === 'no-select') return false;
-      if (req.sources.length === 0) return false;
-      if (req.sourceMode === 'folder' && (req.sources[0].children?.length ?? 0) === 0) return false;
-    }
-    const form = new FormData();
-
-    if (libgenMode ?? false) {
-      form.append('md5s', req.books.map((e) => e.md5).join(','));
-    } else {
-      let files: Source[] = [];
-      if (req.sourceMode === 'files') {
-        //TODO: Divide by size
-        files = req.sources;
-      }
-      if (req.sourceMode === 'folder') {
-        files = req.sources[0].children ?? [];
-      }
-      if (files.length === 0) {
-        alert('No files');
-        return false;
-      }
-
-      for (const file of files) {
-        form.append('files', {
-          uri: file.path,
-          name: file.name,
-          type: file.mime ?? 'application/zip',
-        } as any);
-      }
-    }
-
+  async sendUnique(
+    req: TransactionRequest,
+    form: FormData,
+    libgenMode?: boolean
+  ): Promise<boolean> {
     const toCloud = req.destination === 'cloud';
-
     form.append('profile', req.model ?? '');
     form.append('title', req.title ?? '');
     form.append('author', req.author ?? '');
@@ -246,6 +222,63 @@ export const useQueue = create<State>((set, get) => ({
         foregroundServiceType: ['dataSync'],
       }
     );
+
+    return true;
+  },
+
+  async send(req: TransactionRequest, libgenMode?: boolean): Promise<boolean> {
+    if (!(libgenMode ?? false)) {
+      if (req.sourceMode === 'no-select') return false;
+      if (req.sources.length === 0) return false;
+      if (req.sourceMode === 'folder' && (req.sources[0].children?.length ?? 0) === 0) return false;
+    }
+
+    if (libgenMode ?? false) {
+      const form = new FormData();
+      form.append('md5s', req.books.map((e) => e.md5).join(','));
+      return get().sendUnique(req, form, libgenMode);
+    } else {
+      let files: Source[] = [];
+      if (req.sourceMode === 'files') {
+        files = req.sources;
+      }
+      if (req.sourceMode === 'folder') {
+        files = req.sources[0].children ?? [];
+      }
+      if (files.length === 0) {
+        alert('No files');
+        return false;
+      }
+
+      let form = new FormData();
+      let size = 0;
+
+      for (const file of files) {
+        if (file.size! > MAX_CHUNK_SIZE) {
+          alert(`File ${file.name} (${file.size} bytes) is too big (max 200 MB)`);
+          return false;
+        }
+
+        if (size + file.size! > MAX_CHUNK_SIZE) {
+          if (!get().sendUnique(req, form, libgenMode)) {
+            return false;
+          }
+          form = new FormData();
+          size = 0;
+        }
+
+        form.append('files', {
+          uri: file.path,
+          name: file.name,
+          type: file.mime ?? 'application/zip',
+        } as any);
+        size += file.size!;
+      }
+
+      if (form.getAll('files').length > 0) {
+        return get().sendUnique(req, form, libgenMode);
+      }
+    }
 
     return true;
   },
