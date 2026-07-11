@@ -27,6 +27,7 @@ import { defineTask } from 'expo-task-manager';
 import { StorageService } from '../src/services/storage-service';
 import { QueueElement } from '../src/models/queue-element';
 import { useVersionChecker } from '../src/hooks/useVersionhecker';
+import { useShallow } from 'zustand/react/shallow';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -91,6 +92,9 @@ export default function RootLayout() {
   const initSettings = useSettings((s) => s.init);
   const initMonitoredFolders = useMonitoredFolders((s) => s.init);
   const initVersionChecker = useVersionChecker((s) => s.init);
+  const { checkProgress, trans } = useQueue(
+    useShallow((s) => ({ checkProgress: s.checkProgress, trans: s.transactions }))
+  );
 
   useEffect(() => {
     initVersionChecker();
@@ -122,6 +126,12 @@ export default function RootLayout() {
       responseSubscription.remove();
     };
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(checkProgress, 2000);
+
+    return () => clearInterval(interval);
+  }, [trans.length !== 0]);
 
   const [fontsLoaded] = useFonts({
     regular: Inter_400Regular,

@@ -5,7 +5,6 @@ import (
 	"ismelen/inkomi/internal/infra/api/handlers"
 	"ismelen/inkomi/internal/infra/api/routes"
 	"ismelen/inkomi/internal/infra/cloud"
-	"ismelen/inkomi/internal/infra/epub"
 	infraImage "ismelen/inkomi/internal/infra/image"
 	"ismelen/inkomi/internal/infra/libgen"
 	"ismelen/inkomi/internal/infra/push"
@@ -50,11 +49,10 @@ func main() {
 	tranStore := store.GetManager()
 
 	imgProcessor := infraImage.NewPageProcessor()
-	bookBuilder := epub.New()
 	dropbox := &cloud.DropboxCloud{}
 
 	epubUC := usecases.NewEpubTransactionUC(pushNotifier, tranStore, dropbox)
-	mangaUC := usecases.NewMangaTransactionUC(pushNotifier, tranStore, bookBuilder, imgProcessor, dropbox)
+	mangaUC := usecases.NewMangaTransactionUC(pushNotifier, tranStore, imgProcessor, dropbox)
 	remoteUC := usecases.NewRemoteTransactionUC(pushNotifier, tranStore, libgenServ, dropbox)
 
 	convertHandler := handlers.NewConvertHandler(mangaUC, epubUC, remoteUC)

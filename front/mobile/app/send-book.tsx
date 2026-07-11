@@ -85,7 +85,7 @@ export default function SendBookPage() {
         </View>
 
         <SButton
-          onPress={handleSend}
+          onPress={() => handleSend(false)}
           style={{
             backgroundColor: colors.primary_container,
             paddingVertical: 12,

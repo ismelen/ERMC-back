@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"ismelen/inkomi/internal/domain/convert"
 	"ismelen/inkomi/internal/domain/manga"
+	"ismelen/inkomi/internal/infra/epub"
 	"log"
 	"os"
 	"path/filepath"
@@ -17,14 +18,12 @@ type MangaTransactionUC struct {
 	BaseTransaction
 	imageSettings *manga.ImageSettings
 	tranStore     convert.TransactionStore
-	bookBuilder   manga.BookBuilder
 	imgProcessor  manga.ImageProcessor
 }
 
 func NewMangaTransactionUC(
 	pushNotifier convert.PushNotifier,
 	tranStore convert.TransactionStore,
-	bookBuilder manga.BookBuilder,
 	imgProcessor manga.ImageProcessor,
 	cloud convert.CloudStorage,
 ) *MangaTransactionUC {
@@ -35,7 +34,6 @@ func NewMangaTransactionUC(
 		},
 		imageSettings: manga.NewDefaultImageSettings(),
 		tranStore:     tranStore,
-		bookBuilder:   bookBuilder,
 		imgProcessor:  imgProcessor,
 	}
 }
@@ -62,6 +60,7 @@ func (m *MangaTransactionUC) Execute(chapters []*manga.Chapter, config *convert.
 	go func() {
 		resultPath, err := m.runConversion(ctx, chapters, config, profile, dstPath, progressChan)
 		if err != nil {
+			log.Println(err)
 			if canceled := ctx.Err(); canceled != nil {
 				m.pushNotifier.Send(config.NotifyToken, convert.NewCancelMessage(config))
 				m.tranStore.DeleteTransaction(config.Id)
@@ -95,8 +94,9 @@ func (m *MangaTransactionUC) runConversion(
 	progressChan chan int,
 ) (string, error) {
 	defer close(progressChan)
+	defer os.RemoveAll(filepath.Join(dstPath, "chapters"))
 
-	builder := m.bookBuilder.
+	builder := epub.New().
 		SetSettings(m.imageSettings, profile).
 		Start(config.Title, dstPath)
 
@@ -134,7 +134,6 @@ func (m *MangaTransactionUC) runConversion(
 	}
 
 	path, err := builder.Build()
-	defer os.RemoveAll(filepath.Join(dstPath, "chapters"))
 
 	if err != nil {
 		return "", err

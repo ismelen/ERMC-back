@@ -9,7 +9,6 @@ import (
 	"ismelen/inkomi/internal/infra/api/validation"
 	"ismelen/inkomi/internal/infra/fs"
 	"ismelen/inkomi/internal/shared/filter"
-	"ismelen/inkomi/internal/shared/strutil"
 	"ismelen/inkomi/internal/shared/uid"
 	"ismelen/inkomi/internal/usecases"
 	"log"
@@ -18,9 +17,9 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
+	"github.com/facette/natsort"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/schema"
 )
@@ -272,9 +271,11 @@ func (ch *TransactionHandler) handleEpubTransaction(files []string, config *conv
 }
 
 func (ch *TransactionHandler) handleMangaTransaction(files []string, config *convert.TransactionConfig) (any, error) {
-	sort.Slice(files, func(i, j int) bool {
-		return strutil.AlphanumericCmp(files[i], files[j])
-	})
+	if len(files) > 25 {
+		return nil, &requtil.ApiError{Status: http.StatusBadRequest, Message: "You can only upload 25 0files"}
+	}
+
+	natsort.Sort(files)
 
 	type TransactionInfo struct {
 		config   *convert.TransactionConfig
