@@ -11,40 +11,22 @@ import { TransactionType } from '../../src/models/transaction-request';
 import SText from '../../src/components/shared/SText';
 import SButton from '../../src/components/shared/SButton';
 import { router } from 'expo-router';
-import { useEffect, useRef } from 'react';
 
 export default function QueuePage() {
-  const { active, completed, uploads, cancel, checkProgress } = useQueue(
+  const { active, completed, uploads, cancel } = useQueue(
     useShallow((s) => ({
       active: s.transactions,
       completed: s.completedTransactions,
       uploads: s.uploads,
       cancel: s.cancel,
-      checkProgress: s.checkProgress,
     }))
   );
 
   const navigate = useObjectNavigation((s) => s.navigate);
-  const intervalRef = useRef<number | undefined>(undefined);
 
   const areUploads = uploads.length !== 0;
   const areActive = active.length !== 0;
   const areCompleted = completed.length !== 0;
-
-  useEffect(() => {
-    if (!active) return;
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    intervalRef.current = setInterval(() => {
-      for (const tran of active) {
-        checkProgress(tran.id);
-      }
-    }, 2000);
-
-    return () => clearInterval(intervalRef.current);
-  }, [active]);
 
   return (
     <ScrollView style={{ flex: 1, paddingHorizontal: 24 }}>

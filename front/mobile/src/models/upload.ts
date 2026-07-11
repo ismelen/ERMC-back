@@ -6,4 +6,5 @@ export interface Upload {
   id: string;
   error?: Error;
   libgenMode: boolean;
+  formData?: FormData;
 }

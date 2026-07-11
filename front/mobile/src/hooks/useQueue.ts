@@ -2,32 +2,30 @@ import { randomUUID } from 'expo-crypto';
 import BackgroundService from 'react-native-background-actions';
 import RNBlobUtil from 'react-native-blob-util';
 import { create } from 'zustand';
-import { BACKEND_API_URL, MAX_CHUNK_SIZE } from '../constants';
+import { BACKEND_API_URL, MAX_CHUNK_SIZE, MAX_FILES_CANT } from '../constants';
 import { QueueElement } from '../models/queue-element';
 import { Source } from '../models/source';
 import { TransactionRequest } from '../models/transaction-request';
 import { Upload } from '../models/upload';
-import { FilesystemService } from '../services/filesystem-service';
 import { NotificationService } from '../services/notification-service';
 import { StorageService } from '../services/storage-service';
 import { useCloud } from './useCloud';
-import { useSettings } from './useSettings';
 
 interface State {
   uploads: Upload[];
   transactions: QueueElement[];
   completedTransactions: QueueElement[];
   send(req: Partial<TransactionRequest>, libgenMode?: boolean): Promise<boolean>;
-  checkProgress(id: string): Promise<boolean>;
+  checkProgress(): Promise<void>;
   download(idx: number, id: string): Promise<boolean>;
   init(): Promise<void>;
   cancel(id: string): Promise<void>;
-  sendUnique(
-    req: Partial<TransactionRequest>,
-    form: FormData,
-    libgenMode?: boolean
-  ): Promise<boolean>;
 }
+
+const collator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: 'base',
+});
 
 export const TRANSACTIONS_KEY = 'transactions';
 export const COMPLETE_TRANSACTIONS_KEY = 'complete_transactions';
@@ -94,122 +92,185 @@ export const useQueue = create<State>((set, get) => ({
     return true;
   },
 
-  async checkProgress(id: string): Promise<boolean> {
-    const transactions = get().transactions;
-    const transaction = transactions.find((e) => e.id === id);
+  async checkProgress(): Promise<void> {
+    const trans = get().transactions;
+    const results = await Promise.allSettled(trans.map((t) => fetchStatus(t.id)));
 
-    if (!transaction) return true;
+    const pending: QueueElement[] = [];
+    const completeds: QueueElement[] = [];
 
-    try {
-      const progress = await fetchStatus(id);
-      transaction.progress = progress;
-    } catch (e: any) {
-      console.log(e);
-      transaction.error = e.message;
-    }
+    results.forEach((res, i) => {
+      const tran = trans[i];
+      let completedOrError = false;
+      let updated: QueueElement;
 
-    if (transaction.progress === 100 || transaction.error) {
-      set((s) => ({
-        transactions: s.transactions.filter((e) => e.id !== id),
-        completedTransactions: [transaction, ...s.completedTransactions],
-      }));
-      StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
-      StorageService.SetAsync(COMPLETE_TRANSACTIONS_KEY, get().completedTransactions);
-      return true;
-    }
+      if (res.status === 'fulfilled') {
+        updated = { ...tran, progress: res.value };
+        completedOrError = res.value === 100;
+      } else {
+        updated = { ...tran, error: res.reason?.message ?? String(res.reason) };
+        completedOrError = true;
+      }
 
-    set({
-      transactions: [...transactions],
+      if (completedOrError) {
+        completeds.unshift(updated);
+      } else {
+        pending.push(updated);
+      }
     });
 
-    return false;
+    completeds.push(...get().completedTransactions);
+    StorageService.SetAsync(TRANSACTIONS_KEY, pending);
+    StorageService.SetAsync(COMPLETE_TRANSACTIONS_KEY, completeds);
+
+    set({ transactions: pending, completedTransactions: completeds });
   },
 
-  async sendUnique(
-    req: TransactionRequest,
-    form: FormData,
-    libgenMode?: boolean
-  ): Promise<boolean> {
-    const toCloud = req.destination === 'cloud';
-    form.append('profile', req.model ?? '');
-    form.append('title', req.title ?? '');
-    form.append('author', req.author ?? '');
-    form.append('cloud', String(toCloud));
-    form.append('merge', String(req.merge));
+  async send(req: TransactionRequest, libgenMode?: boolean): Promise<boolean> {
+    if (!(libgenMode ?? false)) {
+      if (req.sourceMode === 'no-select') return false;
+      if (req.sources.length === 0) return false;
+      if (req.sourceMode === 'folder' && (req.sources[0].children?.length ?? 0) === 0) return false;
+    }
+
+    const forms: FormData[] = [];
+
+    if (libgenMode ?? false) {
+      const form = new FormData();
+      form.append('md5s', req.books.map((e) => e.md5).join(','));
+      forms.push(form);
+    } else {
+      let files: Source[] = [];
+      if (req.sourceMode === 'files') {
+        files = req.sources;
+      } else {
+        files = req.sources[0].children ?? [];
+      }
+      if (files.length === 0) {
+        alert('No files');
+        return false;
+      }
+
+      let form = new FormData();
+      let size = 0;
+      let cant = 0;
+
+      files.sort((a, b) => collator.compare(a.path, b.path));
+
+      for (const file of files) {
+        if (file.size! > MAX_CHUNK_SIZE) {
+          alert(`File ${file.name} (${file.size} bytes) is too big (max 200 MB)`);
+          return false;
+        }
+
+        cant++;
+        if (size + file.size! > MAX_CHUNK_SIZE || cant >= MAX_FILES_CANT) {
+          forms.push(form);
+          form = new FormData();
+          size = 0;
+          cant = 0;
+        }
+
+        form.append('files', {
+          uri: file.path,
+          name: file.name,
+          type: file.mime ?? 'application/zip',
+        } as any);
+        size += file.size!;
+      }
+
+      if (form.getAll('files').length > 0 || cant > 0) {
+        forms.push(form);
+      }
+    }
 
     const permissionGranted = await NotificationService.requestNotificationPermission();
-    if (permissionGranted) {
-      form.append('notify_token', await NotificationService.getToken());
-    }
+    const notifyToken = permissionGranted ? await NotificationService.getToken() : '';
 
-    if (toCloud) {
-      const token = (await useCloud.getState().getToken()) ?? '';
-      const folder = (await useCloud.getState().getFolder()) ?? '';
+    const toCloud = req.destination === 'cloud';
+    const token = toCloud ? ((await useCloud.getState().getToken()) ?? '') : '';
+    const folder = toCloud ? ((await useCloud.getState().getFolder()) ?? '') : '';
+
+    const uploads: Upload[] = [];
+
+    for (const form of forms) {
+      form.append('profile', req.model ?? '');
+      form.append('title', req.title ?? '');
+      form.append('author', req.author ?? '');
+      form.append('cloud', String(toCloud));
+      form.append('merge', String(req.merge));
+      form.append('notify_token', notifyToken);
       form.append('cloud_token', token);
       form.append('cloud_folder', folder);
+
+      let sources: Source[] = [];
+      if (!libgenMode) {
+        const files = form.getAll('files').map((e: any) => e.uri as string);
+
+        if (req.sourceMode === 'files') {
+          sources = req.sources.filter((e) => files.includes(e.path));
+        } else {
+          const source = req.sources[0];
+          source.children = source.children!.filter((e) => files.includes(e.path));
+          sources = [source];
+        }
+      }
+
+      const request: TransactionRequest = {
+        ...req,
+        sources: sources,
+      };
+
+      uploads.push({
+        id: randomUUID(),
+        libgenMode: libgenMode ?? false,
+        request: request,
+        timestamp: Date.now(),
+        formData: form,
+      });
     }
+    set((s) => ({ uploads: [...s.uploads, ...uploads] }));
 
-    const upload: Upload = {
-      request: req,
-      timestamp: Date.now(),
-      id: randomUUID(),
-      libgenMode: libgenMode ?? false,
-    };
-    set((s) => ({ uploads: [...s.uploads, upload] }));
-
+    const url = `${BACKEND_API_URL}/transaction/convert${(libgenMode ?? false) ? '?remote=true' : ''}`;
     await BackgroundService.start(
       async () => {
-        try {
-          const resp = await fetch(
-            `${BACKEND_API_URL}/transaction/convert${(libgenMode ?? false) ? '?remote=true' : ''}`,
-            {
-              method: 'POST',
-              body: form,
-            }
-          );
+        await Promise.all(
+          uploads.map(async ({ id, formData: form, request }) => {
+            try {
+              const resp = await fetch(url, { method: 'POST', body: form });
 
-          if (resp.status !== 200) {
-            const json = await resp.json();
-            alert(json.error);
-            return;
-          }
+              set((s) => ({ uploads: s.uploads.filter((u) => u.id !== id) }));
 
-          const raw: QueueElement[] = await resp.json();
-          const data = raw.map((e) => ({
-            ...req,
-            timestamp: Date.now(),
-            filename: e.filename,
-            id: e.id,
-            progress: 0,
-          }));
-
-          if (libgenMode) {
-            data.forEach((e) => {
-              e.title = req.books.find((b) => b.md5 === e.filename)?.title ?? e.filename;
-            });
-          }
-
-          set((s) => ({ transactions: [...s.transactions, ...data] }));
-          StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
-
-          if (req.deleteOrigin ?? false) {
-            for (let src of req.sources!) {
-              const hasChildren = (src.children ?? []).length > 0;
-              for (let child of src.children ?? []) {
-                FilesystemService.deleteFile(child.path);
+              if (resp.status !== 200) {
+                const json = await resp.json();
+                alert(json.error);
+                return;
               }
-              if (!hasChildren) FilesystemService.deleteFile(src.path);
-            }
-          }
 
-          set((s) => ({ uploads: s.uploads.filter((e) => e.id !== upload.id) }));
-        } catch (e) {
-          set((s) => ({
-            uploads: s.uploads.map((u) => (u.id === upload.id ? { ...u, error: e as Error } : u)),
-          }));
-        } finally {
-          await BackgroundService.stop();
-        }
+              const raw: QueueElement[] = await resp.json();
+              const data = raw.map((e) => ({
+                ...request,
+                timestamp: Date.now(),
+                filename: e.filename,
+                id: e.id,
+                progress: 0,
+              }));
+
+              if (libgenMode) {
+                data.forEach((e) => {
+                  e.title = request.books.find((b) => b.md5 === e.filename)?.title ?? e.filename;
+                });
+              }
+
+              set((s) => ({ transactions: [...s.transactions, ...data] }));
+              StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
+            } catch (e) {
+              console.log(e);
+            }
+          })
+        );
+
+        await BackgroundService.stop();
       },
       {
         taskName: 'inkomi-upload',
@@ -225,63 +286,6 @@ export const useQueue = create<State>((set, get) => ({
 
     return true;
   },
-
-  async send(req: TransactionRequest, libgenMode?: boolean): Promise<boolean> {
-    if (!(libgenMode ?? false)) {
-      if (req.sourceMode === 'no-select') return false;
-      if (req.sources.length === 0) return false;
-      if (req.sourceMode === 'folder' && (req.sources[0].children?.length ?? 0) === 0) return false;
-    }
-
-    if (libgenMode ?? false) {
-      const form = new FormData();
-      form.append('md5s', req.books.map((e) => e.md5).join(','));
-      return get().sendUnique(req, form, libgenMode);
-    } else {
-      let files: Source[] = [];
-      if (req.sourceMode === 'files') {
-        files = req.sources;
-      }
-      if (req.sourceMode === 'folder') {
-        files = req.sources[0].children ?? [];
-      }
-      if (files.length === 0) {
-        alert('No files');
-        return false;
-      }
-
-      let form = new FormData();
-      let size = 0;
-
-      for (const file of files) {
-        if (file.size! > MAX_CHUNK_SIZE) {
-          alert(`File ${file.name} (${file.size} bytes) is too big (max 200 MB)`);
-          return false;
-        }
-
-        if (size + file.size! > MAX_CHUNK_SIZE) {
-          if (!get().sendUnique(req, form, libgenMode)) {
-            return false;
-          }
-          form = new FormData();
-          size = 0;
-        }
-
-        form.append('files', {
-          uri: file.path,
-          name: file.name,
-          type: file.mime ?? 'application/zip',
-        } as any);
-        size += file.size!;
-      }
-
-      if (form.getAll('files').length > 0) {
-        return get().sendUnique(req, form, libgenMode);
-      }
-    }
-
-    return true;
-  },
 }));
 
 async function fetchStatus(id: string): Promise<number> {
@@ -294,4 +298,44 @@ async function fetchStatus(id: string): Promise<number> {
   }
 
   return json.progress;
+}
+
+const chapterPatterns: RegExp[] = [
+  /\bch(?:apter)?\.?\s*(\d+(?:\.\d+)?)/i,
+  /\bcap[ií]?tulo\.?\s*(\d+(?:\.\d+)?)|\bcap\.?\s*(\d+(?:\.\d+)?)/i,
+  /\bepisodi?o?\.?\s*(\d+(?:\.\d+)?)/i,
+];
+function extractChapterNumber(filename: string): number | null {
+  for (const re of chapterPatterns) {
+    const m = filename.match(re);
+    if (!m) continue;
+    for (let i = 1; i < m.length; i++) {
+      if (m[i] !== undefined && m[i] !== '') {
+        const n = parseFloat(m[i]);
+        if (!isNaN(n)) return n;
+      }
+    }
+  }
+  return null;
+}
+const numRe = /\d+|\D+/g;
+function alphanumericCmpInner(a: string, b: string): number {
+  const as = a.match(numRe) ?? [];
+  const bs = b.match(numRe) ?? [];
+  for (let i = 0; i < as.length && i < bs.length; i++) {
+    if (as[i] === bs[i]) continue;
+    const an = parseInt(as[i], 10);
+    const bn = parseInt(bs[i], 10);
+    if (!isNaN(an) && !isNaN(bn)) return an - bn;
+    return as[i] < bs[i] ? -1 : 1;
+  }
+  return as.length - bs.length;
+}
+function alphanumericSort(a: string, b: string): number {
+  const aNum = extractChapterNumber(a);
+  const bNum = extractChapterNumber(b);
+  if (aNum !== null && bNum !== null && aNum !== bNum) {
+    return aNum - bNum;
+  }
+  return alphanumericCmpInner(a, b);
 }
