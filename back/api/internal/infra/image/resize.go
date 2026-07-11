@@ -12,17 +12,14 @@ func (ip *ImageEditor) Resize() {
 		tW = 0
 	}
 
-	filter := imaging.Lanczos
+	var filter imaging.ResampleFilter
 	if ip.isImgSmaller() {
+		filter = imaging.MitchellNetravali
+	} else {
 		filter = imaging.CatmullRom
 	}
 
-	(*ip.Img) = imaging.Resize(
-		*ip.Img,
-		tW,
-		tH,
-		filter,
-	)
+	(*ip.Img) = imaging.Resize(*ip.Img, tW, tH, filter)
 }
 
 func (ip *ImageEditor) getImgRatios() (float64, float64) {

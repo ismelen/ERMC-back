@@ -87,8 +87,6 @@ func (ch *TransactionHandler) HandleConvert(r *http.Request) (any, error) {
 		return nil, requtil.New(400, err.Error())
 	}
 
-	log.Println(reqDTO.Title)
-
 	config := &convert.TransactionConfig{
 		Author:      reqDTO.Author,
 		Title:       reqDTO.Title,
@@ -273,6 +271,10 @@ func (ch *TransactionHandler) handleEpubTransaction(files []string, config *conv
 }
 
 func (ch *TransactionHandler) handleMangaTransaction(files []string, config *convert.TransactionConfig) (any, error) {
+	if len(files) > 25 {
+		return nil, &requtil.ApiError{Status: http.StatusBadRequest, Message: "You can only upload 25 0files"}
+	}
+
 	natsort.Sort(files)
 
 	type TransactionInfo struct {

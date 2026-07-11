@@ -134,7 +134,6 @@ func (m *MangaTransactionUC) runConversion(
 	}
 
 	path, err := builder.Build()
-	log.Println(dstPath)
 
 	if err != nil {
 		return "", err

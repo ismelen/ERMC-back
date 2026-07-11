@@ -3,7 +3,6 @@ package convert
 import (
 	"fmt"
 	"ismelen/inkomi/internal/domain/manga"
-	"log"
 	"regexp"
 	"strconv"
 )
@@ -35,8 +34,6 @@ func (t *TransactionConfig) WithId(id string) (*TransactionConfig, error) {
 }
 
 func (t *TransactionConfig) UpdateTitle(chapters []*manga.Chapter) {
-	log.Println(t.Title)
-
 	if !t.Merge && t.Title == "" {
 		t.Title = chapters[0].Filename
 		return
@@ -85,7 +82,6 @@ var fallbackNumberPattern = regexp.MustCompile(`\d+(?:\.\d+)?`)
 var noisePattern = regexp.MustCompile(`(?i)\b(19|20)\d{2}\b|\b\d{3,4}p\b|\bvol(?:ume)?\.?\s*\d+`)
 
 func ExtractChapterNumber(filename string) (float64, bool) {
-	// 1. Intentar patrones específicos primero (más fiables)
 	for _, re := range chapterPatterns {
 		m := re.FindStringSubmatch(filename)
 		if m == nil {
