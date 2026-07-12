@@ -3,89 +3,101 @@ package image
 import (
 	"image"
 	"image/color"
+	"log"
+	"math"
 )
 
-type bBox struct {
-	left, top, right, bottom int
-}
+type bBox = [4]int // left, top, right, bottom
 
-func (b *bBox) getSurface() float64 {
-	return float64(b.right - b.left) / float64(b.top - b.bottom)
-}
+func (e *ImageEditor) GetBBox(img image.Image) (bBox, color.RGBA) {
+	dims := img.Bounds()
+	w, h := dims.Dx()-1, dims.Dy()-1
+	max := int(math.Min(0.1*float64(w), 0.1*float64(h)))
+	colors := make(map[color.RGBA]int)
 
-type side struct {
-	vector       int
-	isHorizontal bool
-	max          int
-	origin       int
-	end          int
-}
-
-const threshold = uint8(128)
-
-func (ip *ImageEditor) GetBBox(img image.Image, checkWhite bool) bBox {
-	dim := img.Bounds()
-	w, h := dim.Dx(), dim.Dy()
-	maxX := int(0.1 * float64(w))
-	maxY := int(0.1 * float64(h))
-
-	top := side{
-		vector:       1,
-		isHorizontal: false,
-		max:          maxY,
-		end:          w,
-		origin:       0,
+	sides := [4]side{
+		{origin: [2]int{0, 0}, vector: [2]int{1, 0}, dim: [2]int{0, h}},
+		{origin: [2]int{0, 0}, vector: [2]int{0, 1}, dim: [2]int{w, 0}},
+		{origin: [2]int{w, 0}, vector: [2]int{-1, 0}, dim: [2]int{0, h}},
+		{origin: [2]int{0, h}, vector: [2]int{0, -1}, dim: [2]int{w, 5}},
 	}
 
-	bottom := side{
-		vector:       -1,
-		isHorizontal: false,
-		max:          maxY,
-		end:          w,
-		origin:       h,
+	var bBox bBox
+	for i, side := range sides {
+		margin, bg := side.crop(img, max, 0.05)
+		bBox[i] = margin
+		colors[bg]++
 	}
 
-	left := side{
-		vector:       1,
-		isHorizontal: true,
-		max:          maxX,
-		end:          h,
-		origin:       0,
-	}
-
-	right := side{
-		vector:       -1,
-		isHorizontal: true,
-		max:          maxX,
-		end:          h,
-		origin:       w,
-	}
-
-	return bBox{
-		top:    top.getSide(img, checkWhite),
-		bottom: bottom.getSide(img, checkWhite),
-		left:   left.getSide(img, checkWhite),
-		right:  right.getSide(img, checkWhite),
-	}
-}
-
-func (this *side) getSide(img image.Image, checkWhite bool) int {
-
-	var c color.Gray
-	for lvl := 1; lvl != this.max; lvl++ {
-		level := this.origin + lvl*this.vector
-		for p := 1; p < this.end; p++ {
-			if this.isHorizontal {
-				c = color.GrayModel.Convert(img.At(level, p)).(color.Gray)
-			} else {
-				c = color.GrayModel.Convert(img.At(p, level)).(color.Gray)
-			}
-			if (checkWhite && c.Y >= threshold) ||
-				(!checkWhite && c.Y < threshold) {
-				return level - 1
-			}
+	var bg color.RGBA
+	bgCant := 0
+	for c, cant := range colors {
+		if cant > bgCant {
+			bgCant = cant
+			bg = c
 		}
 	}
 
-	return this.origin
+	return bBox, bg
+}
+
+type side struct {
+	vector [2]int
+	origin [2]int
+	dim    [2]int
+}
+
+func (s side) crop(img image.Image, max int, nonBgThreshold float64) (int, color.RGBA) {
+	var bgColor *color.RGBA
+
+	lvl := 0
+	for ; lvl < max; lvl++ {
+		x := s.origin[0] + (lvl+s.dim[0])*s.vector[0]
+		y := s.origin[1] + (lvl+s.dim[1])*s.vector[1]
+
+		colors := make(map[color.RGBA]int)
+		total := 0
+
+		for bx := x; bx <= x+s.dim[0]; bx++ {
+			for by := y; by <= y+s.dim[1]; by++ {
+				pixel := img.At(bx, by)
+				c := color.NRGBAModel.Convert(pixel).(color.NRGBA)
+				color := color.RGBA{c.R, c.G, c.B, 255}
+
+				colors[color]++
+				total++
+			}
+		}
+
+		var bg color.RGBA
+		bgCant := 0
+		for c, cant := range colors {
+			if cant > bgCant {
+				bgCant = cant
+				bg = c
+			}
+		}
+
+		if bgColor == nil {
+			bgColor = &bg
+		} else if *bgColor != bg {
+			break
+		}
+
+		nonBgRatio := 1.0 - float64(bgCant)/float64(total)
+		if nonBgRatio > nonBgThreshold {
+			if s.dim[1] > 1 {
+				log.Println(lvl, nonBgRatio)
+			}
+			break
+		}
+	}
+
+	delta := s.vector[0] + s.vector[1]
+	origin := int(math.Max(float64(s.origin[0]), float64(s.origin[1])))
+
+	if lvl-1 < 0 {
+		return origin, *bgColor
+	}
+	return origin + delta*lvl, *bgColor
 }

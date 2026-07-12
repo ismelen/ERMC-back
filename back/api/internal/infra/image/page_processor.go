@@ -22,20 +22,23 @@ func (p *PageProcessor) ProcessPage(path string, idx int, profile *manga.Profile
 		return nil, err
 	}
 
-	page.HasWhiteBg = editor.HasWhiteBg()
-	editor.CropMargins()
+	// page.HasWhiteBg = editor.HasWhiteBg()
 
 	isColor := settings.ForceColor && editor.IsColored()
 	if !isColor {
 		editor.Grayscale()
 	}
+
 	if settings.RemoveRainbowEffect && isColor {
 		editor.RemoveRainbowEffect()
 	}
 
-	if settings.SetExtremBlackPoint {
+	if settings.SetExtremBlackPoint && !isColor {
 		editor.SetExtremeBlackPoint()
 	}
+
+	editor.CropMargins()
+	page.Bg = editor.GetBg()
 
 	partEditors := editor.TrySplit(settings.SpreadSplitter == 2)
 	if settings.SpreadSplitter != 1 && len(partEditors) > 2 {

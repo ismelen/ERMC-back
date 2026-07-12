@@ -1,6 +1,7 @@
 package manga
 
 import (
+	"fmt"
 	"image"
 	"ismelen/inkomi/internal/shared/strutil"
 	"math"
@@ -9,18 +10,15 @@ import (
 )
 
 type Page struct {
-	HasWhiteBg bool
-	Path       string
-	Parts      []*PagePart
+	Bg    [3]uint8
+	Path  string
+	Parts []*PagePart
 }
 
 func NewPage(path string) *Page { return &Page{Path: path} }
 
 func (this *Page) GetCSSBgStyle() string {
-	if !this.HasWhiteBg {
-		return ""
-	}
-	return "background-color:#000000;"
+	return fmt.Sprintf("background-color:#%02X%02X%02X;", this.Bg[0], this.Bg[1], this.Bg[2])
 }
 
 type PagePart struct {

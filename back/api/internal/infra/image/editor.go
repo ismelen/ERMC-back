@@ -14,7 +14,7 @@ type ImageEditor struct {
 	Img              *image.Image
 	targetW, targetH int
 	forceColor       bool
-	hasWhiteBg       bool
+	bg               [3]uint8
 	SplitOperation   SplitOperation
 }
 

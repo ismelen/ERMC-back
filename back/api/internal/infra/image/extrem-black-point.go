@@ -2,7 +2,6 @@ package image
 
 import (
 	"image/color"
-	"log"
 	"math"
 
 	"github.com/disintegration/imaging"
@@ -10,7 +9,6 @@ import (
 
 func (e *ImageEditor) SetExtremeBlackPoint() {
 	// (*e.Img) = imaging.AdjustContrast(*e.Img, 20)
-	log.Println("Applying extreme black point")
 	bp := e.findExtremeBlackPoint(64)
 	if bp == 0 {
 		return
@@ -26,6 +24,8 @@ func (e *ImageEditor) SetExtremeBlackPoint() {
 			A: c.A,
 		}
 	})
+
+	*e.Img = imaging.AdjustContrast(*e.Img, 100)
 }
 
 func adjustChannel(v uint8, blackPoint float64) uint8 {

@@ -10,8 +10,8 @@ import (
 )
 
 func (l *LibgenService) StartDiscovery(ctx context.Context, interval time.Duration) {
-	l.updateMirror()
 	go func() {
+		l.updateMirror()
 		ticker := time.NewTicker(interval)
 		for {
 			select {
