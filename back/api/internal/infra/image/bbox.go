@@ -3,7 +3,6 @@ package image
 import (
 	"image"
 	"image/color"
-	"log"
 	"math"
 )
 
@@ -86,9 +85,6 @@ func (s side) crop(img image.Image, max int, nonBgThreshold float64) (int, color
 
 		nonBgRatio := 1.0 - float64(bgCant)/float64(total)
 		if nonBgRatio > nonBgThreshold {
-			if s.dim[1] > 1 {
-				log.Println(lvl, nonBgRatio)
-			}
 			break
 		}
 	}

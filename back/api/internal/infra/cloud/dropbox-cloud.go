@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -66,7 +65,6 @@ func (d *DropboxCloud) Upload(path, token, folder string) error {
 		return err
 	}
 
-	log.Println(data)
 	if msg, ok := data["error_summary"]; ok {
 		return fmt.Errorf("%s", msg.(string))
 	}
