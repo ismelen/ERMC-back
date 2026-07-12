@@ -33,6 +33,10 @@ func (p *PageProcessor) ProcessPage(path string, idx int, profile *manga.Profile
 		editor.RemoveRainbowEffect()
 	}
 
+	if settings.SetExtremBlackPoint {
+		editor.SetExtremeBlackPoint()
+	}
+
 	partEditors := editor.TrySplit(settings.SpreadSplitter == 2)
 	if settings.SpreadSplitter != 1 && len(partEditors) > 2 {
 		partEditors = partEditors[:2]

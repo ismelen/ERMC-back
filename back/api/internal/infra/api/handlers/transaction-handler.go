@@ -326,7 +326,7 @@ func (ch *TransactionHandler) handleMangaTransaction(files []string, config *con
 
 	go func() {
 		for _, tran := range transactions {
-			defer os.RemoveAll(filepath.Join(tran.dstPath, "chapters"))
+			// defer os.RemoveAll(filepath.Join(tran.dstPath, "chapters"))
 			ch.mangaUC.Execute(tran.chapters, tran.config, tran.dstPath)
 		}
 	}()

@@ -8,7 +8,6 @@ import (
 	"ismelen/inkomi/internal/infra/epub"
 	"log"
 	"os"
-	"path/filepath"
 	"runtime"
 
 	"golang.org/x/sync/errgroup"
@@ -94,7 +93,6 @@ func (m *MangaTransactionUC) runConversion(
 	progressChan chan int,
 ) (string, error) {
 	defer close(progressChan)
-	defer os.RemoveAll(filepath.Join(dstPath, "chapters"))
 
 	builder := epub.New().
 		SetSettings(m.imageSettings, profile).
