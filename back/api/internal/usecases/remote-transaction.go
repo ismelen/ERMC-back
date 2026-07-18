@@ -38,9 +38,9 @@ func (e *RemoteTransactionUC) Execute(md5 string, config *convert.TransactionCon
 		return
 	}
 
-	result, err := e.libgenServ.Download(md5)
+	result, err := e.libgenServ.Download(md5, 3)
 	if err != nil {
-		result.Stream.Close()
+		tran.SetError(err)
 		e.NotifyError(config, err)
 		return
 	}

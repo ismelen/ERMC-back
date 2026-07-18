@@ -45,7 +45,7 @@ func (l *LibgenHandler) HandleSearchBook(r *http.Request) (any, error) {
 
 func (l *LibgenHandler) HandleDownloadBook(r *http.Request) (any, error) {
 	md5 := chi.URLParam(r, "md5")
-	result, err := l.libgenServ.Download(md5)
+	result, err := l.libgenServ.Download(md5, 3)
 	if err != nil {
 		return nil, err
 	}

@@ -25,6 +25,23 @@ func (l *LibgenService) StartDiscovery(ctx context.Context, interval time.Durati
 	}()
 }
 
+func (l *LibgenService) refreshMirror() {
+	l.singleUpdater.Do("refresh", func() (any, error) {
+		l.updateMirror()
+		return nil, nil
+	})
+}
+
+func (l *LibgenService) getMirror() (book.LibgenMirror, bool) {
+	value := l.mirror.Load()
+	if value == nil {
+		return nil, false
+	}
+
+	mirror, ok := value.(book.LibgenMirror)
+	return mirror, ok
+}
+
 func (l *LibgenService) updateMirror() {
 	mirrors := getMirrors()
 
