@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/render"
 )
 
-func Wrap(f func(r *http.Request) (any, error)) http.HandlerFunc {
+func Wrap[R any](f func(r *http.Request) (*R, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := f(r)
 
@@ -21,6 +21,7 @@ func Wrap(f func(r *http.Request) (any, error)) http.HandlerFunc {
 			}
 			render.Status(r, status)
 			render.JSON(w, r, map[string]any{"error": err.Error()})
+			return
 		}
 
 		if data == nil {
@@ -28,7 +29,7 @@ func Wrap(f func(r *http.Request) (any, error)) http.HandlerFunc {
 			return
 		}
 
-		switch v := data.(type) {
+		switch v := any(*data).(type) {
 		case FileResponse:
 			if v.Remove {
 				defer os.RemoveAll(v.Path)

@@ -21,7 +21,7 @@ func NewLibgenHandler(libgenServ book.LibgenService) *LibgenHandler {
 	return &LibgenHandler{libgenServ}
 }
 
-func (l *LibgenHandler) HandleSearchBook(r *http.Request) (any, error) {
+func (l *LibgenHandler) HandleSearchBook(r *http.Request) (*[]book.Book, error) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
 		return nil, requtil.New(http.StatusBadRequest, "Empty query")
@@ -40,10 +40,10 @@ func (l *LibgenHandler) HandleSearchBook(r *http.Request) (any, error) {
 		return nil, err
 	}
 
-	return books, nil
+	return &books, nil
 }
 
-func (l *LibgenHandler) HandleDownloadBook(r *http.Request) (any, error) {
+func (l *LibgenHandler) HandleDownloadBook(r *http.Request) (*requtil.FileResponse, error) {
 	md5 := chi.URLParam(r, "md5")
 	result, err := l.libgenServ.Download(md5, 3)
 	if err != nil {
@@ -62,7 +62,7 @@ func (l *LibgenHandler) HandleDownloadBook(r *http.Request) (any, error) {
 		return nil, err
 	}
 
-	return requtil.FileResponse{
+	return &requtil.FileResponse{
 		Path:   path,
 		Name:   filepath.Base(path),
 		Remove: true,

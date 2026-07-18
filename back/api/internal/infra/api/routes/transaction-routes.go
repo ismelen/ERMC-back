@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"ismelen/inkomi/internal/infra/api/dto"
 	"ismelen/inkomi/internal/infra/api/handlers"
 	"ismelen/inkomi/internal/infra/api/requtil"
 
@@ -11,8 +12,8 @@ func SetupConvertRoutes(api *chi.Mux, handler *handlers.TransactionHandler) {
 	r := chi.NewRouter()
 	api.Mount("/transaction", r)
 
-	r.Post("/convert", requtil.Wrap(handler.HandleConvert))
+	r.Post("/convert", requtil.Wrap[[]dto.TransactionResponse](handler.HandleConvert))
 	r.Get("/status/{id}", requtil.Wrap(handler.HandleCheckStatus))
-	r.Get("/download/{id}", requtil.Wrap(handler.HandleDownload))
+	r.Get("/download/{id}", requtil.Wrap[requtil.FileResponse](handler.HandleDownload))
 	r.Put("/cancel/{id}", requtil.Wrap(handler.HandleCancel))
 }

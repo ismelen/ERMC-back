@@ -60,7 +60,7 @@ var filenamesFilter = filter.Use(
 	&validation.SameFormatFilter{},
 )
 
-func (ch *TransactionHandler) HandleConvert(r *http.Request) (any, error) {
+func (ch *TransactionHandler) HandleConvert(r *http.Request) (*[]dto.TransactionResponse, error) {
 	modeQuery := r.URL.Query().Get("remote")
 	remoteMode := false
 	if modeQuery == "true" {
@@ -166,7 +166,7 @@ func (ch *TransactionHandler) getFilesToProcess(r *http.Request) ([]string, stri
 	return children, ext, nil
 }
 
-func (ch *TransactionHandler) handleRemoteTransaction(md5s []string, config *convert.TransactionConfig) (any, error) {
+func (ch *TransactionHandler) handleRemoteTransaction(md5s []string, config *convert.TransactionConfig) (*[]dto.TransactionResponse, error) {
 	type TransactionInfo struct {
 		md5     string
 		config  *convert.TransactionConfig
@@ -203,10 +203,10 @@ func (ch *TransactionHandler) handleRemoteTransaction(md5s []string, config *con
 		}
 	}()
 
-	return responses, nil
+	return &responses, nil
 }
 
-func (ch *TransactionHandler) handleEpubTransaction(files []string, config *convert.TransactionConfig) (any, error) {
+func (ch *TransactionHandler) handleEpubTransaction(files []string, config *convert.TransactionConfig) (*[]dto.TransactionResponse, error) {
 	type TransactionInfo struct {
 		dstPath string
 		file    string
@@ -267,10 +267,10 @@ func (ch *TransactionHandler) handleEpubTransaction(files []string, config *conv
 		}
 	}()
 
-	return responses, nil
+	return &responses, nil
 }
 
-func (ch *TransactionHandler) handleMangaTransaction(files []string, config *convert.TransactionConfig) (any, error) {
+func (ch *TransactionHandler) handleMangaTransaction(files []string, config *convert.TransactionConfig) (*[]dto.TransactionResponse, error) {
 	if len(files) > 25 {
 		return nil, &requtil.ApiError{Status: http.StatusBadRequest, Message: "You can only upload 25 0files"}
 	}
@@ -331,7 +331,7 @@ func (ch *TransactionHandler) handleMangaTransaction(files []string, config *con
 		}
 	}()
 
-	return responses, nil
+	return &responses, nil
 }
 
 func saveConvertFiles(ext string, files []*multipart.FileHeader, tempSavePath string) (string, []string, error) {
@@ -345,7 +345,7 @@ func saveConvertFiles(ext string, files []*multipart.FileHeader, tempSavePath st
 	}
 }
 
-func (ch *TransactionHandler) HandleCheckStatus(r *http.Request) (any, error) {
+func (ch *TransactionHandler) HandleCheckStatus(r *http.Request) (*map[string]any, error) {
 	id := chi.URLParam(r, "id")
 
 	processed, err := ch.mangaUC.CheckProgress(id)
@@ -353,10 +353,10 @@ func (ch *TransactionHandler) HandleCheckStatus(r *http.Request) (any, error) {
 		return nil, err
 	}
 
-	return map[string]any{"progress": processed}, nil
+	return &map[string]any{"progress": processed}, nil
 }
 
-func (ch *TransactionHandler) HandleDownload(r *http.Request) (any, error) {
+func (ch *TransactionHandler) HandleDownload(r *http.Request) (*requtil.FileResponse, error) {
 	id := chi.URLParam(r, "id")
 
 	path, err := ch.mangaUC.GetResultPath(id)
@@ -364,14 +364,14 @@ func (ch *TransactionHandler) HandleDownload(r *http.Request) (any, error) {
 		return nil, err
 	}
 
-	return requtil.FileResponse{
+	return &requtil.FileResponse{
 		Path: path,
 		Name: filepath.Base(path),
 	}, nil
 }
 
-func (ch *TransactionHandler) HandleCancel(r *http.Request) (any, error) {
+func (ch *TransactionHandler) HandleCancel(r *http.Request) (*any, error) {
 	id := chi.URLParam(r, "id")
 	ch.mangaUC.CancelTransaction(id)
-	return map[string]any{}, nil
+	return nil, nil
 }

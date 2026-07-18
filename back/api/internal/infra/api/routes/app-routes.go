@@ -10,9 +10,9 @@ import (
 func SetupAppRoutes(api *chi.Mux, public *chi.Mux, handler *handlers.AppHandler) {
 	rApi := chi.NewRouter()
 	api.Mount("/app", rApi)
-	rApi.Get("/version", requtil.Wrap(handler.HandleVersion))
+	rApi.Get("/version", requtil.Wrap[string](handler.HandleVersion))
 
 	rPublic := chi.NewRouter()
 	public.Mount("/app", rPublic)
-	rPublic.Get("/download", requtil.Wrap(handler.HandleDownload))
+	rPublic.Get("/download", requtil.Wrap[requtil.FileResponse](handler.HandleDownload))
 }
