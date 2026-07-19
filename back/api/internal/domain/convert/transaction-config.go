@@ -10,64 +10,46 @@ import (
 type TransactionConfig struct {
 	Author      string
 	Title       string
-	Profile     string
 	Merge       bool
-	Id          string
 	Cloud       bool
 	CloudToken  string
 	CloudFolder string
 	NotifyToken string
-	ProfileData *manga.Profile
+	Profile     *manga.Profile
+	Cant        int32
+	Type        string // cbz, epub, md5
 }
 
-func (t *TransactionConfig) WithId(id string) (*TransactionConfig, error) {
-	trans := *t
-	trans.Id = id
-
-	profileData, err := NewProfile(t.Profile)
-	if err != nil {
-		return nil, err
-	}
-
-	trans.ProfileData = profileData
-	return &trans, nil
-}
-
-func (t *TransactionConfig) UpdateTitle(chapters []*manga.Chapter) {
+func (t *TransactionConfig) GetTitle(files []*TransactionResultFile) string {
 	if !t.Merge && t.Title == "" {
-		t.Title = chapters[0].Filename
-		return
+		return files[0].Filename
 	}
 
-	fstChName := chapters[0].Filename
-	lastChName := chapters[len(chapters)-1].Filename
+	fstChName := files[0].Filename
+	lastChName := files[len(files)-1].Filename
 
 	if t.Title == "" {
-		if len(chapters) == 1 {
-			t.Title = fstChName
-			return
+		if len(files) == 1 {
+			return fstChName
 		}
-		t.Title = fmt.Sprintf("%s - %s", fstChName, lastChName)
-		return
+		return fmt.Sprintf("%s - %s", fstChName, lastChName)
+
 	}
 
 	fstChNum, fstOk := ExtractChapterNumber(fstChName)
 	lastChNum, lastOk := ExtractChapterNumber(lastChName)
 
 	if !fstOk || !lastOk {
-		if len(chapters) == 1 {
-			t.Title = fstChName
-			return
+		if len(files) == 1 {
+			return fstChName
 		}
-		t.Title = fmt.Sprintf("%s - %s", fstChName, lastChName)
-		return
+		return fmt.Sprintf("%s - %s", fstChName, lastChName)
 	}
 
-	if len(chapters) == 1 {
-		t.Title = fmt.Sprintf("%s Ch.%g", t.Title, fstChNum)
-		return
+	if len(files) == 1 {
+		return fmt.Sprintf("%s Ch.%g", t.Title, fstChNum)
 	}
-	t.Title = fmt.Sprintf("%s Ch.[%g - %g]", t.Title, fstChNum, lastChNum)
+	return fmt.Sprintf("%s Ch.[%g - %g]", t.Title, fstChNum, lastChNum)
 }
 
 var chapterPatterns = []*regexp.Regexp{

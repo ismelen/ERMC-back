@@ -6,25 +6,25 @@ type PushMessage struct {
 	Title, Message, Id, Err, Type string
 }
 
-func NewCancelMessage(config *TransactionConfig) PushMessage {
+func NewCancelMessage(tran *Transaction, file *TransactionResultFile) PushMessage {
 	return PushMessage{
 		Title:   "Canceled",
-		Message: fmt.Sprintf("%s conversion canceled", config.Title),
-		Id:      config.Id,
+		Message: fmt.Sprintf("%s conversion canceled", file.Filename),
+		Id:      tran.Id,
 		Type:    "cancel",
 	}
 }
 
-func NewErrorMessage(config *TransactionConfig, err error) PushMessage {
+func NewErrorMessage(tran *Transaction, err error) PushMessage {
 	return PushMessage{
 		Title: "Error",
 		Err:   err.Error(),
 		Type:  "error",
-		Id:    config.Id,
+		Id:    tran.Id,
 	}
 }
 
-func NewSuccessMessage(config *TransactionConfig, msg string) PushMessage {
+func NewSuccessMessage(tran *Transaction, msg string) PushMessage {
 	return PushMessage{
 		Title:   "Success",
 		Type:    "success",

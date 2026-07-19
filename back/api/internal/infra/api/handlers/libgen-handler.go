@@ -24,7 +24,7 @@ func NewLibgenHandler(libgenServ book.LibgenService) *LibgenHandler {
 func (l *LibgenHandler) HandleSearchBook(r *http.Request) (*[]book.Book, error) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
-		return nil, requtil.New(http.StatusBadRequest, "Empty query")
+		return nil, requtil.NewError(http.StatusBadRequest, "Empty query")
 	}
 
 	language := r.URL.Query().Get("lang")

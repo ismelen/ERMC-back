@@ -46,17 +46,17 @@ func main() {
 		panic(err)
 	}
 
-	tranStore := store.GetManager()
+	tranStore := store.NewTransactionStore()
 
 	imgProcessor := infraImage.NewPageProcessor()
 	dropbox := &cloud.DropboxCloud{}
 
-	epubUC := usecases.NewEpubTransactionUC(pushNotifier, tranStore, dropbox)
-	mangaUC := usecases.NewMangaTransactionUC(pushNotifier, tranStore, imgProcessor, dropbox)
-	remoteUC := usecases.NewRemoteTransactionUC(pushNotifier, tranStore, libgenServ, dropbox)
+	epubUC := usecases.NewEpubTransactionUC(pushNotifier, dropbox)
+	cbzUC := usecases.NewCBZTransactioUC(pushNotifier, imgProcessor, dropbox)
+	md5UC := usecases.NewMd5TransactionUC(pushNotifier, libgenServ, dropbox)
 
-	convertHandler := handlers.NewConvertHandler(mangaUC, epubUC, remoteUC)
-	routes.SetupConvertRoutes(api, convertHandler)
+	transactionHandler := handlers.NewTransactionHandler(epubUC, cbzUC, md5UC, tranStore)
+	routes.SetupTransactionRoutes(api, transactionHandler)
 
 	libgenHandler := handlers.NewLibgenHandler(libgenServ)
 	routes.SetupLibgenRoutes(api, libgenHandler)

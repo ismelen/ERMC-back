@@ -5,7 +5,7 @@ type ApiError struct {
 	Message string
 }
 
-func New(status int, message string) *ApiError {
+func NewError(status int, message string) *ApiError {
 	return &ApiError{Status: status, Message: message}
 }
 

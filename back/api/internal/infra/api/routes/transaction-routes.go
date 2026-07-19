@@ -8,12 +8,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func SetupConvertRoutes(api *chi.Mux, handler *handlers.TransactionHandler) {
+func SetupTransactionRoutes(api *chi.Mux, handler *handlers.TransactionsV2Handler) {
 	r := chi.NewRouter()
-	api.Mount("/transaction", r)
+	api.Mount("/transactions", r)
 
-	r.Post("/convert", requtil.Wrap[[]dto.TransactionResponse](handler.HandleConvert))
-	r.Get("/status/{id}", requtil.Wrap(handler.HandleCheckStatus))
-	r.Get("/download/{id}", requtil.Wrap[requtil.FileResponse](handler.HandleDownload))
-	r.Put("/cancel/{id}", requtil.Wrap(handler.HandleCancel))
+	r.Post("/start", requtil.Wrap[dto.TransactionStartResponse](handler.HandleStartTransaction))
+	r.Post("{tranId}/attach", requtil.Wrap[string](handler.HandleAttachFile))
+
+	r.Get("{tranId}/status", requtil.Wrap[dto.TransactionStatusResponse](handler.HandleGetStatus))
+	r.Put("{tranId}/cancel", requtil.Wrap(handler.HandleCancel))
+	r.Get("{tranId}/download/{fileId}", requtil.Wrap[requtil.FileResponse](handler.HandleDownload))
 }
