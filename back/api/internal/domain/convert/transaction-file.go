@@ -26,6 +26,14 @@ func (t *TransactionFile) Status() TransactionFileStatus {
 	return t.status
 }
 
+func (t *TransactionFile) Processing() {
+	t.status = TransactionFileProcessing
+}
+
+func (t *TransactionFile) Done() {
+	t.status = TransactionFileDone
+}
+
 func (t *TransactionFile) SetError(err error) {
 	t.status = TransactionFileError
 	t.Error = err

@@ -13,7 +13,7 @@ type TransactionStartRequest struct {
 	CloudToken  string `json:"cloud_token,omitempty"`
 	CloudFolder string `json:"cloud_folder,omitempty"`
 	NotifyToken string `json:"notify_token,omitempty"`
-	Cant        int    `json:"cant"`
+	Cant        int32  `json:"cant"`
 	Type        string `json:"type"`
 }
 

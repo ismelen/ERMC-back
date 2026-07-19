@@ -28,7 +28,7 @@ type BaseTransactionUC struct {
 }
 
 func (m BaseTransactionUC) Execute(file *convert.TransactionFile, tran *convert.Transaction, transPath string) {
-	file.Status = "processing"
+	file.Processing()
 	result := m.Process(file, tran, transPath)
 
 	if !tran.Config.Merge {
@@ -50,7 +50,7 @@ func (m BaseTransactionUC) Execute(file *convert.TransactionFile, tran *convert.
 		file.SetError(err)
 		return
 	}
-	file.Status = "done"
+	file.Done()
 
 	if !(tran.Config.Merge && tran.Config.Type == "cbz") {
 		m.SendAndNotify(tran, result)

@@ -6,14 +6,14 @@ require (
 	firebase.google.com/go/v4 v4.20.0
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/disintegration/imaging v1.6.2
+	github.com/facette/natsort v0.0.0-20181210072756-2cd4dd1e2dcb
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-chi/cors v1.2.2
 	github.com/go-chi/render v1.0.3
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/schema v1.4.1
 	github.com/joho/godotenv v1.5.1
 	github.com/pgaskin/kepubify/v4 v4.0.4
-	golang.org/x/image v0.34.0
+	golang.org/x/image v0.43.0
 	golang.org/x/sync v0.21.0
 	golang.org/x/text v0.38.0
 	google.golang.org/api v0.285.0
@@ -41,7 +41,6 @@ require (
 	github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.37.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect
-	github.com/facette/natsort v0.0.0-20181210072756-2cd4dd1e2dcb // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
