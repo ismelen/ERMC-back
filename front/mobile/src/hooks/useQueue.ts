@@ -93,37 +93,32 @@ export const useQueue = create<State>((set, get) => ({
   },
 
   async checkProgress(): Promise<void> {
-    const trans = get().transactions;
-    const results = await Promise.allSettled(trans.map((t) => fetchStatus(t.id)));
-
-    const pending: QueueElement[] = [];
-    const completeds: QueueElement[] = [];
-
-    results.forEach((res, i) => {
-      const tran = trans[i];
-      let completedOrError = false;
-      let updated: QueueElement;
-
-      if (res.status === 'fulfilled') {
-        updated = { ...tran, progress: res.value };
-        completedOrError = res.value === 100;
-      } else {
-        updated = { ...tran, error: res.reason?.message ?? String(res.reason) };
-        completedOrError = true;
-      }
-
-      if (completedOrError) {
-        completeds.unshift(updated);
-      } else {
-        pending.push(updated);
-      }
-    });
-
-    completeds.push(...get().completedTransactions);
-    StorageService.SetAsync(TRANSACTIONS_KEY, pending);
-    StorageService.SetAsync(COMPLETE_TRANSACTIONS_KEY, completeds);
-
-    set({ transactions: pending, completedTransactions: completeds });
+    // TODO:
+    // const trans = get().transactions;
+    // const results = await Promise.allSettled(trans.map((t) => fetchStatus(t.id)));
+    // const pending: QueueElement[] = [];
+    // const completeds: QueueElement[] = [];
+    // results.forEach((res, i) => {
+    //   const tran = trans[i];
+    //   let completedOrError = false;
+    //   let updated: QueueElement;
+    //   if (res.status === 'fulfilled') {
+    //     updated = { ...tran, progress: res.value };
+    //     completedOrError = res.value === 100;
+    //   } else {
+    //     updated = { ...tran, error: res.reason?.message ?? String(res.reason) };
+    //     completedOrError = true;
+    //   }
+    //   if (completedOrError) {
+    //     completeds.unshift(updated);
+    //   } else {
+    //     pending.push(updated);
+    //   }
+    // });
+    // completeds.push(...get().completedTransactions);
+    // StorageService.SetAsync(TRANSACTIONS_KEY, pending);
+    // StorageService.SetAsync(COMPLETE_TRANSACTIONS_KEY, completeds);
+    // set({ transactions: pending, completedTransactions: completeds });
   },
 
   async send(req: TransactionRequest, libgenMode?: boolean): Promise<boolean> {
@@ -133,158 +128,136 @@ export const useQueue = create<State>((set, get) => ({
       if (req.sourceMode === 'folder' && (req.sources[0].children?.length ?? 0) === 0) return false;
     }
 
-    const forms: FormData[] = [];
-
-    if (libgenMode ?? false) {
-      const form = new FormData();
-      form.append('md5s', req.books.map((e) => e.md5).join(','));
-      forms.push(form);
-    } else {
-      let files: Source[] = [];
-      if (req.sourceMode === 'files') {
-        files = req.sources;
-      } else {
-        files = req.sources[0].children ?? [];
-      }
-      if (files.length === 0) {
-        alert('No files');
-        return false;
-      }
-
-      let form = new FormData();
-      let size = 0;
-      let cant = 0;
-
-      files.sort((a, b) => collator.compare(a.path, b.path));
-
-      for (const file of files) {
-        if (file.size! > MAX_CHUNK_SIZE) {
-          alert(`File ${file.name} (${file.size} bytes) is too big (max 200 MB)`);
-          return false;
-        }
-
-        cant++;
-        if (size + file.size! > MAX_CHUNK_SIZE || cant >= MAX_FILES_CANT) {
-          forms.push(form);
-          form = new FormData();
-          size = 0;
-          cant = 0;
-        }
-
-        form.append('files', {
-          uri: file.path,
-          name: file.name,
-          type: file.mime ?? 'application/zip',
-        } as any);
-        size += file.size!;
-      }
-
-      if (form.getAll('files').length > 0 || cant > 0) {
-        forms.push(form);
-      }
-    }
-
-    const permissionGranted = await NotificationService.requestNotificationPermission();
-    const notifyToken = permissionGranted ? await NotificationService.getToken() : '';
-
-    const toCloud = req.destination === 'cloud';
-    const token = toCloud ? ((await useCloud.getState().getToken()) ?? '') : '';
-    const folder = toCloud ? ((await useCloud.getState().getFolder()) ?? '') : '';
-
-    const uploads: Upload[] = [];
-
-    for (const form of forms) {
-      form.append('profile', req.model ?? '');
-      form.append('title', req.title ?? '');
-      form.append('author', req.author ?? '');
-      form.append('cloud', String(toCloud));
-      form.append('merge', String(req.merge));
-      form.append('notify_token', notifyToken);
-      form.append('cloud_token', token);
-      form.append('cloud_folder', folder);
-
-      let sources: Source[] = [];
-      if (!libgenMode) {
-        const files = form.getAll('files').map((e: any) => e.uri as string);
-
-        if (req.sourceMode === 'files') {
-          sources = req.sources.filter((e) => files.includes(e.path));
-        } else {
-          const source = req.sources[0];
-          source.children = source.children!.filter((e) => files.includes(e.path));
-          sources = [source];
-        }
-      }
-
-      const request: TransactionRequest = {
-        ...req,
-        sources: sources,
-      };
-
-      uploads.push({
-        id: randomUUID(),
-        libgenMode: libgenMode ?? false,
-        request: request,
-        timestamp: Date.now(),
-        formData: form,
-      });
-    }
-    set((s) => ({ uploads: [...s.uploads, ...uploads] }));
-
-    const url = `${BACKEND_API_URL}/transaction/convert${(libgenMode ?? false) ? '?remote=true' : ''}`;
-    await BackgroundService.start(
-      async () => {
-        await Promise.all(
-          uploads.map(async ({ id, formData: form, request }) => {
-            try {
-              const resp = await fetch(url, { method: 'POST', body: form });
-
-              set((s) => ({ uploads: s.uploads.filter((u) => u.id !== id) }));
-
-              if (resp.status !== 200) {
-                const json = await resp.json();
-                alert(json.error);
-                return;
-              }
-
-              const raw: QueueElement[] = await resp.json();
-              const data = raw.map((e) => ({
-                ...request,
-                timestamp: Date.now(),
-                filename: e.filename,
-                id: e.id,
-                progress: 0,
-              }));
-
-              if (libgenMode) {
-                data.forEach((e) => {
-                  e.title = request.books.find((b) => b.md5 === e.filename)?.title ?? e.filename;
-                });
-              }
-
-              set((s) => ({ transactions: [...s.transactions, ...data] }));
-              StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
-            } catch (e) {
-              console.log(e);
-            }
-          })
-        );
-
-        await BackgroundService.stop();
-      },
-      {
-        taskName: 'inkomi-upload',
-        taskTitle: 'Inkomi',
-        taskDesc: 'Uploading files...',
-        taskIcon: {
-          name: 'ic_launcher',
-          type: 'mipmap',
-        },
-        foregroundServiceType: ['dataSync'],
-      }
-    );
-
-    return true;
+    // TODO: get files, start transaction (create object), send files one by one (create object)
+    // const forms: FormData[] = [];
+    // if (libgenMode ?? false) {
+    //   const form = new FormData();
+    //   form.append('md5s', req.books.map((e) => e.md5).join(','));
+    //   forms.push(form);
+    // } else {
+    //   let files: Source[] = [];
+    //   if (req.sourceMode === 'files') {
+    //     files = req.sources;
+    //   } else {
+    //     files = req.sources[0].children ?? [];
+    //   }
+    //   if (files.length === 0) {
+    //     alert('No files');
+    //     return false;
+    //   }
+    //   let form = new FormData();
+    //   let size = 0;
+    //   let cant = 0;
+    //   files.sort((a, b) => collator.compare(a.path, b.path));
+    //   for (const file of files) {
+    //     if (file.size! > MAX_CHUNK_SIZE) {
+    //       alert(`File ${file.name} (${file.size} bytes) is too big (max 200 MB)`);
+    //       return false;
+    //     }
+    //     cant++;
+    //     if (size + file.size! > MAX_CHUNK_SIZE || cant >= MAX_FILES_CANT) {
+    //       forms.push(form);
+    //       form = new FormData();
+    //       size = 0;
+    //       cant = 0;
+    //     }
+    //     form.append('files', {
+    //       uri: file.path,
+    //       name: file.name,
+    //       type: file.mime ?? 'application/zip',
+    //     } as any);
+    //     size += file.size!;
+    //   }
+    //   if (form.getAll('files').length > 0 || cant > 0) {
+    //     forms.push(form);
+    //   }
+    // }
+    // const permissionGranted = await NotificationService.requestNotificationPermission();
+    // const notifyToken = permissionGranted ? await NotificationService.getToken() : '';
+    // const toCloud = req.destination === 'cloud';
+    // const token = toCloud ? ((await useCloud.getState().getToken()) ?? '') : '';
+    // const folder = toCloud ? ((await useCloud.getState().getFolder()) ?? '') : '';
+    // const uploads: Upload[] = [];
+    // for (const form of forms) {
+    //   form.append('profile', req.model ?? '');
+    //   form.append('title', req.title ?? '');
+    //   form.append('author', req.author ?? '');
+    //   form.append('cloud', String(toCloud));
+    //   form.append('merge', String(req.merge));
+    //   form.append('notify_token', notifyToken);
+    //   form.append('cloud_token', token);
+    //   form.append('cloud_folder', folder);
+    //   let sources: Source[] = [];
+    //   if (!libgenMode) {
+    //     const files = form.getAll('files').map((e: any) => e.uri as string);
+    //     if (req.sourceMode === 'files') {
+    //       sources = req.sources.filter((e) => files.includes(e.path));
+    //     } else {
+    //       const source = req.sources[0];
+    //       source.children = source.children!.filter((e) => files.includes(e.path));
+    //       sources = [source];
+    //     }
+    //   }
+    //   const request: TransactionRequest = {
+    //     ...req,
+    //     sources: sources,
+    //   };
+    //   uploads.push({
+    //     id: randomUUID(),
+    //     libgenMode: libgenMode ?? false,
+    //     request: request,
+    //     timestamp: Date.now(),
+    //     formData: form,
+    //   });
+    // }
+    // set((s) => ({ uploads: [...s.uploads, ...uploads] }));
+    // const url = `${BACKEND_API_URL}/transaction/convert${(libgenMode ?? false) ? '?remote=true' : ''}`;
+    // await BackgroundService.start(
+    //   async () => {
+    //     await Promise.all(
+    //       uploads.map(async ({ id, formData: form, request }) => {
+    //         try {
+    //           const resp = await fetch(url, { method: 'POST', body: form });
+    //           set((s) => ({ uploads: s.uploads.filter((u) => u.id !== id) }));
+    //           if (resp.status !== 200) {
+    //             const json = await resp.json();
+    //             alert(json.error);
+    //             return;
+    //           }
+    //           const raw: QueueElement[] = await resp.json();
+    //           const data = raw.map((e) => ({
+    //             ...request,
+    //             timestamp: Date.now(),
+    //             filename: e.filename,
+    //             id: e.id,
+    //             progress: 0,
+    //           }));
+    //           if (libgenMode) {
+    //             data.forEach((e) => {
+    //               e.title = request.books.find((b) => b.md5 === e.filename)?.title ?? e.filename;
+    //             });
+    //           }
+    //           set((s) => ({ transactions: [...s.transactions, ...data] }));
+    //           StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
+    //         } catch (e) {
+    //           console.log(e);
+    //         }
+    //       })
+    //     );
+    //     await BackgroundService.stop();
+    //   },
+    //   {
+    //     taskName: 'inkomi-upload',
+    //     taskTitle: 'Inkomi',
+    //     taskDesc: 'Uploading files...',
+    //     taskIcon: {
+    //       name: 'ic_launcher',
+    //       type: 'mipmap',
+    //     },
+    //     foregroundServiceType: ['dataSync'],
+    //   }
+    // );
+    // return true;
   },
 }));
 
