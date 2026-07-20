@@ -113,9 +113,23 @@ func (t *TransactionsV2Handler) HandleGetStatus(r *http.Request) (*dto.Transacti
 		Completed: tran.CompletedFiles(),
 	}
 	for _, file := range tran.Items {
+		resultId := ""
+		if file.Result != nil {
+			resultId = file.Result.Id
+		}
+
 		resp.Items = append(resp.Items, dto.TransactionStatusResponseItem{
 			Filename: file.Filename,
 			Status:   file.Status(),
+			Id:       file.Id,
+			ResultId: resultId,
+		})
+	}
+
+	for _, result := range tran.ResultFiles {
+		resp.Results = append(resp.Results, dto.TransactionStatusResultFileResponseItem{
+			Id:       result.Id,
+			Filename: result.Filename,
 		})
 	}
 

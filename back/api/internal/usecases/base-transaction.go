@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"ismelen/inkomi/internal/domain/convert"
 	"ismelen/inkomi/internal/infra/epub"
+	"ismelen/inkomi/internal/shared/uid"
 	"os"
 	"path/filepath"
 	"slices"
@@ -127,6 +128,7 @@ func (m BaseTransactionUC) MergeFiles(results []*convert.TransactionResultFile, 
 	}
 
 	result := convert.NewTransactionResultFile(
+		uid.GetRandomID(6),
 		filename,
 		outPath,
 		size,

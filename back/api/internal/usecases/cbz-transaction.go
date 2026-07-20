@@ -7,6 +7,7 @@ import (
 	"ismelen/inkomi/internal/domain/manga"
 	"ismelen/inkomi/internal/infra/epub"
 	"ismelen/inkomi/internal/infra/fs"
+	"ismelen/inkomi/internal/shared/uid"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -85,5 +86,5 @@ func (c CBZTransactionUC) Process(file *convert.TransactionFile, tran *convert.T
 	path, err := builder.Build()
 	filename := filepath.Base(path)
 
-	return convert.NewTransactionResultFile(filename, path, file.Size, []*convert.TransactionFile{file})
+	return convert.NewTransactionResultFile(uid.GetRandomID(6), filename, path, file.Size, []*convert.TransactionFile{file})
 }

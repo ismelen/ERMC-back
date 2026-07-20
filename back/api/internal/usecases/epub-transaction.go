@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"ismelen/inkomi/internal/domain/convert"
+	"ismelen/inkomi/internal/shared/uid"
 )
 
 type EpubTransactionUC struct {
@@ -22,5 +23,5 @@ func NewEpubTransactionUC(
 }
 
 func (e EpubTransactionUC) Process(file *convert.TransactionFile, tran *convert.Transaction, transPath string) *convert.TransactionResultFile {
-	return convert.NewTransactionResultFile(file.Filename, file.SrcPath, file.Size, []*convert.TransactionFile{file})
+	return convert.NewTransactionResultFile(uid.GetRandomID(6), file.Filename, file.SrcPath, file.Size, []*convert.TransactionFile{file})
 }
