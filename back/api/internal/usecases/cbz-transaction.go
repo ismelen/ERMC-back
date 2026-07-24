@@ -26,7 +26,7 @@ func NewCBZTransactioUC(
 	imgProcessor manga.ImageProcessor,
 	cloud convert.CloudStorage,
 ) *CBZTransactionUC {
-	return &CBZTransactionUC{
+	t := &CBZTransactionUC{
 		BaseTransactionUC: BaseTransactionUC{
 			pushNotifier: pushNotifier,
 			cloud:        cloud,
@@ -34,13 +34,15 @@ func NewCBZTransactioUC(
 		imageSettings: manga.NewDefaultImageSettings(),
 		imgProcessor:  imgProcessor,
 	}
+	t.processor = t
+	return t
 }
 
 func (c CBZTransactionUC) Process(file *convert.TransactionFile, tran *convert.Transaction, transPath string) *convert.TransactionResultFile {
 	dir := filepath.Dir(file.SrcPath)
 	builder := epub.New().
 		SetSettings(c.imageSettings, tran.Config.Profile).
-		Start(file.Filename, dir)
+		Start(file.Name, dir)
 
 	workers := max(1, runtime.NumCPU()*3/4)
 

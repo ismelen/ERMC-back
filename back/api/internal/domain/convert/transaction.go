@@ -2,6 +2,8 @@ package convert
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync/atomic"
 	"time"
 )
@@ -11,23 +13,34 @@ type Transaction struct {
 	status         atomic.Int32 // Waiting, Processing, Done, Canceled, Error
 	Items          []*TransactionFile
 	completedFiles atomic.Int32
-	AttachedItems  atomic.Int32
+	attachedItems  atomic.Int32
 	Config         *TransactionConfig
 	CreatedAt      time.Time
 	Error          error
 	ResultFiles    []*TransactionResultFile
+	BasePath       string
 }
 
-func NewTransaction(id string, config *TransactionConfig) *Transaction {
+func NewTransaction(id string, config *TransactionConfig, transPath string) *Transaction {
 	t := &Transaction{
 		Id:          id,
 		CreatedAt:   time.Now(),
-		Items:       make([]*TransactionFile, 0, config.Cant),
-		ResultFiles: make([]*TransactionResultFile, 0, config.Cant),
+		Items:       make([]*TransactionFile, config.Cant),
+		ResultFiles: make([]*TransactionResultFile, config.Cant),
+		Config:      config,
+		BasePath:    filepath.Join(transPath, id),
 	}
 
 	t.status.Store(int32(TransactionWaiting))
 	return t
+}
+
+func (t *Transaction) Delete() {
+	os.RemoveAll(t.BasePath)
+}
+
+func (t *Transaction) AttachedItems() int32 {
+	return t.attachedItems.Load()
 }
 
 func (t *Transaction) Status() TransactionStatus {
@@ -35,12 +48,10 @@ func (t *Transaction) Status() TransactionStatus {
 }
 
 func (t *Transaction) GetResultFile(id string) (*TransactionResultFile, error) {
-	for _, file := range t.Items {
-		if file.Id == id {
-			if file.Result == nil {
-				return nil, fmt.Errorf("file not processed yet")
-			}
-			return file.Result, nil
+	for i := range t.CompletedFiles() {
+		result := t.ResultFiles[i]
+		if result.Id == id {
+			return result, nil
 		}
 	}
 
@@ -74,13 +85,13 @@ func (t *Transaction) AttachFile(file *TransactionFile) (string, error) {
 		return "", err
 	}
 
-	attachedItems := t.AttachedItems.Load()
+	attachedItems := t.attachedItems.Load()
 	if attachedItems+1 > t.Config.Cant {
 		return "", fmt.Errorf("files limit exceded")
 	}
 
 	t.Items[attachedItems] = file
-	t.AttachedItems.Add(1)
+	t.attachedItems.Add(1)
 
 	if t.Status() == TransactionWaiting {
 		t.status.Store(int32(TransactionProcessing))
@@ -94,7 +105,15 @@ func (t *Transaction) Cancel() {
 }
 
 func (t *Transaction) CompletedFiles() int32 {
+	if t.Status() == TransactionDone {
+		return int32(len(t.ResultFiles))
+	}
+
 	return int32(t.completedFiles.Load())
+}
+
+func (t *Transaction) SetResults(files []*TransactionResultFile) {
+	t.ResultFiles = files
 }
 
 func (t *Transaction) AddResult(file *TransactionResultFile) (bool, error) {
@@ -106,7 +125,7 @@ func (t *Transaction) AddResult(file *TransactionResultFile) (bool, error) {
 	t.ResultFiles[completedFiles] = file
 	t.completedFiles.Add(1)
 
-	completed := completedFiles >= t.Config.Cant
+	completed := (completedFiles + 1) >= t.Config.Cant
 	if completed {
 		t.Done()
 	}

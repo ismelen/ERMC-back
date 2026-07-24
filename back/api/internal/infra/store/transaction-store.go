@@ -5,6 +5,7 @@ import (
 	"ismelen/inkomi/internal/domain/convert"
 	"ismelen/inkomi/internal/shared/uid"
 	"sync"
+	"time"
 )
 
 type TransactionStore struct {
@@ -15,10 +16,15 @@ func NewTransactionStore() *TransactionStore {
 	return &TransactionStore{}
 }
 
-func (t *TransactionStore) StartTransaction(config *convert.TransactionConfig) *convert.Transaction {
+func (t *TransactionStore) StartTransaction(config *convert.TransactionConfig, transPath string) *convert.Transaction {
 	id := uid.GetRandomID(8)
-	tran := convert.NewTransaction(id, config)
+	tran := convert.NewTransaction(id, config, transPath)
 	t.transactions.Store(id, tran)
+
+	time.AfterFunc(4*time.Hour, func() {
+		tran.Delete()
+		t.transactions.Delete(id)
+	})
 
 	return tran
 }

@@ -1,21 +1,27 @@
 package convert
 
+import (
+	"path/filepath"
+	"strings"
+)
+
 type TransactionFile struct {
-	Id       string
-	Filename string
-	Size     int64
-	status   TransactionFileStatus // Pending, Processing, Done, Error
-	SrcPath  string
-	Error    error
-	Result   *TransactionResultFile
+	Id      string
+	Name    string
+	Size    int64
+	status  TransactionFileStatus // Pending, Processing, Done, Error
+	SrcPath string
+	Error   error
+	Result  *TransactionResultFile
 }
 
 func NewTransactionFile(id, filename, path string, size int64) *TransactionFile {
+	ext := filepath.Ext(filename)
 	t := &TransactionFile{
-		Id:       id,
-		Filename: filename,
-		Size:     size,
-		SrcPath:  path,
+		Id:      id,
+		Name:    strings.TrimSuffix(filename, ext),
+		Size:    size,
+		SrcPath: path,
 	}
 
 	t.status = TransactionFilePending

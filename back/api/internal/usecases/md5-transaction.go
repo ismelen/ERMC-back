@@ -4,6 +4,7 @@ import (
 	"ismelen/inkomi/internal/domain/book"
 	"ismelen/inkomi/internal/domain/convert"
 	"ismelen/inkomi/internal/infra/fs"
+	"ismelen/inkomi/internal/shared/uid"
 	"os"
 	"path/filepath"
 )
@@ -18,13 +19,16 @@ func NewMd5TransactionUC(
 	libgenServ book.LibgenService,
 	cloud convert.CloudStorage,
 ) *MD5UC {
-	return &MD5UC{
+	t := &MD5UC{
 		BaseTransactionUC: BaseTransactionUC{
 			pushNotifier: pushNotifier,
 			cloud:        cloud,
 		},
 		libgenServ: libgenServ,
 	}
+
+	t.processor = t
+	return t
 }
 
 func (m MD5UC) Process(file *convert.TransactionFile, tran *convert.Transaction, transPath string) *convert.TransactionResultFile {
@@ -43,5 +47,5 @@ func (m MD5UC) Process(file *convert.TransactionFile, tran *convert.Transaction,
 		return nil
 	}
 
-	return convert.NewTransactionResultFile(result.Filename, dstPath, 0, []*convert.TransactionFile{file})
+	return convert.NewTransactionResultFile(uid.GetRandomID(6), result.Filename, dstPath, 0, []*convert.TransactionFile{file})
 }

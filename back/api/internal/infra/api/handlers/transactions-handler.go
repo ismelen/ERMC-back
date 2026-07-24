@@ -9,6 +9,7 @@ import (
 	"ismelen/inkomi/internal/shared/strutil"
 	"ismelen/inkomi/internal/shared/uid"
 	"ismelen/inkomi/internal/usecases"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -56,7 +57,7 @@ func (t *TransactionsV2Handler) HandleStartTransaction(r *http.Request) (*dto.Tr
 		return nil, err
 	}
 
-	tran := t.tranStore.StartTransaction(config)
+	tran := t.tranStore.StartTransaction(config, t.transPath)
 	return &dto.TransactionStartResponse{
 		Id:        tran.Id,
 		Timestamp: tran.CreatedAt.Unix(),
@@ -86,7 +87,7 @@ func (t *TransactionsV2Handler) HandleDownload(r *http.Request) (*requtil.FileRe
 
 	return &requtil.FileResponse{
 		Path: file.Path,
-		Name: file.Filename,
+		Name: file.Name,
 	}, nil
 }
 
@@ -97,6 +98,7 @@ func (t *TransactionsV2Handler) HandleCancel(r *http.Request) (*any, error) {
 	}
 
 	tran.Cancel()
+	os.RemoveAll(filepath.Join(t.transPath, tran.Id))
 	return nil, nil
 }
 
@@ -112,24 +114,31 @@ func (t *TransactionsV2Handler) HandleGetStatus(r *http.Request) (*dto.Transacti
 		Total:     tran.Config.Cant,
 		Completed: tran.CompletedFiles(),
 	}
-	for _, file := range tran.Items {
+
+	log.Printf("Attached items cant: %d", tran.AttachedItems())
+
+	for i := range tran.AttachedItems() {
+		file := tran.Items[i]
+
 		resultId := ""
 		if file.Result != nil {
 			resultId = file.Result.Id
 		}
 
 		resp.Items = append(resp.Items, dto.TransactionStatusResponseItem{
-			Filename: file.Filename,
+			Filename: file.Name,
 			Status:   file.Status(),
 			Id:       file.Id,
 			ResultId: resultId,
 		})
 	}
 
-	for _, result := range tran.ResultFiles {
+	for i := range tran.CompletedFiles() {
+		result := tran.ResultFiles[i]
+
 		resp.Results = append(resp.Results, dto.TransactionStatusResultFileResponseItem{
 			Id:       result.Id,
-			Filename: result.Filename,
+			Filename: result.Name,
 		})
 	}
 
@@ -152,7 +161,7 @@ func (t *TransactionsV2Handler) HandleAttachFile(r *http.Request) (*string, erro
 	}
 	defer file.Close()
 
-	if ext := filepath.Ext(header.Filename); ext != tran.Config.Type {
+	if ext := filepath.Ext(header.Filename); ext != "."+tran.Config.Type {
 		return nil, requtil.NewError(
 			http.StatusBadRequest,
 			fmt.Sprintf("%s file type not suported, only %s", ext, tran.Config.Type),
@@ -161,7 +170,12 @@ func (t *TransactionsV2Handler) HandleAttachFile(r *http.Request) (*string, erro
 
 	tranFileId := uid.GetRandomID(6)
 	filename := strutil.NormalizeString(header.Filename)
-	dstPath := filepath.Join(t.transPath, tran.Id, tranFileId, filename)
+	dirPath := filepath.Join(t.transPath, tran.Id, tranFileId)
+	dstPath := filepath.Join(dirPath, filename)
+
+	if err := os.MkdirAll(dirPath, os.ModeAppend); err != nil {
+		return nil, err
+	}
 
 	dst, err := os.Create(dstPath)
 	if err != nil {

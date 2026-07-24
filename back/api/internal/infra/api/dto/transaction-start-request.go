@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"fmt"
 	"ismelen/inkomi/internal/domain/convert"
 )
 
@@ -23,16 +24,22 @@ func (t TransactionStartRequest) ToTransactionConfig() (*convert.TransactionConf
 		return nil, err
 	}
 
-	return &convert.TransactionConfig{
-		Author:      t.Author,
-		Title:       t.Title,
-		Merge:       t.Merge,
-		Cloud:       t.Cloud,
-		CloudToken:  t.CloudToken,
-		CloudFolder: t.CloudFolder,
-		NotifyToken: t.NotifyToken,
-		Profile:     profile,
-		Cant:        t.Cant,
-		Type:        t.Type,
-	}, nil
+	switch t.Type {
+	case "md5", "epub", "cbz":
+		return &convert.TransactionConfig{
+			Author:      t.Author,
+			Title:       t.Title,
+			Merge:       t.Merge,
+			Cloud:       t.Cloud,
+			CloudToken:  t.CloudToken,
+			CloudFolder: t.CloudFolder,
+			NotifyToken: t.NotifyToken,
+			Profile:     profile,
+			Cant:        t.Cant,
+			Type:        t.Type,
+		}, nil
+	default:
+		return nil, fmt.Errorf("type not supported")
+	}
+
 }

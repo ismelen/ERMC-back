@@ -9,7 +9,7 @@ type PushMessage struct {
 func NewCancelMessage(tran *Transaction, file *TransactionResultFile) PushMessage {
 	return PushMessage{
 		Title:   "Canceled",
-		Message: fmt.Sprintf("%s conversion canceled", file.Filename),
+		Message: fmt.Sprintf("%s conversion canceled", file.Name),
 		Id:      tran.Id,
 		Type:    "cancel",
 	}

@@ -13,9 +13,9 @@ func SetupTransactionRoutes(api *chi.Mux, handler *handlers.TransactionsV2Handle
 	api.Mount("/transactions", r)
 
 	r.Post("/start", requtil.Wrap[dto.TransactionStartResponse](handler.HandleStartTransaction))
-	r.Post("{tranId}/attach", requtil.Wrap[string](handler.HandleAttachFile))
+	r.Post("/{tranId}/attach", requtil.Wrap[string](handler.HandleAttachFile))
 
-	r.Get("{tranId}/status", requtil.Wrap[dto.TransactionStatusResponse](handler.HandleGetStatus))
-	r.Put("{tranId}/cancel", requtil.Wrap(handler.HandleCancel))
-	r.Get("{tranId}/download/{fileId}", requtil.Wrap[requtil.FileResponse](handler.HandleDownload))
+	r.Get("/{tranId}/status", requtil.Wrap[dto.TransactionStatusResponse](handler.HandleGetStatus))
+	r.Put("/{tranId}/cancel", requtil.Wrap(handler.HandleCancel))
+	r.Get("/{tranId}/download/{fileId}", requtil.Wrap[requtil.FileResponse](handler.HandleDownload))
 }

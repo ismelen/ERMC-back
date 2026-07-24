@@ -26,11 +26,13 @@ const MAX_CHUNK_SIZE = 200 << 20
 type BaseTransactionUC struct {
 	pushNotifier convert.PushNotifier
 	cloud        convert.CloudStorage
+	processor    TransactionUC
 }
 
 func (m BaseTransactionUC) Execute(file *convert.TransactionFile, tran *convert.Transaction, transPath string) {
 	file.Processing()
-	result := m.Process(file, tran, transPath)
+	result := m.processor.Process(file, tran, transPath)
+	os.RemoveAll(filepath.Join(file.SrcPath))
 
 	if !tran.Config.Merge {
 		if err := m.KepubifyResult(tran, result); err != nil {
@@ -70,7 +72,7 @@ func (m BaseTransactionUC) Execute(file *convert.TransactionFile, tran *convert.
 
 func (m BaseTransactionUC) ChopAndMerge(tran *convert.Transaction, transPath string) {
 	slices.SortFunc(tran.ResultFiles, func(a, b *convert.TransactionResultFile) int {
-		if natsort.Compare(a.Filename, b.Filename) {
+		if natsort.Compare(a.Name, b.Name) {
 			return -1
 		}
 		return 1
@@ -98,7 +100,7 @@ func (m BaseTransactionUC) ChopAndMerge(tran *convert.Transaction, transPath str
 
 		size += result.Size
 		filesToMerge = append(filesToMerge, result)
-		defer os.RemoveAll(result.Path)
+		defer os.RemoveAll(filepath.Dir(result.Path))
 	}
 
 	if len(filesToMerge) > 0 {
@@ -116,7 +118,14 @@ func (m BaseTransactionUC) ChopAndMerge(tran *convert.Transaction, transPath str
 func (m BaseTransactionUC) MergeFiles(results []*convert.TransactionResultFile, size int64, tran *convert.Transaction, transPath string) (*convert.TransactionResultFile, error) {
 	title := tran.Config.GetTitle(tran.ResultFiles)
 	filename := fmt.Sprintf("%s%s", title, ".epub")
-	outPath := filepath.Join(transPath, tran.Id, filename)
+	resultId := uid.GetRandomID(6)
+
+	outDir := filepath.Join(transPath, tran.Id, resultId)
+	if err := os.MkdirAll(outDir, os.ModeAppend); err != nil {
+		return nil, err
+	}
+
+	outPath := filepath.Join(outDir, filename)
 	err := epub.MergeEpubs(results, title, tran.Config.Author, outPath)
 	if err != nil {
 		return nil, err
@@ -128,7 +137,7 @@ func (m BaseTransactionUC) MergeFiles(results []*convert.TransactionResultFile, 
 	}
 
 	result := convert.NewTransactionResultFile(
-		uid.GetRandomID(6),
+		resultId,
 		filename,
 		outPath,
 		size,
@@ -189,13 +198,13 @@ func (b *BaseTransactionUC) SendAndNotify(tran *convert.Transaction, result *con
 	if tran.Config.Cloud {
 		b.pushNotifier.Send(
 			tran.Config.NotifyToken,
-			convert.NewSuccessMessage(tran, fmt.Sprintf("Sending %s to cloud", result.Filename)),
+			convert.NewSuccessMessage(tran, fmt.Sprintf("Sending %s to cloud", result.Name)),
 		)
 
 		if err := b.cloud.Upload(result.Path, tran.Config.CloudToken, tran.Config.CloudFolder); err != nil {
 			b.pushNotifier.Send(
 				tran.Config.NotifyToken,
-				convert.NewErrorMessage(tran, fmt.Errorf("Cannot send %s to cloud", result.Filename)),
+				convert.NewErrorMessage(tran, fmt.Errorf("Cannot send %s to cloud", result.Name)),
 			)
 			result.SetError(err)
 		}
@@ -204,7 +213,7 @@ func (b *BaseTransactionUC) SendAndNotify(tran *convert.Transaction, result *con
 
 	b.pushNotifier.Send(
 		tran.Config.NotifyToken,
-		convert.NewSuccessMessage(tran, fmt.Sprintf("%s transaction ready", result.Filename)),
+		convert.NewSuccessMessage(tran, fmt.Sprintf("%s transaction ready", result.Name)),
 	)
 }
 
