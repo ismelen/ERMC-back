@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useCloud } from '../../hooks/useCloud';
+import { usePathname } from 'expo-router';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const DRAWER_HEIGHT = SCREEN_HEIGHT * 0.75;
@@ -25,6 +26,7 @@ interface DropboxFolder {
 }
 
 export function DropboxFolderPickerModal() {
+  const pathname = usePathname();
   const showDialog = useCloud((s) => s.showDialog);
   const onFolderSelect = useCloud((s) => s.onFolderSelect);
   const getToken = useCloud((s) => s.getToken);
@@ -82,7 +84,7 @@ export function DropboxFolderPickerModal() {
     setLoading(true);
     setError(null);
     try {
-      const token = await getToken();
+      const token = await getToken(pathname);
       if (!token) throw new Error('No hay sesión de Dropbox activa');
 
       const res = await fetch('https://api.dropboxapi.com/2/files/list_folder', {

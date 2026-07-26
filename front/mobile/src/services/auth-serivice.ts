@@ -18,10 +18,12 @@ export interface OAuthData {
 WebBrowser.maybeCompleteAuthSession();
 
 export class AuthService {
-  static async login(): Promise<OAuthData | undefined> {
+  static async login(returnPath?: string): Promise<OAuthData | undefined> {
     const redirectUri = Linking.createURL('oauth');
 
     const { codeVerifier, codeChallenge } = await AuthService.generatePKCE();
+
+    const stateParam = returnPath ? `&state=${encodeURIComponent(returnPath)}` : '';
 
     const authUrl =
       `https://www.dropbox.com/oauth2/authorize` +
@@ -31,6 +33,7 @@ export class AuthService {
       `&code_challenge=${codeChallenge}` +
       `&code_challenge_method=S256` +
       `&token_access_type=offline` +
+      stateParam +
       `&scope=files.content.write%20files.metadata.read%20account_info.read`;
 
     const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);

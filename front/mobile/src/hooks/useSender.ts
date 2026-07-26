@@ -13,11 +13,11 @@ import { useObjectNavigation } from './useObjectNavigation';
 import { useEffect, useState } from 'react';
 import { useSettings } from './useSettings';
 import { useQueue } from './useQueue';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { Directions } from 'react-native-gesture-handler';
 import { useMonitoredFolders } from './useMonitoredFolders';
 
-export function useSender(mode: TransactionMode) {
+export function useSender(mode: TransactionMode, pathname?: string) {
   const { clear, initData } = useObjectNavigation(
     useShallow((s) => ({ clear: s.clear, initData: s.object }))
   );
@@ -56,7 +56,7 @@ export function useSender(mode: TransactionMode) {
     }
 
     setSending(true);
-    const done = await send(config);
+    const done = await send(config, pathname);
     setSending(false);
 
     if (!done) return false;

@@ -10,18 +10,21 @@ import { useShallow } from 'zustand/react/shallow';
 import SIcon from '../../src/components/icons/SIcon';
 import { useCloud } from '../../src/hooks/useCloud';
 import SButton from '../../src/components/shared/SButton';
+import { usePathname } from 'expo-router';
 
 export default function SettingsPage() {
+  const pathname = usePathname();
+
   const { settings, setModel } = useSettings(
     useShallow((s) => ({ settings: s.settings, setModel: s.setModel }))
   );
 
-  const { email, getToken, getCloudInfo, info, logout } = useCloud(
+  const { oauth, folder, getFolder, getToken, logout } = useCloud(
     useShallow((s) => ({
-      email: s.email,
+      oauth: s.oauth,
+      folder: s.folder,
       getToken: s.getToken,
-      info: s.cloudInfo,
-      getCloudInfo: s.getCloudInfo,
+      getFolder: s.getFolder,
       logout: s.logout,
     }))
   );
@@ -52,7 +55,7 @@ export default function SettingsPage() {
             <SIcon name="cloud" color={colors.primary} size={32} type="outlined" />
             <SText style={{ fontSize: 18, flex: 1, fontFamily: 'semibold' }}>Dropbox</SText>
             <SButton
-              onPress={() => (email ? logout() : getToken(true))}
+              onPress={() => (oauth?.email ? logout() : getToken(pathname, true))}
               style={{
                 borderWidth: 1,
                 borderColor: colors.primary_fixed,
@@ -63,11 +66,11 @@ export default function SettingsPage() {
               }}
             >
               <SText style={{ fontFamily: 'semibold', color: colors.primary }}>
-                {email ? 'Disconnect' : 'Connect'}
+                {oauth?.email ? 'Disconnect' : 'Connect'}
               </SText>
             </SButton>
           </View>
-          {email && (
+          {oauth?.email && (
             <View
               style={{
                 flexDirection: 'row',
@@ -78,14 +81,14 @@ export default function SettingsPage() {
             >
               <SIcon name="check_circle" color={colors.primary} size={14} />
               <SText style={{ fontSize: 12, color: colors.primary, fontFamily: 'semibold' }}>
-                Connected as {email}
+                Connected as {oauth.email}
               </SText>
             </View>
           )}
         </View>
       </View>
 
-      {email && (
+      {oauth?.email && (
         <View
           style={{
             marginTop: 10,
@@ -106,10 +109,10 @@ export default function SettingsPage() {
                 padding: 10,
               }}
             >
-              <SText>{info?.folderPath ?? 'Select folder'}</SText>
+              <SText>{folder ?? 'Select folder'}</SText>
             </View>
             <SButton
-              onPress={() => getCloudInfo(true)}
+              onPress={() => getFolder(true)}
               style={{
                 backgroundColor: colors.primary,
                 paddingHorizontal: 14,

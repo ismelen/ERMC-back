@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { colors } from '../src/theme/colors';
@@ -14,7 +14,8 @@ import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
 
 export default function SendComicPage() {
-  const { sending, config, setConfig, send } = useSender('cbz');
+  const pathname = usePathname();
+  const { sending, config, setConfig, send } = useSender('cbz', pathname);
 
   if (sending)
     return (

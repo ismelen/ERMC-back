@@ -11,10 +11,11 @@ import SearchedBookCard from '../src/components/search/searched-book-card';
 import { useLibgen } from '../src/hooks/useLibgen';
 import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 
 export default function SendLibgen() {
-  const { sending, config, setConfig, send } = useSender('md5');
+  const pathname = usePathname();
+  const { sending, config, setConfig, send } = useSender('md5', pathname);
 
   const { selectedBooks, onDelete, clear } = useLibgen(
     useShallow((s) => ({

@@ -53,11 +53,15 @@ export const useQueue = create(
           StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
         },
 
-        async send(config: TransactionConfig): Promise<boolean> {
+        async send(config: TransactionConfig, pathname?: string): Promise<boolean> {
+          // TODO: Guardar last config para el redirect
+
           if (config.files.length === 0) return false;
 
           const notifyToken = await NotificationService.getToken();
-          const cloud = config.toCloud ? await useCloud.getState().getCloudInfo() : undefined;
+          const cloud = config.toCloud
+            ? await useCloud.getState().getCloudInfo(pathname)
+            : undefined;
 
           const tran = await TransactionService.startTransaction(config, cloud, notifyToken);
           if (!tran) return false;

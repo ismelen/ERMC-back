@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import SText from '../src/components/shared/SText';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { colors } from '../src/theme/colors';
 import SourceSelector from '../src/components/senders/source-selector';
 import DestinationSelector from '../src/components/senders/destination-selector';
@@ -13,7 +13,8 @@ import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
 
 export default function SendBookPage() {
-  const { sending, config, setConfig, send } = useSender('epub');
+  const pathname = usePathname();
+  const { sending, config, setConfig, send } = useSender('epub', pathname);
 
   if (sending)
     return (
