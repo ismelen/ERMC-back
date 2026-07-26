@@ -57,7 +57,7 @@ export const useCloud = create(
         if (info.folderPath && info.token && !forced) return info;
 
         if (!info.token) {
-          const token = (info.token = await useCloud.getState().getToken(forced));
+          const token = await useCloud.getState().getToken(forced);
           if (!token) {
             alert('no token');
             return;
@@ -77,6 +77,7 @@ export const useCloud = create(
           info.folderPath = path;
         }
 
+        set({ cloudInfo: info });
         StorageService.SetSecureAsync(FOLDER_PATH_KEY, JSON.stringify(info));
         return info;
       },

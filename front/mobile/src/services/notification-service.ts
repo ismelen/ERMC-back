@@ -11,7 +11,7 @@ export class NotificationService {
   }
 
   static async getToken(): Promise<string> {
-    if (!NotificationService.requestNotificationPermission()) return '';
+    if (!(await NotificationService.requestNotificationPermission())) return '';
 
     const inst = getMessaging();
     return await getToken(inst);
