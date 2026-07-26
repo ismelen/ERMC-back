@@ -10,7 +10,7 @@ import (
 
 type Transaction struct {
 	Id             string
-	status         atomic.Int32 // Waiting, Processing, Done, Canceled, Error
+	status         atomic.Int32 // Waiting, Processing, Done, Canceled, Error, Merging
 	Items          []*TransactionFile
 	completedFiles atomic.Int32
 	attachedItems  atomic.Int32
@@ -76,6 +76,10 @@ func (t *Transaction) Done() {
 	t.status.Store(int32(TransactionDone))
 }
 
+func (t *Transaction) Merging() {
+	t.status.Store(int32(TransactionMerging))
+}
+
 func (t *Transaction) Processing() {
 	t.status.Store(int32(TransactionProcessing))
 }
@@ -127,7 +131,11 @@ func (t *Transaction) AddResult(file *TransactionResultFile) (bool, error) {
 
 	completed := (completedFiles + 1) >= t.Config.Cant
 	if completed {
-		t.Done()
+		if t.Config.Merge {
+			t.Merging()
+		} else {
+			t.Done()
+		}
 	}
 
 	return completed, nil

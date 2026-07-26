@@ -45,7 +45,7 @@ func (f *FirebasePushNotifier) Send(token string, data convert.PushMessage) erro
 			Title: data.Title,
 			Body:  data.Message,
 		},
-		Data: data.ToMap(),
+		Data: data.Data(),
 		Android: &messaging.AndroidConfig{
 			Priority: "high",
 		},

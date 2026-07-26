@@ -9,8 +9,8 @@ import (
 	"ismelen/inkomi/internal/shared/strutil"
 	"ismelen/inkomi/internal/shared/uid"
 	"ismelen/inkomi/internal/usecases"
-	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -108,41 +108,7 @@ func (t *TransactionsV2Handler) HandleGetStatus(r *http.Request) (*dto.Transacti
 		return nil, err
 	}
 
-	resp := &dto.TransactionStatusResponse{
-		Id:        tran.Id,
-		Status:    tran.Status(),
-		Total:     tran.Config.Cant,
-		Completed: tran.CompletedFiles(),
-	}
-
-	log.Printf("Attached items cant: %d", tran.AttachedItems())
-
-	for i := range tran.AttachedItems() {
-		file := tran.Items[i]
-
-		resultId := ""
-		if file.Result != nil {
-			resultId = file.Result.Id
-		}
-
-		resp.Items = append(resp.Items, dto.TransactionStatusResponseItem{
-			Filename: file.Name,
-			Status:   file.Status(),
-			Id:       file.Id,
-			ResultId: resultId,
-		})
-	}
-
-	for i := range tran.CompletedFiles() {
-		result := tran.ResultFiles[i]
-
-		resp.Results = append(resp.Results, dto.TransactionStatusResultFileResponseItem{
-			Id:       result.Id,
-			Filename: result.Name,
-		})
-	}
-
-	return resp, nil
+	return dto.NewTransactionStatusResponse(tran), nil
 }
 
 func (t *TransactionsV2Handler) HandleAttachFile(r *http.Request) (*string, error) {
@@ -169,7 +135,12 @@ func (t *TransactionsV2Handler) HandleAttachFile(r *http.Request) (*string, erro
 	}
 
 	tranFileId := uid.GetRandomID(6)
-	filename := strutil.NormalizeString(header.Filename)
+	decodedFilename, err := url.QueryUnescape(header.Filename)
+	if err != nil {
+		return nil, err
+	}
+
+	filename := strutil.NormalizeString(decodedFilename)
 	dirPath := filepath.Join(t.transPath, tran.Id, tranFileId)
 	dstPath := filepath.Join(dirPath, filename)
 

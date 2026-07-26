@@ -1,9 +1,13 @@
 package convert
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type PushMessage struct {
 	Title, Message, Id, Err, Type string
+	data                          map[string]string
 }
 
 func NewCancelMessage(tran *Transaction, file *TransactionResultFile) PushMessage {
@@ -32,11 +36,11 @@ func NewSuccessMessage(tran *Transaction, msg string) PushMessage {
 	}
 }
 
-func (p *PushMessage) ToMap() map[string]string {
-	return map[string]string{
-		"title":   p.Title,
-		"message": p.Message,
-		"id":      p.Id,
-		"error":   p.Err,
+func (p *PushMessage) Data() map[string]string {
+	raw, err := json.Marshal(p.data)
+	if err != nil {
+		return map[string]string{"error": err.Error()}
 	}
+
+	return map[string]string{"data": string(raw)}
 }

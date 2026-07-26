@@ -13,6 +13,7 @@ const (
 	TransactionDone
 	TransactionCanceled
 	TransactionError
+	TransactionMerging
 )
 
 func (state TransactionStatus) String() string {
@@ -27,6 +28,8 @@ func (state TransactionStatus) String() string {
 		return "canceled"
 	case TransactionError:
 		return "error"
+	case TransactionMerging:
+		return "merging"
 	default:
 		return "unknown"
 	}
@@ -52,6 +55,8 @@ func (state *TransactionStatus) UnmarshalJSON(data []byte) error {
 		*state = TransactionCanceled
 	case "error":
 		*state = TransactionError
+	case "merging":
+		*state = TransactionMerging
 	default:
 		return fmt.Errorf("estado desconocido: %q", str)
 	}

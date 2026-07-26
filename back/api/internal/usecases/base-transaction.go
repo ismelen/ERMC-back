@@ -68,6 +68,7 @@ func (m BaseTransactionUC) Execute(file *convert.TransactionFile, tran *convert.
 	for _, result := range tran.ResultFiles {
 		m.SendAndNotify(tran, result)
 	}
+	tran.Done()
 }
 
 func (m BaseTransactionUC) ChopAndMerge(tran *convert.Transaction, transPath string) {
