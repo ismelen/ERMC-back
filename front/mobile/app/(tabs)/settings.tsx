@@ -12,16 +12,16 @@ import { useCloud } from '../../src/hooks/useCloud';
 import SButton from '../../src/components/shared/SButton';
 
 export default function SettingsPage() {
-  const { config, setModel } = useSettings(
-    useShallow((s) => ({ config: s.baseConfig, setModel: s.setModel }))
+  const { settings, setModel } = useSettings(
+    useShallow((s) => ({ settings: s.settings, setModel: s.setModel }))
   );
 
-  const { email, getToken, getFolder, folder, logout } = useCloud(
+  const { email, getToken, getCloudInfo, info, logout } = useCloud(
     useShallow((s) => ({
       email: s.email,
       getToken: s.getToken,
-      getFolder: s.getFolder,
-      folder: s.folderPath,
+      info: s.cloudInfo,
+      getCloudInfo: s.getCloudInfo,
       logout: s.logout,
     }))
   );
@@ -32,7 +32,7 @@ export default function SettingsPage() {
       <View style={{ marginTop: 14, gap: 4 }}>
         <SText style={styles.title}>READER MODEL</SText>
         <SSelect
-          value={config.model}
+          value={settings.model}
           options={eReaderProfiles}
           onOptionChange={(opt) => setModel(opt.value)}
         />
@@ -106,10 +106,10 @@ export default function SettingsPage() {
                 padding: 10,
               }}
             >
-              <SText>{folder ?? 'Select folder'}</SText>
+              <SText>{info?.folderPath ?? 'Select folder'}</SText>
             </View>
             <SButton
-              onPress={() => getFolder(true)}
+              onPress={() => getCloudInfo(true)}
               style={{
                 backgroundColor: colors.primary,
                 paddingHorizontal: 14,

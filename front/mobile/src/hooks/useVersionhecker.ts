@@ -17,14 +17,18 @@ export const useVersionChecker = create<State>((set) => ({
   showDialog: false,
 
   async init() {
-    if (!APP_VERSION) return;
+    try {
+      if (!APP_VERSION) return;
 
-    const resp = await fetch(`${BACKEND_API_URL}/app/version`);
-    if (!resp.ok) return;
+      const resp = await fetch(`${BACKEND_API_URL}/app/version`);
+      if (!resp.ok) return;
 
-    const version: string = await resp.json();
+      const version: string = await resp.json();
 
-    set({ showDialog: version !== APP_VERSION, newVersion: version });
+      set({ showDialog: version !== APP_VERSION, newVersion: version });
+    } catch (e) {
+      console.error(e);
+    }
   },
 
   hideDialog() {

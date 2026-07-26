@@ -1,43 +1,42 @@
 import { useState } from 'react';
-import { Source } from '../models/source';
 import { FilesystemService } from '../services/filesystem-service';
+import { TransactionSource } from '../models/transaction-source';
 
-export type SourceMode = 'files' | 'folder' | 'no-select';
-
-export function useSource(initSources?: Source[]) {
-  const [mode, setMode] = useState<SourceMode>(
-    !initSources || initSources.length === 0
-      ? 'no-select'
-      : initSources.length === 1
-        ? 'folder'
-        : 'files'
-  );
-  const [sources, setSources] = useState<Source[]>(initSources ?? []);
+export function useSource(initFolder?: TransactionSource, initFiles?: TransactionSource[]) {
+  const [folder, setFolder] = useState<TransactionSource | undefined>(initFolder);
+  const [files, setFiles] = useState<TransactionSource[]>(initFiles ?? []);
+  const [loading, setLoading] = useState(false);
 
   const addFiles = async () => {
+    setLoading(true);
     const srcs = await FilesystemService.pickFiles();
-    if (!srcs || srcs.length == 0) return;
+    setLoading(false);
 
-    const newSources = [...sources, ...srcs];
-    setSources(newSources);
-
-    if (mode !== 'files') setMode('files');
+    if (!srcs || srcs.length === 0) return;
+    setFiles([...files, ...srcs]);
   };
 
   const addFolder = async () => {
-    const src = await FilesystemService.pickFolder();
-    if (!src) return;
+    setLoading(true);
+    const res = await FilesystemService.pickFolder();
+    setLoading(false);
 
-    setSources([src]);
-    if (mode !== 'folder') setMode('folder');
+    if (!res) return;
+    const [newFolder, newFiles] = res;
+
+    setFiles([...files, ...newFiles]);
+    setFolder(newFolder);
   };
 
-  const deleteSource = (index: number) => {
-    const newSources = sources.filter((_, idx) => idx !== index);
-    setSources(newSources);
+  const deleteSource = (idx: number) => {
+    if (folder) {
+      setFolder(undefined);
+      setFiles([]);
+      return;
+    }
 
-    if (newSources.length === 0) setMode('no-select');
+    setFiles(files.filter((_, i) => i !== idx));
   };
 
-  return { mode, sources, addFiles, addFolder, deleteSource };
+  return { folder, files, addFiles, addFolder, deleteSource, loading };
 }

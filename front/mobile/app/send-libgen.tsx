@@ -14,7 +14,7 @@ import { useSender } from '../src/hooks/useSender';
 import { Stack } from 'expo-router';
 
 export default function SendLibgen() {
-  const { sending, req, setReq, handleSend } = useSender('remote');
+  const { sending, config, setConfig, send } = useSender('md5');
 
   const { selectedBooks, onDelete, clear } = useLibgen(
     useShallow((s) => ({
@@ -52,7 +52,7 @@ export default function SendLibgen() {
             <SText style={styles.title}>BOOKS</SText>
             {Object.values(selectedBooks).map((e) => (
               <SearchedBookCard
-                key={e.md5}
+                key={e.src}
                 book={e}
                 onSelect={() => onDelete(e)}
                 selected={false}
@@ -64,28 +64,25 @@ export default function SendLibgen() {
           <View>
             <SText style={styles.title}>READER MODEL</SText>
             <SSelect
-              value={req.model}
+              value={config.model}
               options={eReaderProfiles}
-              onOptionChange={(opt) => setReq((s) => ({ ...s, model: opt.value }))}
+              onOptionChange={(opt) => setConfig((s) => ({ ...s, model: opt.value }))}
             />
           </View>
 
           <View style={styles.section}>
             <SText style={styles.title}>DESTINATION</SText>
             <DestinationSelector
-              initDestination={req.destination}
-              onChange={(dest) => setReq((s) => ({ ...s, destination: dest }))}
+              toCloud={config.toCloud}
+              onChange={(toCloud) => setConfig((s) => ({ ...s, toCloud: toCloud }))}
             />
           </View>
         </ScrollView>
 
         <SButton
           onPress={async () => {
-            req.books = Object.values(selectedBooks);
-            if (req.books.length === 0) return;
-
-            setReq((s) => ({ ...s, books: req.books }));
-            await handleSend(true);
+            setConfig((s) => ({ ...s, files: Object.values(selectedBooks) }));
+            if (await send()) clear();
           }}
           style={{
             backgroundColor: colors.primary_container,

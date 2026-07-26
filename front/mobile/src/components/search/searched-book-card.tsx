@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { LibgenBook } from '../../models/book';
 import { colors, hexToRgba } from '../../theme/colors';
 import SText from '../shared/SText';
 import SButton from '../shared/SButton';
 import SIcon from '../icons/SIcon';
 import PulseBlock from '../shared/pulse-block';
+import { TransactionSource } from '../../models/transaction-source';
 
 interface Props {
-  book: LibgenBook;
+  book: TransactionSource;
   selected?: boolean;
   onSelect(): void;
   deleteMode?: boolean;
@@ -73,7 +73,7 @@ export default function SearchedBookCard({
           style={{ flex: 1, fontFamily: 'semibold', fontSize: 16, alignSelf: 'flex-start' }}
           numberOfLines={2}
         >
-          {book.title}
+          {book.name}
         </SText>
 
         <View style={{ justifyContent: 'space-between', marginTop: 6 }}>

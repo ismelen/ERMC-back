@@ -1,64 +1,41 @@
 import { create } from 'zustand';
 import { StorageService } from '../services/storage-service';
-import { TransactionRequest } from '../models/transaction-request';
-import { BaseConfig } from '../models/base-config';
+import { immer } from 'zustand/middleware/immer';
+import { combine } from 'zustand/middleware';
+import { TransactionConfig } from '../models/transaction-config';
 
-interface State {
-  baseConfig: BaseConfig;
-  setModel(model?: string): void;
-  init(): Promise<void>;
-  udpateConfig(baseConfig: BaseConfig): void;
-}
+const SETTINGS_KEY = 'settings_key';
+export type Settings = Omit<TransactionConfig, 'title' | 'author' | 'files' | 'folder' | 'mode'>;
 
-const BASE_CONFIG_KEY = 'base_config_key';
+export const useSettings = create(
+  immer(
+    combine(
+      {
+        settings: {
+          merge: true,
+          toCloud: false,
+        } as Settings,
+      },
+      (set) => ({
+        async init() {
+          const settings = await StorageService.GetAsync<Settings>(SETTINGS_KEY);
+          if (!settings) return;
 
-export const useSettings = create<State>((set, get) => ({
-  baseConfig: {
-    deleteOrigin: false,
-    merge: true,
-    destination: 'local',
-  },
+          set({ settings });
+        },
 
-  async init() {
-    const baseConfig = await StorageService.GetAsync<BaseConfig>(BASE_CONFIG_KEY);
-    if (!baseConfig) return;
-    set({ baseConfig });
-  },
+        setModel(model?: string) {
+          set((s) => {
+            s.settings.model = model ?? '';
+            StorageService.SetAsync(SETTINGS_KEY, s.settings);
+          });
+        },
 
-  setModel(model?: string) {
-    set((s) => {
-      const newConfig = {
-        ...s.baseConfig,
-        model,
-      };
-      StorageService.SetAsync(BASE_CONFIG_KEY, newConfig);
-
-      return { baseConfig: newConfig };
-    });
-  },
-
-  udpateConfig(baseConfig: BaseConfig) {
-    set({ baseConfig });
-    StorageService.SetAsync(BASE_CONFIG_KEY, baseConfig);
-  },
-}));
-
-// interface State {
-//   model?: string;
-//   setModel(model?: string): void;
-//   init(): Promise<void>;
-// }
-
-// const MODEL_KEY = 'e_reader_model';
-
-// export const useSettings = create<State>((set, get) => ({
-//   async init() {
-//     const model = await StorageService.GetAsync<string>(MODEL_KEY);
-//     set({ model: model });
-//   },
-
-//   setModel(model?: string) {
-//     set({ model });
-//     StorageService.SetAsync(MODEL_KEY, model);
-//   },
-// }));
+        setSettings(settings: Settings) {
+          set({ settings });
+          StorageService.SetAsync(SETTINGS_KEY, settings);
+        },
+      })
+    )
+  )
+);

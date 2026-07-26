@@ -1,19 +1,19 @@
 import { create } from 'zustand';
 import { BACKEND_API_URL } from '../constants';
-import { LibgenBook } from '../models/book';
+import { TransactionSource } from '../models/transaction-source';
 
 interface State {
-  search(query?: string): Promise<LibgenBook[] | undefined>;
-  selected: Record<string, LibgenBook>;
+  search(query?: string): Promise<TransactionSource[] | undefined>;
+  selected: Record<string, TransactionSource>;
 
-  selectBook(book: LibgenBook): void;
+  selectBook(book: TransactionSource): void;
   clear(): void;
 }
 
 export const useLibgen = create<State>((set, get) => ({
   selected: {},
 
-  async search(query?: string): Promise<LibgenBook[] | undefined> {
+  async search(query?: string): Promise<TransactionSource[] | undefined> {
     if (!query) return;
 
     const resp = await fetch(`${BACKEND_API_URL}/books/search?q=${query ?? ''}`, {
@@ -28,14 +28,14 @@ export const useLibgen = create<State>((set, get) => ({
     set({ selected: {} });
   },
 
-  selectBook(book: LibgenBook) {
-    const exists = !!get().selected[book.md5];
+  selectBook(book: TransactionSource) {
+    const exists = !!get().selected[book.src];
     const selected = get().selected;
 
     if (exists) {
-      delete selected[book.md5];
+      delete selected[book.src];
     } else {
-      selected[book.md5] = book;
+      selected[book.src] = book;
     }
 
     set({ selected: { ...selected } });

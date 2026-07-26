@@ -13,7 +13,7 @@ import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
 
 export default function SendBookPage() {
-  const { sending, req, setReq, handleSend } = useSender('epub');
+  const { sending, config, setConfig, send } = useSender('epub');
 
   if (sending)
     return (
@@ -42,16 +42,20 @@ export default function SendBookPage() {
           <View>
             <SText style={styles.title}>SOURCE</SText>
             <SourceSelector
-              initSources={req.sources}
-              onChange={(srcs) => setReq((s) => ({ ...s, sources: srcs }))}
-              onModeChange={(mode) => setReq((s) => ({ ...s, sourceMode: mode }))}
+              initFolder={config.folder}
+              initFiles={config.files}
+              onChange={(files, folder) =>
+                setConfig((s) => ({ ...s, folder: folder, files: files }))
+              }
             />
-            {req.sourceMode === 'folder' && (
+            {config && (
               <OptionCardChecker
-                initialChecked={req.monitorize ?? false}
+                initialChecked={config.monitoredIdx != undefined}
                 label="Monitorize folder"
                 text="Monitor changes in this folder"
-                onChange={(checked) => setReq((s) => ({ ...s, monitorize: checked }))}
+                onChange={(checked) =>
+                  setConfig((s) => ({ ...s, monitoredIdx: checked ? 1 : undefined }))
+                }
               />
             )}
           </View>
@@ -59,33 +63,23 @@ export default function SendBookPage() {
           <View>
             <SText style={styles.title}>READER MODEL</SText>
             <SSelect
-              value={req.model}
+              value={config.model}
               options={eReaderProfiles}
-              onOptionChange={(opt) => setReq((s) => ({ ...s, model: opt.value }))}
+              onOptionChange={(opt) => setConfig((s) => ({ ...s, model: opt.value }))}
             />
           </View>
 
           <View>
             <SText style={styles.title}>DESTINATION</SText>
             <DestinationSelector
-              initDestination={req.destination}
-              onChange={(dest) => setReq((s) => ({ ...s, destination: dest }))}
+              toCloud={config.toCloud}
+              onChange={(toCloud) => setConfig((s) => ({ ...s, toCloud: toCloud }))}
             />
           </View>
-
-          {/* <View>
-            <SText style={styles.title}>OPTIONS</SText>
-            <OptionCardChecker
-              initialChecked={req.deleteOrigin}
-              label="Delete source"
-              text="Remove original after successful upload"
-              onChange={(checked) => setReq((s) => ({ ...s, deleteOrigin: checked }))}
-            />
-          </View> */}
         </View>
 
         <SButton
-          onPress={() => handleSend(false)}
+          onPress={() => send()}
           style={{
             backgroundColor: colors.primary_container,
             paddingVertical: 12,

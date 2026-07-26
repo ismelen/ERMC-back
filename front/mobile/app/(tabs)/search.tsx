@@ -5,13 +5,13 @@ import { colors, hexToRgba } from '../../src/theme/colors';
 import { ScrollView } from 'react-native-gesture-handler';
 import SIcon from '../../src/components/icons/SIcon';
 import { useLibgen } from '../../src/hooks/useLibgen';
-import { LibgenBook } from '../../src/models/book';
 import SearchedBookCard from '../../src/components/search/searched-book-card';
 import { useShallow } from 'zustand/react/shallow';
 import SButton from '../../src/components/shared/SButton';
 import { router } from 'expo-router';
 import SearchedBookCardSkeleton from '../../src/components/search/search-book-card-skeleton';
 import STextInput from '../../src/components/shared/STextInput';
+import { TransactionSource } from '../../src/models/transaction-source';
 
 export default function Search() {
   const { search, selectBook, selectedBooks } = useLibgen(
@@ -26,7 +26,7 @@ export default function Search() {
 
   const [query, setQuery] = useState('');
 
-  const [results, setResults] = useState<LibgenBook[]>([]);
+  const [results, setResults] = useState<TransactionSource[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
   const handleSearch = async () => {
@@ -68,10 +68,10 @@ export default function Search() {
           ? Array.from({ length: 3 }).map((_, i) => <SearchedBookCardSkeleton key={i} />)
           : results.map((e) => (
               <SearchedBookCard
-                key={e.md5}
+                key={e.src}
                 book={e}
                 onSelect={() => selectBook(e)}
-                selected={!!selectedBooks[e.md5]}
+                selected={!!selectedBooks[e.src]}
               />
             ))}
       </ScrollView>

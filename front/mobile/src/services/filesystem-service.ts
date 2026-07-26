@@ -1,36 +1,35 @@
 import { pick, pickDirectory, types } from '@react-native-documents/picker';
-import { Source } from '../models/source';
 import { Directory, File } from 'expo-file-system';
+import { TransactionSource } from '../models/transaction-source';
 
 export class FilesystemService {
-  static async pickFolder(): Promise<Source | undefined> {
+  static async pickFolder(): Promise<[TransactionSource, TransactionSource[]] | undefined> {
     try {
       const dir = await pickDirectory();
       if (!dir || !dir.uri) return;
 
-      const source: Source = {
+      const source: TransactionSource = {
         name: decodeURIComponent(dir.uri).split('/').pop() ?? '',
-        path: dir.uri,
-        children: await FilesystemService.filesFromFolder(dir.uri),
+        src: dir.uri,
       };
 
-      return source;
+      return [source, await FilesystemService.filesFromFolder(dir.uri)];
     } catch {
       return;
     }
   }
 
-  static async filesFromFolder(uri: string): Promise<Source[]> {
+  static async filesFromFolder(uri: string): Promise<TransactionSource[]> {
     try {
       const files = new Directory(uri).list();
 
-      const sources: Source[] = [];
+      const sources: TransactionSource[] = [];
 
       files.forEach((file) => {
         if (file instanceof Directory) return;
         sources.push({
           name: file.name,
-          path: file.uri,
+          src: file.uri,
           size: file.size,
           mime: file.type,
         });
@@ -42,7 +41,7 @@ export class FilesystemService {
     }
   }
 
-  static async pickFiles(): Promise<Source[] | undefined> {
+  static async pickFiles(): Promise<TransactionSource[] | undefined> {
     try {
       const files = await pick({
         allowMultiSelection: true,
@@ -55,10 +54,10 @@ export class FilesystemService {
         (file) =>
           ({
             name: file.name,
-            path: file.uri,
+            src: file.uri,
             size: file.size,
             mime: file.type,
-          }) as Source
+          }) as TransactionSource
       );
     } catch {
       return;

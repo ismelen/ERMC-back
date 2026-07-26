@@ -1,5 +1,5 @@
-import { router, Stack } from 'expo-router';
-import React from 'react';
+import { Stack } from 'expo-router';
+import React, { useEffect } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { colors } from '../src/theme/colors';
 import SText from '../src/components/shared/SText';
@@ -14,7 +14,7 @@ import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
 
 export default function SendComicPage() {
-  const { sending, req, setReq, handleSend } = useSender('comic');
+  const { sending, config, setConfig, send } = useSender('cbz');
 
   if (sending)
     return (
@@ -43,22 +43,25 @@ export default function SendComicPage() {
           <View style={styles.section}>
             <SText style={styles.title}>SOURCE</SText>
             <SourceSelector
-              initSources={req.sources ?? []}
-              onChange={(srcs) =>
-                setReq((s) => ({
+              initFolder={config.folder}
+              initFiles={config.files}
+              onChange={(files, folder) => {
+                setConfig((s) => ({
                   ...s,
-                  sources: srcs,
-                  title: s.title === '' ? (srcs[0]?.name ?? s.title) : s.title,
-                }))
-              }
-              onModeChange={(mode) => setReq((s) => ({ ...s, sourceMode: mode }))}
+                  folder: folder,
+                  files: files,
+                  title: s.title !== '' ? s.title : folder?.name,
+                }));
+              }}
             />
-            {req.sourceMode === 'folder' && (
+            {config.folder && (
               <OptionCardChecker
-                initialChecked={req.monitorize ?? false}
+                initialChecked={config.monitoredIdx !== undefined}
                 label="Monitorize folder"
                 text="Monitor changes in this folder"
-                onChange={(checked) => setReq((s) => ({ ...s, monitorize: checked }))}
+                onChange={(checked) =>
+                  setConfig((s) => ({ ...s, monitoredIdx: checked ? 1 : undefined }))
+                }
               />
             )}
           </View>
@@ -66,47 +69,43 @@ export default function SendComicPage() {
           <View>
             <SText style={styles.title}>READER MODEL</SText>
             <SSelect
-              value={req.model}
+              value={config.model}
               options={eReaderProfiles}
-              onOptionChange={(opt) => setReq((s) => ({ ...s, model: opt.value }))}
+              onOptionChange={(opt) => setConfig((s) => ({ ...s, model: opt.value }))}
             />
           </View>
 
           <View style={styles.section}>
             <SText style={styles.title}>METADATA</SText>
             <MetadataSection
-              initialMetadata={{ title: req.title, author: req.author }}
-              onChange={(meta) => setReq((s) => ({ ...s, author: meta.author, title: meta.title }))}
+              initialMetadata={{ title: config.title, author: config.author }}
+              onChange={(meta) =>
+                setConfig((s) => ({ ...s, author: meta.author, title: meta.title }))
+              }
             />
           </View>
 
           <View style={styles.section}>
             <SText style={styles.title}>DESTINATION</SText>
             <DestinationSelector
-              initDestination={req.destination}
-              onChange={(dest) => setReq((s) => ({ ...s, destination: dest }))}
+              toCloud={config.toCloud}
+              onChange={(toCloud) => setConfig((s) => ({ ...s, toCloud: toCloud }))}
             />
           </View>
 
           <View style={{ gap: 5 }}>
             <SText style={styles.title}>OPTIONS</SText>
             <OptionCardChecker
-              initialChecked={req.merge ?? false}
+              initialChecked={config.merge ?? false}
               label="Merge chapters"
               text="Combine multiple chapters into a single volume"
-              onChange={(checked) => setReq((s) => ({ ...s, merge: checked }))}
+              onChange={(checked) => setConfig((s) => ({ ...s, merge: checked }))}
             />
-            {/* <OptionCardChecker
-              initialChecked={req.deleteOrigin ?? false}
-              label="Delete source"
-              text="Remove original after successful upload"
-              onChange={(checked) => setReq((s) => ({ ...s, deleteOrigin: checked }))}
-            /> */}
           </View>
         </View>
       </ScrollView>
       <SButton
-        onPress={() => handleSend(false)}
+        onPress={() => send()}
         style={{
           backgroundColor: colors.primary_container,
           margin: 24,

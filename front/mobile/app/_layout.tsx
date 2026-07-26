@@ -11,7 +11,7 @@ import {
   Inter_700Bold,
   Inter_900Black,
 } from '@expo-google-fonts/inter';
-import { COMPLETE_TRANSACTIONS_KEY, TRANSACTIONS_KEY, useQueue } from '../src/hooks/useQueue';
+import { TRANSACTIONS_KEY, useQueue } from '../src/hooks/useQueue';
 import { useCloud } from '../src/hooks/useCloud';
 import { DropboxFolderPickerModal } from '../src/components/modals/dropbox-folder-picker-modal';
 import { useSettings } from '../src/hooks/useSettings';
@@ -25,9 +25,9 @@ import {
 } from 'expo-notifications';
 import { defineTask } from 'expo-task-manager';
 import { StorageService } from '../src/services/storage-service';
-import { QueueElement } from '../src/models/queue-element';
 import { useVersionChecker } from '../src/hooks/useVersionhecker';
 import { useShallow } from 'zustand/react/shallow';
+import { Transaction } from '../src/models/transaction';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -54,36 +54,22 @@ defineTask(BACKGROUND_NOTIFICATION_TASK, async ({ data, error }) => {
   }
 });
 
-async function processNotification(
-  data: any
-): Promise<[QueueElement[], QueueElement[]] | undefined> {
-  let actives = await StorageService.GetAsync<QueueElement[]>(TRANSACTIONS_KEY);
-  if (!actives) return;
+async function processNotification(data: any): Promise<Transaction[] | undefined> {
+  const raw = data['data'];
 
-  const idx = actives.findIndex((e) => e.id === data.id);
-  if (idx === -1) return;
+  const tran: Transaction = JSON.parse(raw);
 
-  const completeds = await StorageService.GetAsync<QueueElement[]>(COMPLETE_TRANSACTIONS_KEY);
-  if (!completeds) return;
+  let transactions = (await StorageService.GetAsync<Transaction[]>(TRANSACTIONS_KEY)) ?? [tran];
 
-  const tran = actives[idx];
-  switch (data.type) {
-    case 'success':
-      tran.progress === 100;
-      break;
-    case 'error':
-      tran.error = data.error;
-      break;
-    case 'canceled':
-      tran.error = 'Canceled';
+  const idx = transactions.findIndex((e) => e.id !== tran.id);
+  if (idx === -1) {
+    transactions.unshift(tran);
+  } else {
+    transactions[idx] = tran;
   }
-  completeds.unshift(tran);
-  actives = actives.filter((_, i) => i !== idx);
 
-  await StorageService.SetAsync<QueueElement[]>(COMPLETE_TRANSACTIONS_KEY, completeds);
-  await StorageService.SetAsync<QueueElement[]>(TRANSACTIONS_KEY, actives);
-
-  return [actives, completeds];
+  await StorageService.SetAsync(TRANSACTIONS_KEY, transactions);
+  return transactions;
 }
 
 export default function RootLayout() {
@@ -92,9 +78,6 @@ export default function RootLayout() {
   const initSettings = useSettings((s) => s.init);
   const initMonitoredFolders = useMonitoredFolders((s) => s.init);
   const initVersionChecker = useVersionChecker((s) => s.init);
-  const { checkProgress, trans } = useQueue(
-    useShallow((s) => ({ checkProgress: s.checkProgress, trans: s.transactions }))
-  );
 
   useEffect(() => {
     initVersionChecker();
@@ -110,11 +93,7 @@ export default function RootLayout() {
       const transactions = await processNotification(data);
       if (!transactions) return;
 
-      const [actives, completeds] = transactions;
-      useQueue.setState({
-        transactions: actives,
-        completedTransactions: completeds,
-      });
+      useQueue.setState({ transactions: transactions });
     });
 
     const responseSubscription = addNotificationResponseReceivedListener(() => {
@@ -126,12 +105,6 @@ export default function RootLayout() {
       responseSubscription.remove();
     };
   }, []);
-
-  useEffect(() => {
-    const interval = setInterval(checkProgress, 2000);
-
-    return () => clearInterval(interval);
-  }, [trans.length !== 0]);
 
   const [fontsLoaded] = useFonts({
     regular: Inter_400Regular,

@@ -1,53 +1,61 @@
 import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { useSource } from '../../hooks/useSource';
+import { TransactionSource } from '../../models/transaction-source';
 import { colors } from '../../theme/colors';
-import SButton from '../shared/SButton';
 import SIcon from '../icons/SIcon';
+import SButton from '../shared/SButton';
 import SText from '../shared/SText';
-import { SourceMode, useSource } from '../../hooks/useSource';
-import { Source } from '../../models/source';
 
 interface Props {
-  initSources: Source[];
-  onChange(sources: Source[]): void;
-  onModeChange(mode: SourceMode): void;
+  initFolder?: TransactionSource;
+  initFiles: TransactionSource[];
+  onChange(files: TransactionSource[], folder?: TransactionSource): void;
   enabled?: boolean;
 }
 
-export default function SourceSelector({
-  initSources,
-  onChange,
-  onModeChange,
-  enabled = true,
-}: Props) {
-  const { addFiles, addFolder, mode, sources, deleteSource } = useSource(initSources);
+export default function SourceSelector({ initFolder, initFiles, onChange, enabled = true }: Props) {
+  const { files, folder, addFiles, addFolder, deleteSource, loading } = useSource(
+    initFolder,
+    initFiles
+  );
 
   useEffect(() => {
-    onChange(sources);
-  }, [sources]);
+    onChange(files, folder);
+  }, [files, folder]);
 
-  useEffect(() => {
-    onModeChange(mode);
-  }, [mode]);
+  if (loading) {
+    return (
+      <View
+        style={{
+          backgroundColor: colors.surface_container_low,
+          paddingVertical: 20,
+          borderRadius: 12,
+        }}
+      >
+        <ActivityIndicator size={30} color={colors.primary} />
+      </View>
+    );
+  }
 
-  switch (mode) {
-    case 'files':
-      return (
-        <View style={{ gap: 10 }}>
-          <SourcesViewer sources={sources} deleteSource={deleteSource} mode={mode} />
-          <AddMore onClick={addFiles} />
-        </View>
-      );
+  if (folder) {
+    return (
+      <SourcesViewer
+        sources={[folder]}
+        deleteSource={deleteSource}
+        mode={'folder'}
+        enabled={enabled}
+      />
+    );
+  }
 
-    case 'folder':
-      return (
-        <SourcesViewer
-          sources={sources}
-          deleteSource={deleteSource}
-          mode={mode}
-          enabled={enabled}
-        />
-      );
+  if (files.length > 0) {
+    return (
+      <View style={{ gap: 10 }}>
+        <SourcesViewer sources={files} deleteSource={deleteSource} mode={'files'} />
+        <AddMore onClick={addFiles} />
+      </View>
+    );
   }
 
   return (
@@ -64,7 +72,7 @@ function SourcesViewer({
   mode,
   enabled = true,
 }: {
-  sources: Source[];
+  sources: TransactionSource[];
   deleteSource(index: number): void;
   mode: 'files' | 'folder' | 'no-select';
   enabled?: boolean;
@@ -90,7 +98,7 @@ function SourcesViewer({
             borderTopColor:
               idx !== 0 && sources.length > 0 ? colors.outline_variant : 'transparent',
           }}
-          key={`${idx}${src.path}`}
+          key={`${idx}${src.src}`}
         >
           <View
             style={{

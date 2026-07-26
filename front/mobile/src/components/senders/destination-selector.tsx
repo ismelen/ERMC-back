@@ -3,21 +3,23 @@ import { View } from 'react-native';
 import { colors } from '../../theme/colors';
 import SButton from '../shared/SButton';
 import SText from '../shared/SText';
-import { Destination } from '../../models/transaction-request';
 
-const destinations: Destination[] = ['local', 'cloud'];
+const destinations: { name: string; value: boolean }[] = [
+  { name: 'local', value: false },
+  { name: 'cloud', value: true },
+];
 
 interface Props {
-  initDestination: Destination;
-  onChange(destination: Destination): void;
+  toCloud: boolean;
+  onChange(toCloud: boolean): void;
 }
 
-export default function DestinationSelector({ initDestination, onChange }: Props) {
-  const [destination, setDestination] = useState(initDestination);
+export default function DestinationSelector({ toCloud, onChange }: Props) {
+  const [cloudDestination, setCloudDestination] = useState(toCloud);
 
   useEffect(() => {
-    onChange(destination);
-  }, [destination]);
+    onChange(cloudDestination);
+  }, [cloudDestination]);
 
   return (
     <View
@@ -32,24 +34,25 @@ export default function DestinationSelector({ initDestination, onChange }: Props
     >
       {destinations.map((dest) => (
         <SButton
-          key={dest}
-          onPress={() => setDestination(dest)}
+          key={dest.name}
+          onPress={() => setCloudDestination(dest.value)}
           style={{
             flex: 1,
             alignItems: 'center',
             justifyContent: 'center',
             paddingVertical: 10,
             borderRadius: 7,
-            backgroundColor: dest === destination ? colors.primary_container : 'transparent',
+            backgroundColor:
+              dest.value === cloudDestination ? colors.primary_container : 'transparent',
           }}
         >
           <SText
             style={{
               fontFamily: 'semibold',
-              color: dest === destination ? colors.on_primary : colors.on_surface,
+              color: dest.value === cloudDestination ? colors.on_primary : colors.on_surface,
             }}
           >
-            {dest[0].toUpperCase() + dest.slice(1)}
+            {dest.name[0].toUpperCase() + dest.name.slice(1)}
           </SText>
         </SButton>
       ))}

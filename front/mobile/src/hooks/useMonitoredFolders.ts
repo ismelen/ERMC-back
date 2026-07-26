@@ -1,69 +1,91 @@
+// import { create } from 'zustand';
+// import { Source } from '../models/source';
+// import { TransactionRequest } from '../models/transaction-request';
+// import { StorageService } from '../services/storage-service';
+// import { FilesystemService } from '../services/filesystem-service';
+
 import { create } from 'zustand';
-import { Source } from '../models/source';
-import { TransactionRequest } from '../models/transaction-request';
+import { TransactionConfig } from '../models/transaction-config';
+import { TransactionSource } from '../models/transaction-source';
+import { immer } from 'zustand/middleware/immer';
+import { combine } from 'zustand/middleware';
 import { StorageService } from '../services/storage-service';
 import { FilesystemService } from '../services/filesystem-service';
 
-interface State {
-  folders: MonitoredFolder[];
-  init(): Promise<void>;
-  add(req: TransactionRequest): Promise<void>;
-  remove(idx: number): Promise<void>;
-  update(req: TransactionRequest, idx: number): Promise<void>;
-}
-
-export interface MonitoredFolder extends TransactionRequest {
-  diff: number;
-  oldFiles: Source[];
-}
-
 const FOLDERS_KEY = 'monitored_folders_key';
 
-export const useMonitoredFolders = create<State>((set, get) => ({
-  folders: [],
+export interface MonitoredFolder extends TransactionConfig {
+  diff: number;
+  oldFiles: TransactionSource[];
+}
 
-  async init() {
-    const folders = await StorageService.GetAsync<MonitoredFolder[]>(FOLDERS_KEY);
-    if (!folders) return;
+interface State {
+  folders: MonitoredFolder[];
+}
 
-    for (const folder of folders) {
-      const src = folder.sources[0];
-      const newFiles = await FilesystemService.filesFromFolder(src.path);
-      const oldFiles = new Set(folder.oldFiles);
+export const useMonitoredFolders = create(
+  immer(
+    combine(
+      {
+        folders: [],
+      } as State,
+      (set, get) => ({
+        async init() {
+          const folders = await StorageService.GetAsync<MonitoredFolder[]>(FOLDERS_KEY);
+          if (!folders) return;
 
-      const diff = newFiles.filter((s) => !oldFiles.has(s));
-      if (diff.length === 0) continue;
+          set({ folders });
+          set(async (state) => {
+            for (const monitored of state.folders as MonitoredFolder[]) {
+              const src = monitored.folder;
+              if (!src) continue;
 
-      src.children = diff;
-      folder.diff = diff.length;
-    }
+              const newFiles = await FilesystemService.filesFromFolder(src.src);
+              const oldFiles = new Set(monitored.files);
 
-    StorageService.SetAsync(FOLDERS_KEY, folders);
-    set({ folders });
-  },
+              const diff = newFiles.filter((s) => !oldFiles.has(s));
+              if (diff.length === 0) continue;
 
-  async add(req: TransactionRequest) {
-    if (req.sourceMode !== 'folder') return;
+              monitored.oldFiles = monitored.files;
+              monitored.files = diff;
+              monitored.diff = diff.length;
+            }
+          });
+        },
 
-    const folders = get().folders;
-    folders.push({ ...req, oldFiles: req.sources[0].children ?? [], diff: 0 });
+        async add(config: TransactionConfig) {
+          if (!config.folder) return;
 
-    StorageService.SetAsync(FOLDERS_KEY, folders);
-    set({ folders });
-  },
+          set((state: State) => {
+            state.folders.push({
+              ...config,
+              oldFiles: config.files,
+              diff: 0,
+            });
+          });
 
-  async update(req: TransactionRequest, idx: number) {
-    const folders = get().folders;
-    folders[idx] = { ...req, oldFiles: req.sources[0].children ?? [], diff: 0 };
+          StorageService.SetAsync(FOLDERS_KEY, get().folders);
+        },
 
-    StorageService.SetAsync(FOLDERS_KEY, folders);
-    set({ folders: [...folders] });
-  },
+        async update(config: TransactionConfig, idx: number) {
+          set((state: State) => {
+            state.folders[idx] = {
+              ...config,
+              oldFiles: config.files,
+              diff: 0,
+            };
+          });
 
-  async remove(idx: number) {
-    const folders = get().folders.filter((_, i) => i !== idx);
+          StorageService.SetAsync(FOLDERS_KEY, get().folders);
+        },
 
-    StorageService.SetAsync(FOLDERS_KEY, folders);
-    set({ folders });
-  },
-}));
+        async remove(idx: number) {
+          set((state: State) => {
+            state.folders = state.folders.filter((_, i) => i !== idx);
+          });
+          StorageService.SetAsync(FOLDERS_KEY, get().folders);
+        },
+      })
+    )
+  )
+);

@@ -4,12 +4,12 @@ import ActionCard from '../../src/components/home/action-card';
 import SText from '../../src/components/shared/SText';
 import { router, Tabs } from 'expo-router';
 import AppHeader from '../../src/components/app-header';
-import { useMonitoredFolders } from '../../src/hooks/useMonitoredFolders';
+import { MonitoredFolder, useMonitoredFolders } from '../../src/hooks/useMonitoredFolders';
 import { colors } from '../../src/theme/colors';
 import SButton from '../../src/components/shared/SButton';
 import SIcon from '../../src/components/icons/SIcon';
 import { useObjectNavigation } from '../../src/hooks/useObjectNavigation';
-import { TransactionType } from '../../src/models/transaction-request';
+import { TransactionMode } from '../../src/models/transaction-config';
 
 export default function HomePage() {
   const folders = useMonitoredFolders((s) => s.folders);
@@ -45,7 +45,7 @@ export default function HomePage() {
                 key={i}
                 onPress={() => {
                   e.monitoredIdx = i;
-                  navigate(getPath(e.type), e);
+                  navigate(getPath(e.mode), e);
                 }}
                 style={{
                   boxShadow: colors.boxShadow,
@@ -79,13 +79,13 @@ export default function HomePage() {
   );
 }
 
-function getPath(type: TransactionType) {
-  switch (type) {
-    case 'comic':
+function getPath(mode: TransactionMode) {
+  switch (mode) {
+    case 'cbz':
       return '/send-comic';
     case 'epub':
       return '/send-book';
-    case 'remote':
+    case 'md5':
       return '/send-libgen';
   }
 }
