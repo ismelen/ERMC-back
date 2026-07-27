@@ -2,6 +2,7 @@ package dto
 
 import (
 	"ismelen/inkomi/internal/domain/convert"
+	"log"
 )
 
 type TransactionStatusResponse struct {
@@ -59,7 +60,10 @@ func NewTransactionStatusResponse(tran *convert.Transaction) *TransactionStatusR
 	}
 
 	t.Results = []TransactionStatusResultFileResponseItem{}
-	for i := range tran.CompletedFiles() {
+	max := tran.CompletedFiles()
+	log.Println(max)
+
+	for i := range max {
 		result := tran.ResultFiles[i]
 
 		t.Results = append(t.Results, TransactionStatusResultFileResponseItem{

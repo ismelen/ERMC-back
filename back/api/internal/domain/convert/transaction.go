@@ -16,7 +16,6 @@ type Transaction struct {
 	attachedItems  atomic.Int32
 	Config         *TransactionConfig
 	CreatedAt      time.Time
-	Error          error
 	ResultFiles    []*TransactionResultFile
 	BasePath       string
 }
@@ -33,6 +32,10 @@ func NewTransaction(id string, config *TransactionConfig, transPath string) *Tra
 
 	t.status.Store(int32(TransactionWaiting))
 	return t
+}
+
+func (t *Transaction) Error() {
+	t.status.Store(int32(TransactionError))
 }
 
 func (t *Transaction) Delete() {
@@ -58,18 +61,18 @@ func (t *Transaction) GetResultFile(id string) (*TransactionResultFile, error) {
 	return nil, fmt.Errorf("file doesn't exists")
 }
 
-func (t *Transaction) HasFinished() (bool, error) {
+func (t *Transaction) assertActive() error {
 	status := t.Status()
 
 	if status == TransactionCanceled {
-		return false, fmt.Errorf("transaction canceled")
+		return fmt.Errorf("transaction canceled")
 	}
 
 	if status == TransactionDone {
-		return false, fmt.Errorf("transaction finished")
+		return fmt.Errorf("transaction finished")
 	}
 
-	return true, nil
+	return nil
 }
 
 func (t *Transaction) Done() {
@@ -85,17 +88,20 @@ func (t *Transaction) Processing() {
 }
 
 func (t *Transaction) AttachFile(file *TransactionFile) (string, error) {
-	if _, err := t.HasFinished(); err != nil {
+	if err := t.assertActive(); err != nil {
 		return "", err
 	}
 
 	attachedItems := t.attachedItems.Load()
-	if attachedItems+1 > t.Config.Cant {
+	if attachedItems >= t.Config.Cant {
+		return "", fmt.Errorf("files limit exceded")
+	}
+
+	if !t.attachedItems.CompareAndSwap(attachedItems, attachedItems+1) {
 		return "", fmt.Errorf("files limit exceded")
 	}
 
 	t.Items[attachedItems] = file
-	t.attachedItems.Add(1)
 
 	if t.Status() == TransactionWaiting {
 		t.status.Store(int32(TransactionProcessing))
@@ -109,7 +115,8 @@ func (t *Transaction) Cancel() {
 }
 
 func (t *Transaction) CompletedFiles() int32 {
-	if t.Status() == TransactionDone {
+	status := t.Status()
+	if status == TransactionDone || status == TransactionMerging {
 		return int32(len(t.ResultFiles))
 	}
 
@@ -121,13 +128,12 @@ func (t *Transaction) SetResults(files []*TransactionResultFile) {
 }
 
 func (t *Transaction) AddResult(file *TransactionResultFile) (bool, error) {
-	if _, err := t.HasFinished(); err != nil {
+	if err := t.assertActive(); err != nil {
 		return true, err
 	}
 
-	completedFiles := t.CompletedFiles()
+	completedFiles := t.completedFiles.Add(1) - 1
 	t.ResultFiles[completedFiles] = file
-	t.completedFiles.Add(1)
 
 	completed := (completedFiles + 1) >= t.Config.Cant
 	if completed {

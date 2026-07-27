@@ -54,13 +54,11 @@ export const useQueue = create(
         },
 
         async send(config: TransactionConfig, pathname?: string): Promise<boolean> {
-          // TODO: Guardar last config para el redirect
-
           if (config.files.length === 0) return false;
 
           const notifyToken = await NotificationService.getToken();
           const cloud = config.toCloud
-            ? await useCloud.getState().getCloudInfo(pathname)
+            ? await useCloud.getState().getCloudInfo(`${pathname}?last=true`)
             : undefined;
 
           const tran = await TransactionService.startTransaction(config, cloud, notifyToken);
@@ -125,53 +123,3 @@ export const useQueue = create(
     )
   )
 );
-
-// const url = `${BACKEND_API_URL}/transaction/convert${(libgenMode ?? false) ? '?remote=true' : ''}`;
-// await BackgroundService.start(
-//   async () => {
-//     await Promise.all(
-//       uploads.map(async ({ id, formData: form, request }) => {
-//         try {
-//           const resp = await fetch(url, { method: 'POST', body: form });
-//           set((s) => ({ uploads: s.uploads.filter((u) => u.id !== id) }));
-//           if (resp.status !== 200) {
-//             const json = await resp.json();
-//             alert(json.error);
-//             return;
-//           }
-//           const raw: QueueElement[] = await resp.json();
-//           const data = raw.map((e) => ({
-//             ...request,
-//             timestamp: Date.now(),
-//             filename: e.filename,
-//             id: e.id,
-//             progress: 0,
-//           }));
-//           if (libgenMode) {
-//             data.forEach((e) => {
-//               e.title = request.books.find((b) => b.md5 === e.filename)?.title ?? e.filename;
-//             });
-//           }
-//           set((s) => ({ transactions: [...s.transactions, ...data] }));
-//           StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
-//         } catch (e) {
-//           console.log(e);
-//         }
-//       })
-//     );
-//     await BackgroundService.stop();
-//   },
-//   {
-//     taskName: 'inkomi-upload',
-//     taskTitle: 'Inkomi',
-//     taskDesc: 'Uploading files...',
-//     taskIcon: {
-//       name: 'ic_launcher',
-//       type: 'mipmap',
-//     },
-//     foregroundServiceType: ['dataSync'],
-//   }
-// );
-// return true;
-//   },
-// }));

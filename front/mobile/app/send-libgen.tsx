@@ -14,8 +14,7 @@ import { useSender } from '../src/hooks/useSender';
 import { Stack, usePathname } from 'expo-router';
 
 export default function SendLibgen() {
-  const pathname = usePathname();
-  const { sending, config, setConfig, send } = useSender('md5', pathname);
+  const { sending, config, setConfig, send } = useSender('md5');
 
   const { selectedBooks, onDelete, clear } = useLibgen(
     useShallow((s) => ({

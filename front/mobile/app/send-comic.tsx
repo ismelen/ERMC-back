@@ -14,8 +14,7 @@ import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
 
 export default function SendComicPage() {
-  const pathname = usePathname();
-  const { sending, config, setConfig, send } = useSender('cbz', pathname);
+  const { sending, config, setConfig, send } = useSender('cbz');
 
   if (sending)
     return (

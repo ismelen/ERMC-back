@@ -11,77 +11,96 @@ export class TransactionService {
     cloud?: CloudInfo,
     notifyToken?: string
   ): Promise<Transaction | undefined> {
-    const res = await fetch(`${BACKEND_API_URL}/transactions/start`, {
-      method: 'POST',
-      body: JSON.stringify({
-        author: config.author,
-        title: config.title,
-        profile: config.model,
-        merge: config.merge,
-        cloud: config.toCloud,
-        cloud_token: cloud?.token,
-        cloud_folder: cloud?.folderPath,
-        notify_token: notifyToken,
-        type: config.mode,
-        cant: config.files.length,
-      }),
-    });
-    const data: Transaction = await res.json();
+    try {
+      const res = await fetch(`${BACKEND_API_URL}/transactions/start`, {
+        method: 'POST',
+        body: JSON.stringify({
+          author: config.author,
+          title: config.title,
+          profile: config.model,
+          merge: config.merge,
+          cloud: config.toCloud,
+          cloud_token: cloud?.token,
+          cloud_folder: cloud?.folderPath,
+          notify_token: notifyToken,
+          type: config.mode,
+          cant: config.files.length,
+        }),
+      });
+      const data: Transaction = await res.json();
 
-    if (res.status !== 200) {
-      alert(data);
+      if (res.status !== 200) {
+        alert(data);
+        return;
+      }
+
+      return {
+        id: data.id,
+        timestamp: data.timestamp,
+        completed: 0,
+        total: config.files.length,
+        config: config,
+        items: [],
+        results: [],
+        uploads: [],
+        status: 'waiting',
+      };
+    } catch (e) {
+      console.error('start transaction', e);
       return;
     }
-
-    return {
-      id: data.id,
-      timestamp: data.timestamp,
-      completed: 0,
-      total: config.files.length,
-      config: config,
-      items: [],
-      results: [],
-      uploads: [],
-      status: 'waiting',
-    };
   }
 
   static async cancelTransaction(tran: Transaction) {
-    await fetch(`${BACKEND_API_URL}/transactions/${tran.id}/cancel`, {
-      method: 'PUT',
-    });
+    try {
+      await fetch(`${BACKEND_API_URL}/transactions/${tran.id}/cancel`, {
+        method: 'PUT',
+      });
+    } catch (e) {
+      console.error('cancel transaction', e);
+    }
   }
 
   static async download(tran: Transaction, id: string): Promise<boolean> {
-    const file = tran.results.find((e) => e.id === id);
-    if (!file) return false;
+    try {
+      const file = tran.results.find((e) => e.id === id);
+      if (!file) return false;
 
-    await RNBlobUtil.config({
-      addAndroidDownloads: {
-        useDownloadManager: true,
-        notification: true,
-        title: file.filename,
-        description: 'Descargando archivo...',
-        mime: TransactionService.getMimeType(file.filename),
-        mediaScannable: true,
-        path: `${RNBlobUtil.fs.dirs.DownloadDir}/${file.filename}`,
-      },
-    }).fetch('GET', `${BACKEND_API_URL}/transactions/${tran.id}/download/${id}`);
+      await RNBlobUtil.config({
+        addAndroidDownloads: {
+          useDownloadManager: true,
+          notification: true,
+          title: file.filename,
+          description: 'Descargando archivo...',
+          mime: TransactionService.getMimeType(file.filename),
+          mediaScannable: true,
+          path: `${RNBlobUtil.fs.dirs.DownloadDir}/${file.filename}`,
+        },
+      }).fetch('GET', `${BACKEND_API_URL}/transactions/${tran.id}/download/${id}`);
 
-    return true;
+      return true;
+    } catch (e) {
+      console.error('download', e);
+      return false;
+    }
   }
 
   /** Downloads to cache and returns the local file path (for sharing). */
   static async downloadToCache(tran: Transaction, id: string): Promise<string | undefined> {
-    const file = tran.results.find((e) => e.id === id);
-    if (!file) return;
+    try {
+      const file = tran.results.find((e) => e.id === id);
+      if (!file) return;
 
-    const path = `${RNBlobUtil.fs.dirs.CacheDir}/${file.filename}`;
-    await RNBlobUtil.config({ path }).fetch(
-      'GET',
-      `${BACKEND_API_URL}/transactions/${tran.id}/download/${id}`
-    );
-    return path;
+      const path = `${RNBlobUtil.fs.dirs.CacheDir}/${file.filename}`;
+      await RNBlobUtil.config({ path }).fetch(
+        'GET',
+        `${BACKEND_API_URL}/transactions/${tran.id}/download/${id}`
+      );
+      return path;
+    } catch (e) {
+      console.error('download cache', e);
+      return;
+    }
   }
 
   static getMimeType(filename: string): string {
@@ -121,7 +140,7 @@ export class TransactionService {
         results,
       };
     } catch (e) {
-      console.error(e);
+      console.error('check status', e);
       return tran;
     }
   }
@@ -153,7 +172,5 @@ export class TransactionService {
     if (res.status !== 200) {
       throw new Error(data.error);
     }
-
-    return data;
   }
 }

@@ -13,14 +13,26 @@ import { useObjectNavigation } from './useObjectNavigation';
 import { useEffect, useState } from 'react';
 import { useSettings } from './useSettings';
 import { useQueue } from './useQueue';
-import { router, usePathname } from 'expo-router';
-import { Directions } from 'react-native-gesture-handler';
+import { router, useLocalSearchParams, usePathname } from 'expo-router';
 import { useMonitoredFolders } from './useMonitoredFolders';
+import { StorageService } from '../services/storage-service';
+import { setLocalesAsync } from '@expo/config-plugins/build/android/Locales.js';
 
-export function useSender(mode: TransactionMode, pathname?: string) {
+interface State {
+  config: TransactionConfig;
+  monitoredIdx?: number;
+  sending: boolean;
+}
+
+const LAST_STATE = 'last_sender_state';
+
+export function useSender(mode: TransactionMode) {
   const { clear, initData } = useObjectNavigation(
     useShallow((s) => ({ clear: s.clear, initData: s.object }))
   );
+
+  const { last } = useLocalSearchParams();
+  const pathname = usePathname();
 
   const { settings, setSettings, setModel } = useSettings(
     useShallow((s) => ({ settings: s.settings, setSettings: s.setSettings, setModel: s.setModel }))
@@ -56,6 +68,11 @@ export function useSender(mode: TransactionMode, pathname?: string) {
     }
 
     setSending(true);
+    await StorageService.SetAsync<State>(LAST_STATE, {
+      config: config,
+      sending: true,
+      monitoredIdx: monitoredIdx,
+    });
     const done = await send(config, pathname);
     setSending(false);
 
@@ -86,6 +103,15 @@ export function useSender(mode: TransactionMode, pathname?: string) {
       setMonitoredIdx(initData?.monitoredIdx);
     }
     clear();
+
+    if (last === 'true') {
+      StorageService.GetAsync<State>(LAST_STATE).then((e) => {
+        if (!e) return;
+        setConfig(e.config);
+        setMonitoredIdx(e.monitoredIdx);
+        setSending(e.sending);
+      });
+    }
   }, []);
 
   return { config, setConfig, sending, send: handleSend };

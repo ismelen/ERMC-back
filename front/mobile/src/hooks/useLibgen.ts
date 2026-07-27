@@ -14,14 +14,19 @@ export const useLibgen = create<State>((set, get) => ({
   selected: {},
 
   async search(query?: string): Promise<TransactionSource[] | undefined> {
-    if (!query) return;
+    try {
+      if (!query) return;
 
-    const resp = await fetch(`${BACKEND_API_URL}/books/search?q=${query ?? ''}`, {
-      method: 'GET',
-    });
+      const resp = await fetch(`${BACKEND_API_URL}/books/search?q=${query ?? ''}`, {
+        method: 'GET',
+      });
 
-    if (!resp.ok || resp.status !== 200) return;
-    return await resp.json();
+      if (!resp.ok || resp.status !== 200) return;
+      return await resp.json();
+    } catch (e) {
+      console.error('books search', e);
+      return;
+    }
   },
 
   clear() {

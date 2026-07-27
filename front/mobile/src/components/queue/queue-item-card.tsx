@@ -75,10 +75,11 @@ export default function QueueItemCard({ data, idx, onRetry }: Props) {
     }, [])
   );
 
-  const handleRetry = () => onRetry?.(data.id);
+  // const handleRetry = () => onRetry?.(data.id);
+  const handleRetry = () => {};
 
   return (
-    <View style={[s.card, isError && s.cardError]}>
+    <SButton onPress={() => onRetry?.(data.id)} style={[s.card, isError && s.cardError]}>
       {/* Header */}
       <CardHeader data={data} />
 
@@ -116,7 +117,7 @@ export default function QueueItemCard({ data, idx, onRetry }: Props) {
 
       {/* Cancel button */}
       {isCancellable && <CancelButton onPress={() => cancel(idx)} />}
-    </View>
+    </SButton>
   );
 }
 

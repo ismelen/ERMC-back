@@ -87,6 +87,7 @@ func (m BaseTransactionUC) ChopAndMerge(tran *convert.Transaction, transPath str
 		if size+result.Size >= MAX_CHUNK_SIZE {
 			result, err := m.MergeFiles(filesToMerge, size, tran, transPath)
 			if err != nil {
+				tran.Error()
 				m.NotifyError(tran, err)
 				for _, fileToMerge := range filesToMerge {
 					fileToMerge.SetError(err)
@@ -107,13 +108,14 @@ func (m BaseTransactionUC) ChopAndMerge(tran *convert.Transaction, transPath str
 	if len(filesToMerge) > 0 {
 		result, err := m.MergeFiles(filesToMerge, size, tran, transPath)
 		if err != nil {
+			tran.Error()
 			m.NotifyError(tran, err)
 			return
 		}
 		mergedFiles = append(mergedFiles, result)
 	}
 
-	tran.ResultFiles = mergedFiles
+	tran.SetResults(mergedFiles)
 }
 
 func (m BaseTransactionUC) MergeFiles(results []*convert.TransactionResultFile, size int64, tran *convert.Transaction, transPath string) (*convert.TransactionResultFile, error) {

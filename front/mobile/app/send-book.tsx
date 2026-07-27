@@ -13,8 +13,7 @@ import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
 
 export default function SendBookPage() {
-  const pathname = usePathname();
-  const { sending, config, setConfig, send } = useSender('epub', pathname);
+  const { sending, config, setConfig, send } = useSender('epub');
 
   if (sending)
     return (

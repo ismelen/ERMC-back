@@ -19,55 +19,60 @@ WebBrowser.maybeCompleteAuthSession();
 
 export class AuthService {
   static async login(returnPath?: string): Promise<OAuthData | undefined> {
-    const redirectUri = Linking.createURL('oauth');
+    try {
+      const redirectUri = Linking.createURL('oauth');
 
-    const { codeVerifier, codeChallenge } = await AuthService.generatePKCE();
+      const { codeVerifier, codeChallenge } = await AuthService.generatePKCE();
 
-    const stateParam = returnPath ? `&state=${encodeURIComponent(returnPath)}` : '';
+      const stateParam = returnPath ? `&state=${encodeURIComponent(returnPath)}` : '';
 
-    const authUrl =
-      `https://www.dropbox.com/oauth2/authorize` +
-      `?client_id=${DROPBOX_API_KEY}` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&response_type=code` +
-      `&code_challenge=${codeChallenge}` +
-      `&code_challenge_method=S256` +
-      `&token_access_type=offline` +
-      stateParam +
-      `&scope=files.content.write%20files.metadata.read%20account_info.read`;
+      const authUrl =
+        `https://www.dropbox.com/oauth2/authorize` +
+        `?client_id=${DROPBOX_API_KEY}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&response_type=code` +
+        `&code_challenge=${codeChallenge}` +
+        `&code_challenge_method=S256` +
+        `&token_access_type=offline` +
+        stateParam +
+        `&scope=files.content.write%20files.metadata.read%20account_info.read`;
 
-    const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
 
-    if (result.type !== 'success') return undefined;
+      if (result.type !== 'success') return;
 
-    const parsed = Linking.parse(result.url);
-    const code = parsed.queryParams?.code as string | undefined;
-    if (!code) return undefined;
+      const parsed = Linking.parse(result.url);
+      const code = parsed.queryParams?.code as string | undefined;
+      if (!code) return;
 
-    const res = await fetch('https://api.dropboxapi.com/oauth2/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        code,
-        grant_type: 'authorization_code',
-        client_id: DROPBOX_API_KEY,
-        redirect_uri: redirectUri,
-        code_verifier: codeVerifier,
-      }).toString(),
-    });
+      const res = await fetch('https://api.dropboxapi.com/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code,
+          grant_type: 'authorization_code',
+          client_id: DROPBOX_API_KEY,
+          redirect_uri: redirectUri,
+          code_verifier: codeVerifier,
+        }).toString(),
+      });
 
-    if (!res.ok) return undefined;
+      if (!res.ok) return;
 
-    const { access_token, refresh_token, expires_in } = await res.json();
+      const { access_token, refresh_token, expires_in } = await res.json();
 
-    const email = await AuthService.getUserEmail(access_token);
+      const email = await AuthService.getUserEmail(access_token);
 
-    return {
-      token: access_token,
-      refresh: refresh_token,
-      expiresAt: Date.now() + expires_in * 1000,
-      email: email,
-    };
+      return {
+        token: access_token,
+        refresh: refresh_token,
+        expiresAt: Date.now() + expires_in * 1000,
+        email: email,
+      };
+    } catch (e) {
+      console.error('dropbox login', e);
+      return;
+    }
   }
 
   static async generatePKCE(): Promise<{ codeVerifier: string; codeChallenge: string }> {
@@ -87,28 +92,33 @@ export class AuthService {
   }
 
   static async refreshToken(refresh: string): Promise<OAuthData | undefined> {
-    const res = await fetch('https://api.dropboxapi.com/oauth2/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token: refresh,
-        client_id: DROPBOX_API_KEY,
-      }).toString(),
-    });
+    try {
+      const res = await fetch('https://api.dropboxapi.com/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: refresh,
+          client_id: DROPBOX_API_KEY,
+        }).toString(),
+      });
 
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error_description ?? 'Failed to refresh Dropbox token');
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error_description ?? 'Failed to refresh Dropbox token');
+      }
+
+      const { access_token, expires_in, refresh_token } = await res.json();
+
+      return {
+        expiresAt: Date.now() + expires_in * 1000,
+        token: access_token,
+        refresh: refresh_token,
+      };
+    } catch (e) {
+      console.error('dropbox refresh', e);
+      return;
     }
-
-    const { access_token, expires_in, refresh_token } = await res.json();
-
-    return {
-      expiresAt: Date.now() + expires_in * 1000,
-      token: access_token,
-      refresh: refresh_token,
-    };
   }
 
   static async getUserEmail(accessToken: string): Promise<string | undefined> {

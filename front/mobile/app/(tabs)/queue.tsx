@@ -9,6 +9,7 @@ import { useObjectNavigation } from '../../src/hooks/useObjectNavigation';
 import SText from '../../src/components/shared/SText';
 import SButton from '../../src/components/shared/SButton';
 import { router } from 'expo-router';
+import { TransactionMode } from '../../src/models/transaction-config';
 
 export default function QueuePage() {
   const { transactions, cancel } = useQueue(
@@ -62,7 +63,14 @@ export default function QueuePage() {
       {areTransactions && (
         <View style={{ marginTop: 16, gap: 10 }}>
           {transactions.map((e, i) => (
-            <QueueItemCard key={e.id} data={e} idx={i} onRetry={(tranId) => {}} />
+            <QueueItemCard
+              key={e.id}
+              data={e}
+              idx={i}
+              onRetry={(tranId) => {
+                navigate(getPath(e.config.mode), e.config);
+              }}
+            />
           ))}
         </View>
       )}
@@ -70,12 +78,13 @@ export default function QueuePage() {
   );
 }
 
-const styles = StyleSheet.create({
-  section: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginTop: 16,
-  },
-  label: { fontSize: 14, fontFamily: 'semibold', color: colors.on_surface_variant },
-});
+function getPath(mode: TransactionMode): string {
+  switch (mode) {
+    case 'cbz':
+      return '/send-comic';
+    case 'epub':
+      return '/send-book';
+    case 'md5':
+      return '/send-libgen';
+  }
+}

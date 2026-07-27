@@ -27,7 +27,7 @@ export const useVersionChecker = create<State>((set) => ({
 
       set({ showDialog: version !== APP_VERSION, newVersion: version });
     } catch (e) {
-      console.error(e);
+      console.error('app version', e);
     }
   },
 
