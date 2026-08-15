@@ -21,7 +21,7 @@ func NewChapter(filename, path string, pagePaths []string) *Chapter {
 	}
 }
 
-func (c *Chapter) GetOrderedPagePaths() []string {
+func (c *Chapter) GetOrderedPagePaths(availableExts ...string) []string {
 	if c.ordered {
 		return c.PagePaths
 	}
@@ -32,8 +32,11 @@ func (c *Chapter) GetOrderedPagePaths() []string {
 
 	var validPaths []string
 	for _, path := range c.PagePaths {
-		if filepath.Ext(path) == ".xml" {
-			continue
+		ext := filepath.Ext(path)
+		for _, avExt := range availableExts {
+			if avExt == ext {
+				continue
+			}
 		}
 		validPaths = append(validPaths, path)
 	}

@@ -52,10 +52,10 @@ func main() {
 	dropbox := &cloud.DropboxCloud{}
 
 	epubUC := usecases.NewEpubTransactionUC(pushNotifier, dropbox)
-	cbzUC := usecases.NewCBZTransactioUC(pushNotifier, imgProcessor, dropbox)
+	mangaUC := usecases.NewMangaTransactionUC(pushNotifier, imgProcessor, dropbox)
 	md5UC := usecases.NewMd5TransactionUC(pushNotifier, libgenServ, dropbox)
 
-	transactionHandler := handlers.NewTransactionHandler(epubUC, cbzUC, md5UC, tranStore)
+	transactionHandler := handlers.NewTransactionHandler(epubUC, mangaUC, md5UC, tranStore)
 	routes.SetupTransactionRoutes(api, transactionHandler)
 
 	libgenHandler := handlers.NewLibgenHandler(libgenServ)

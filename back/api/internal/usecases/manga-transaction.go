@@ -15,18 +15,21 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type CBZTransactionUC struct {
+type GetChapterFunc = func(file string, chaptersDir string) (*manga.Chapter, error)
+
+type MangaTransactionUC struct {
 	BaseTransactionUC
 	imageSettings *manga.ImageSettings
 	imgProcessor  manga.ImageProcessor
+	getChapter    GetChapterFunc
 }
 
-func NewCBZTransactioUC(
+func NewMangaTransactionUC(
 	pushNotifier convert.PushNotifier,
 	imgProcessor manga.ImageProcessor,
 	cloud convert.CloudStorage,
-) *CBZTransactionUC {
-	t := &CBZTransactionUC{
+) *MangaTransactionUC {
+	t := &MangaTransactionUC{
 		BaseTransactionUC: BaseTransactionUC{
 			pushNotifier: pushNotifier,
 			cloud:        cloud,
@@ -38,7 +41,20 @@ func NewCBZTransactioUC(
 	return t
 }
 
-func (c CBZTransactionUC) Process(file *convert.TransactionFile, tran *convert.Transaction, transPath string) *convert.TransactionResultFile {
+func (c MangaTransactionUC) GetChapter(file string, chaptersDir string) (*manga.Chapter, error) {
+	ext := filepath.Ext(file)
+
+	switch ext {
+	case ".pdf":
+		return fs.PdfToChapter(file, chaptersDir)
+	case ".cbz":
+		return fs.FileToChapter(file, chaptersDir)
+	}
+
+	return nil, fmt.Errorf("Not valid format")
+}
+
+func (c MangaTransactionUC) Process(file *convert.TransactionFile, tran *convert.Transaction, transPath string) *convert.TransactionResultFile {
 	dir := filepath.Dir(file.SrcPath)
 	builder := epub.New().
 		SetSettings(c.imageSettings, tran.Config.Profile).
@@ -49,7 +65,7 @@ func (c CBZTransactionUC) Process(file *convert.TransactionFile, tran *convert.T
 	chaptersDir := filepath.Join(dir, "chapters")
 	defer os.RemoveAll(chaptersDir)
 
-	chapter, err := fs.FileToChapter(file.SrcPath, chaptersDir)
+	chapter, err := c.GetChapter(file.SrcPath, chaptersDir)
 	if err != nil {
 		file.SetError(err)
 		return nil
@@ -58,7 +74,7 @@ func (c CBZTransactionUC) Process(file *convert.TransactionFile, tran *convert.T
 	group, gctx := errgroup.WithContext(context.Background())
 	group.SetLimit(workers)
 
-	pages := chapter.GetOrderedPagePaths()
+	pages := chapter.GetOrderedPagePaths(".jpg", ".jpeg", ".png", ".webp")
 	processedPages := make([]*manga.Page, len(pages))
 
 	for pIdx, pagePath := range pages {

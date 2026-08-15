@@ -22,13 +22,13 @@ type TransactionsV2Handler struct {
 	tranStore convert.TransactionStoreI
 	transPath string
 	epubUC    usecases.TransactionUC
-	cbzUC     usecases.TransactionUC
+	mangaUC   usecases.TransactionUC
 	md5UC     usecases.TransactionUC
 }
 
 func NewTransactionHandler(
 	epubUC usecases.TransactionUC,
-	cbzUC usecases.TransactionUC,
+	mangaUC usecases.TransactionUC,
 	md5UC usecases.TransactionUC,
 	tranStore convert.TransactionStoreI,
 ) *TransactionsV2Handler {
@@ -40,7 +40,7 @@ func NewTransactionHandler(
 	return &TransactionsV2Handler{
 		transPath: filepath.Join(wd, "transactions"),
 		epubUC:    epubUC,
-		cbzUC:     cbzUC,
+		mangaUC:   mangaUC,
 		md5UC:     md5UC,
 		tranStore: tranStore,
 	}
@@ -127,11 +127,13 @@ func (t *TransactionsV2Handler) HandleAttachFile(r *http.Request) (*string, erro
 	}
 	defer file.Close()
 
-	if ext := filepath.Ext(header.Filename); ext != "."+tran.Config.Type {
-		return nil, requtil.NewError(
-			http.StatusBadRequest,
-			fmt.Sprintf("%s file type not suported, only %s", ext, tran.Config.Type),
-		)
+	if tran.Config.Type == "epub" {
+		if ext := filepath.Ext(header.Filename); ext != ".epub" {
+			return nil, requtil.NewError(
+				http.StatusBadRequest,
+				fmt.Sprintf("%s file type not suported, only %s", ext, tran.Config.Type),
+			)
+		}
 	}
 
 	tranFileId := uid.GetRandomID(6)
@@ -164,7 +166,7 @@ func (t *TransactionsV2Handler) HandleAttachFile(r *http.Request) (*string, erro
 	go func() {
 		switch tran.Config.Type {
 		case "cbz":
-			t.cbzUC.Execute(tranFile, tran, t.transPath)
+			t.mangaUC.Execute(tranFile, tran, t.transPath)
 		case "epub":
 			t.epubUC.Execute(tranFile, tran, t.transPath)
 		}
