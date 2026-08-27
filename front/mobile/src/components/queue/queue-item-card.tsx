@@ -13,37 +13,38 @@ import SText from '../shared/SText';
 import { useShallow } from 'zustand/react/shallow';
 import * as Sharing from 'expo-sharing';
 import { useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 // --- Status config ---
 
 type TransactionStatus = Transaction['status'];
 
-const statusConfig: Record<TransactionStatus, { label: string; bg: string; fg: string }> = {
-  processing: { label: 'PROCESSING', bg: colors.primary_fixed, fg: colors.on_primary },
-  merging: { label: 'MERGING', bg: colors.secondary_fixed, fg: colors.on_secondary_fixed },
-  error: { label: 'ERROR', bg: colors.error_container, fg: colors.error },
-  done: { label: 'DONE', bg: colors.ok, fg: '#ffffff' },
-  waiting: { label: 'WAITING', bg: colors.surface_container_high, fg: colors.on_surface_variant },
-  canceled: { label: 'CANCELED', bg: colors.outline_variant, fg: colors.on_surface_variant },
-  unknown: { label: 'UNKNOWN', bg: colors.surface_container_high, fg: colors.on_surface_variant },
+const statusConfig: Record<TransactionStatus, { labelKey: string; bg: string; fg: string }> = {
+  processing: { labelKey: 'queue.status.processing', bg: colors.primary_fixed, fg: colors.on_primary },
+  merging: { labelKey: 'queue.status.merging', bg: colors.secondary_fixed, fg: colors.on_secondary_fixed },
+  error: { labelKey: 'queue.status.error', bg: colors.error_container, fg: colors.error },
+  done: { labelKey: 'queue.status.done', bg: colors.ok, fg: '#ffffff' },
+  waiting: { labelKey: 'queue.status.waiting', bg: colors.surface_container_high, fg: colors.on_surface_variant },
+  canceled: { labelKey: 'queue.status.canceled', bg: colors.outline_variant, fg: colors.on_surface_variant },
+  unknown: { labelKey: 'queue.status.unknown', bg: colors.surface_container_high, fg: colors.on_surface_variant },
 };
 
 type FileStatus = TransactionFile['status'];
 
-const fileStatusConfig: Record<FileStatus, { label: string; color: string; icon?: string }> = {
-  processing: { label: 'Converting...', color: colors.primary, icon: 'autorenew' },
-  pending: { label: 'Pending', color: colors.outline },
-  done: { label: 'Done', color: colors.ok, icon: 'check_circle' },
-  error: { label: 'Error', color: colors.error, icon: 'info' },
-  unknown: { label: 'Unknown', color: colors.outline },
+const fileStatusConfig: Record<FileStatus, { labelKey: string; color: string; icon?: string }> = {
+  processing: { labelKey: 'queue.fileStatus.converting', color: colors.primary, icon: 'autorenew' },
+  pending: { labelKey: 'queue.fileStatus.pending', color: colors.outline },
+  done: { labelKey: 'queue.fileStatus.done', color: colors.ok, icon: 'check_circle' },
+  error: { labelKey: 'queue.fileStatus.error', color: colors.error, icon: 'info' },
+  unknown: { labelKey: 'queue.fileStatus.unknown', color: colors.outline },
 };
 
 type UploadStatus = TransactionUpload['status'];
 
-const uploadStatusConfig: Record<UploadStatus, { label: string; color: string }> = {
-  sending: { label: 'Sending...', color: colors.primary },
-  done: { label: 'Done', color: colors.ok },
-  error: { label: 'Error', color: colors.error },
+const uploadStatusConfig: Record<UploadStatus, { labelKey: string; color: string }> = {
+  sending: { labelKey: 'queue.uploadStatus.sending', color: colors.primary },
+  done: { labelKey: 'queue.uploadStatus.done', color: colors.ok },
+  error: { labelKey: 'queue.uploadStatus.error', color: colors.error },
 };
 
 const SECTION_MAX_HEIGHT = 160;
@@ -75,7 +76,6 @@ export default function QueueItemCard({ data, idx, onRetry }: Props) {
     }, [])
   );
 
-  // const handleRetry = () => onRetry?.(data.id);
   const handleRetry = () => {};
 
   return (
@@ -85,7 +85,7 @@ export default function QueueItemCard({ data, idx, onRetry }: Props) {
 
       {/* Uploads */}
       {hasUploads && (
-        <Section title="Uploads">
+        <Section sectionKey="queue.uploads">
           {data.uploads.map((u, i) => (
             <UploadRow key={i} upload={u} onRetry={handleRetry} />
           ))}
@@ -94,7 +94,7 @@ export default function QueueItemCard({ data, idx, onRetry }: Props) {
 
       {/* Items */}
       {hasItems && (
-        <Section title="Items">
+        <Section sectionKey="queue.items">
           {data.items.map((item) => (
             <ItemRow key={item.id} item={item} onRetry={handleRetry} />
           ))}
@@ -103,7 +103,7 @@ export default function QueueItemCard({ data, idx, onRetry }: Props) {
 
       {/* Results */}
       {hasResults && (
-        <Section title="Results">
+        <Section sectionKey="queue.results">
           <View style={{ gap: 4, flexDirection: 'column' }}>
             {data.results.map((result) => (
               <ResultRow key={result.id} result={result} tran={data} idx={idx} />
@@ -124,6 +124,7 @@ export default function QueueItemCard({ data, idx, onRetry }: Props) {
 // --- Card Header ---
 
 function CardHeader({ data }: { data: Transaction }) {
+  const { t } = useTranslation();
   const title = data.config.title || `Transaction ${data.id.slice(0, 8)}`;
   const cfg = statusConfig[data.status];
   const isProcessing = data.status === 'processing';
@@ -137,7 +138,7 @@ function CardHeader({ data }: { data: Transaction }) {
             {title}
           </SText>
         </View>
-        <StatusBadge label={cfg.label} bg={cfg.bg} fg={cfg.fg} />
+        <StatusBadge label={t(cfg.labelKey)} bg={cfg.bg} fg={cfg.fg} />
       </View>
       <View style={[s.row, { gap: 12 }]}>
         <FormatBadge mode={data.config.mode} />
@@ -158,29 +159,32 @@ function StatusBadge({ label, bg, fg }: { label: string; bg: string; fg: string 
 }
 
 function FormatBadge({ mode }: { mode: string }) {
+  const { t } = useTranslation();
   return (
     <View style={[s.row, { gap: 4 }]}>
-      <SText style={s.meta}>Format:</SText>
+      <SText style={s.meta}>{t('queue.format')}</SText>
       <SText style={[s.meta, { fontFamily: 'medium' }]}>{mode}</SText>
     </View>
   );
 }
 
 function DestinationBadge({ toCloud }: { toCloud: boolean }) {
+  const { t } = useTranslation();
   return (
     <View style={[s.row, { gap: 4 }]}>
       <SIcon name="cloud" color={colors.outline} size={14} type="outlined" />
-      <SText style={s.meta}>{toCloud ? 'Cloud' : 'Local'}</SText>
+      <SText style={s.meta}>{toCloud ? t('queue.cloud') : t('queue.local')}</SText>
     </View>
   );
 }
 
 // --- Section with ScrollView ---
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ sectionKey, children }: { sectionKey: string; children: React.ReactNode }) {
+  const { t } = useTranslation();
   return (
     <View style={{ gap: 6 }}>
-      <SText style={s.sectionTitle}>{title}</SText>
+      <SText style={s.sectionTitle}>{t(sectionKey)}</SText>
       <ScrollView style={{ maxHeight: SECTION_MAX_HEIGHT }} nestedScrollEnabled>
         {children}
       </ScrollView>
@@ -191,8 +195,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 // --- Row: Upload ---
 
 function UploadRow({ upload, onRetry }: { upload: TransactionUpload; onRetry(): void }) {
+  const { t } = useTranslation();
   const hasError = !!upload.error;
-  const { label, color } = uploadStatusConfig[upload.status];
+  const { labelKey, color } = uploadStatusConfig[upload.status];
 
   return (
     <View style={{ gap: 2 }}>
@@ -211,7 +216,7 @@ function UploadRow({ upload, onRetry }: { upload: TransactionUpload; onRetry(): 
         {hasError ? (
           <RetryButton onPress={onRetry} />
         ) : (
-          <SText style={[s.meta, { color: color, fontFamily: 'medium' }]}>{label}</SText>
+          <SText style={[s.meta, { color: color, fontFamily: 'medium' }]}>{t(labelKey)}</SText>
         )}
       </View>
       {hasError && <SText style={s.errorText}>{upload.error}</SText>}
@@ -222,6 +227,7 @@ function UploadRow({ upload, onRetry }: { upload: TransactionUpload; onRetry(): 
 // --- Row: Item ---
 
 function ItemRow({ item, onRetry }: { item: TransactionFile; onRetry(): void }) {
+  const { t } = useTranslation();
   const cfg = fileStatusConfig[item.status];
   const hasError = item.status === 'error';
   const isProcessing = item.status === 'processing';
@@ -250,7 +256,7 @@ function ItemRow({ item, onRetry }: { item: TransactionFile; onRetry(): void }) 
           <SText
             style={[s.meta, { color: cfg.color, fontFamily: isProcessing ? 'regular' : 'medium' }]}
           >
-            {cfg.label}
+            {t(cfg.labelKey)}
           </SText>
         )}
       </View>
@@ -355,13 +361,14 @@ function RetryButton({ onPress }: { onPress(): void }) {
 // --- Cancel Button ---
 
 function CancelButton({ onPress }: { onPress(): void }) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   const handle = () => {
-    Alert.alert('Cancel transaction', 'Are you sure you want to cancel this transaction?', [
-      { text: 'No', style: 'cancel' },
+    Alert.alert(t('queue.cancelTitle'), t('queue.cancelMessage'), [
+      { text: t('queue.no'), style: 'cancel' },
       {
-        text: 'Yes, cancel',
+        text: t('queue.yesCancel'),
         style: 'destructive',
         onPress: async () => {
           setLoading(true);
@@ -382,7 +389,7 @@ function CancelButton({ onPress }: { onPress(): void }) {
       ) : (
         <SIcon name="close" color={colors.error} size={18} type="outlined" />
       )}
-      <SText style={s.cancelText}>Cancel</SText>
+      <SText style={s.cancelText}>{t('queue.cancel')}</SText>
     </SButton>
   );
 }
@@ -390,6 +397,7 @@ function CancelButton({ onPress }: { onPress(): void }) {
 // --- Download All ---
 
 function DownloadAllButton({ tran, idx }: { tran: Transaction; idx: number }) {
+  const { t } = useTranslation();
   const download = useQueue((s) => s.download);
   const [loading, setLoading] = useState(false);
 
@@ -411,7 +419,7 @@ function DownloadAllButton({ tran, idx }: { tran: Transaction; idx: number }) {
       ) : (
         <SIcon name="download" color={colors.on_primary} size={22} type="outlined" />
       )}
-      <SText style={s.downloadAllText}>{loading ? 'Downloading...' : 'Download All Results'}</SText>
+      <SText style={s.downloadAllText}>{loading ? t('queue.downloading') : t('queue.downloadAll')}</SText>
     </SButton>
   );
 }

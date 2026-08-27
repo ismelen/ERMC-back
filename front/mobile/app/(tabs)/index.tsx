@@ -10,10 +10,12 @@ import SButton from '../../src/components/shared/SButton';
 import SIcon from '../../src/components/icons/SIcon';
 import { useObjectNavigation } from '../../src/hooks/useObjectNavigation';
 import { TransactionMode } from '../../src/models/transaction-config';
+import { useTranslation } from 'react-i18next';
 
 export default function HomePage() {
   const folders = useMonitoredFolders((s) => s.folders);
   const navigate = useObjectNavigation((s) => s.navigate);
+  const { t } = useTranslation();
 
   return (
     <>
@@ -22,23 +24,23 @@ export default function HomePage() {
         <View style={{ gap: 16 }}>
           <ActionCard
             icon="menu_book"
-            title="Send Comic"
-            subtitle="Convert .cbz to .epub and send to device"
-            tag=".cbz to .epub"
+            title={t('home.sendComic')}
+            subtitle={t('home.sendComicSubtitle')}
+            tag={t('home.sendComicTag')}
             onClick={() => router.push('/send-comic')}
           />
           <ActionCard
             icon="book"
-            title="Send Book"
-            subtitle="Manage and transfer .epub files"
-            tag=".epub management"
+            title={t('home.sendBook')}
+            subtitle={t('home.sendBookSubtitle')}
+            tag={t('home.sendBookTag')}
             onClick={() => router.push('/send-book')}
           />
         </View>
 
         {folders.length !== 0 && (
           <View style={{ gap: 8 }}>
-            <SText style={{ fontFamily: 'semibold', fontSize: 20 }}>Monitored folders</SText>
+            <SText style={{ fontFamily: 'semibold', fontSize: 20 }}>{t('home.monitoredFolders')}</SText>
 
             {folders.map((e, i) => (
               <SButton
@@ -66,7 +68,7 @@ export default function HomePage() {
                       fontSize: 12,
                     }}
                   >
-                    {e.diff !== 0 ? `${e.diff} NEW FILES` : 'SYNCED'}
+                    {e.diff !== 0 ? t('home.newFiles', { count: e.diff }) : t('home.synced')}
                   </SText>
                 </View>
                 <SIcon name="chevron_right" size={32} color={colors.primary} type={'outlined'} />

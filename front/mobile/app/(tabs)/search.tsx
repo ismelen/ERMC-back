@@ -12,6 +12,7 @@ import { router } from 'expo-router';
 import SearchedBookCardSkeleton from '../../src/components/search/search-book-card-skeleton';
 import STextInput from '../../src/components/shared/STextInput';
 import { TransactionSource } from '../../src/models/transaction-source';
+import { useTranslation } from 'react-i18next';
 
 export default function Search() {
   const { search, selectBook, selectedBooks } = useLibgen(
@@ -23,6 +24,7 @@ export default function Search() {
   );
 
   const selectedCant = Object.entries(selectedBooks).length;
+  const { t } = useTranslation();
 
   const [query, setQuery] = useState('');
 
@@ -39,11 +41,11 @@ export default function Search() {
   return (
     <View style={{ flex: 1 }}>
       <View style={{ paddingHorizontal: 24 }}>
-        <SText style={{ fontFamily: 'bold', fontSize: 28 }}>Search</SText>
+        <SText style={{ fontFamily: 'bold', fontSize: 28 }}>{t('search.title')}</SText>
 
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <STextInput
-            placeholder="Search by title, author or genere..."
+            placeholder={t('search.placeholder')}
             onChangeText={setQuery}
             onSubmitEditing={handleSearch}
             style={{
@@ -95,7 +97,7 @@ export default function Search() {
           }}
         >
           <SText style={{ color: colors.on_primary, fontFamily: 'semibold', fontSize: 16 }}>
-            Send books ({selectedCant})
+            {t('search.sendBooks', { count: selectedCant })}
           </SText>
           <SIcon name="upload_file" color={colors.on_primary} size={26} />
         </SButton>

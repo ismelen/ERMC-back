@@ -1,0 +1,116 @@
+{
+  "settings": {
+    "title": "Settings",
+    "readerModel": "READER MODEL",
+    "cloudSync": "CLOUD SYNCHRONIZATION",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "connectedAs": "Connected as {{email}}",
+    "folder": "Folder",
+    "selectFolder": "Select folder",
+    "browse": "Browse",
+    "language": "LANGUAGE"
+  },
+  "home": {
+    "sendComic": "Send Comic",
+    "sendComicSubtitle": "Convert .cbz to .epub and send to device",
+    "sendComicTag": ".cbz to .epub",
+    "sendBook": "Send Book",
+    "sendBookSubtitle": "Manage and transfer .epub files",
+    "sendBookTag": ".epub management",
+    "monitoredFolders": "Monitored folders",
+    "newFiles": "{{count}} NEW FILES",
+    "synced": "SYNCED"
+  },
+  "queue": {
+    "title": "Transaction queue",
+    "empty": "Your queue is empty",
+    "emptySubtitle1": "Start by sending something.",
+    "emptySubtitle2": "Your active and completed uploads will appear here.",
+    "sendSomething": "Send something",
+    "uploads": "Uploads",
+    "items": "Items",
+    "results": "Results",
+    "format": "Format:",
+    "cloud": "Cloud",
+    "local": "Local",
+    "cancelTitle": "Cancel transaction",
+    "cancelMessage": "Are you sure you want to cancel this transaction?",
+    "no": "No",
+    "yesCancel": "Yes, cancel",
+    "cancel": "Cancel",
+    "downloadAll": "Download All Results",
+    "downloading": "Downloading...",
+    "status": {
+      "processing": "PROCESSING",
+      "merging": "MERGING",
+      "error": "ERROR",
+      "done": "DONE",
+      "waiting": "WAITING",
+      "canceled": "CANCELED",
+      "unknown": "UNKNOWN"
+    },
+    "fileStatus": {
+      "converting": "Converting...",
+      "pending": "Pending",
+      "done": "Done",
+      "error": "Error",
+      "unknown": "Unknown"
+    },
+    "uploadStatus": {
+      "sending": "Sending...",
+      "done": "Done",
+      "error": "Error"
+    }
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search by title, author or genre...",
+    "sendBooks": "Send books ({{count}})"
+  },
+  "sendBook": {
+    "title": "Send Book",
+    "source": "SOURCE",
+    "readerModel": "READER MODEL",
+    "destination": "DESTINATION",
+    "send": "Send",
+    "monitorizeFolder": "Monitorize folder",
+    "monitorizeText": "Monitor changes in this folder"
+  },
+  "sendComic": {
+    "title": "Send Comic",
+    "source": "SOURCE",
+    "readerModel": "READER MODEL",
+    "metadata": "METADATA",
+    "destination": "DESTINATION",
+    "options": "OPTIONS",
+    "mergeChapters": "Merge chapters",
+    "mergeText": "Combine multiple chapters into a single volume",
+    "send": "Send",
+    "monitorizeFolder": "Monitorize folder",
+    "monitorizeText": "Monitor changes in this folder"
+  },
+  "sendLibgen": {
+    "title": "Send Books",
+    "books": "BOOKS",
+    "readerModel": "READER MODEL",
+    "destination": "DESTINATION",
+    "send": "Send"
+  },
+  "loading": {
+    "sendingBook": "Sending your book\u2026",
+    "optimizing": "Optimizing for your e-reader. This won't take long."
+  },
+  "destination": {
+    "local": "Local",
+    "cloud": "Cloud"
+  },
+  "metadata": {
+    "title": "Title",
+    "author": "Author"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Espa\u00f1ol"
+  }
+}

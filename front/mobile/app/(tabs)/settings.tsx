@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import SText from '../../src/components/shared/SText';
 import { colors } from '../../src/theme/colors';
@@ -11,12 +11,20 @@ import SIcon from '../../src/components/icons/SIcon';
 import { useCloud } from '../../src/hooks/useCloud';
 import SButton from '../../src/components/shared/SButton';
 import { usePathname } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { SupportedLanguage } from '../../src/i18n/i18n';
+
+const languageOptions: { value: SupportedLanguage; label: string }[] = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+];
 
 export default function SettingsPage() {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
-  const { settings, setModel } = useSettings(
-    useShallow((s) => ({ settings: s.settings, setModel: s.setModel }))
+  const { settings, setModel, setLanguage } = useSettings(
+    useShallow((s) => ({ settings: s.settings, setModel: s.setModel, setLanguage: s.setLanguage }))
   );
 
   const { oauth, folder, getFolder, getToken, logout } = useCloud(
@@ -31,9 +39,9 @@ export default function SettingsPage() {
 
   return (
     <ScrollView style={{ flex: 1, paddingHorizontal: 24 }}>
-      <SText style={{ fontFamily: 'bold', fontSize: 28 }}>Settings</SText>
+      <SText style={{ fontFamily: 'bold', fontSize: 28 }}>{t('settings.title')}</SText>
       <View style={{ marginTop: 14, gap: 4 }}>
-        <SText style={styles.title}>READER MODEL</SText>
+        <SText style={styles.title}>{t('settings.readerModel')}</SText>
         <SSelect
           value={settings.model}
           options={eReaderProfiles}
@@ -42,7 +50,16 @@ export default function SettingsPage() {
       </View>
 
       <View style={{ marginTop: 32, gap: 4 }}>
-        <SText style={styles.title}>CLOUD SYNCHRONIZATION</SText>
+        <SText style={styles.title}>{t('settings.language')}</SText>
+        <SSelect
+          value={settings.language ?? 'en'}
+          options={languageOptions}
+          onOptionChange={(opt) => setLanguage(opt.value as SupportedLanguage)}
+        />
+      </View>
+
+      <View style={{ marginTop: 32, gap: 4 }}>
+        <SText style={styles.title}>{t('settings.cloudSync')}</SText>
         <View
           style={{
             boxShadow: colors.boxShadow,
@@ -66,7 +83,7 @@ export default function SettingsPage() {
               }}
             >
               <SText style={{ fontFamily: 'semibold', color: colors.primary }}>
-                {oauth?.email ? 'Disconnect' : 'Connect'}
+                {oauth?.email ? t('settings.disconnect') : t('settings.connect')}
               </SText>
             </SButton>
           </View>
@@ -81,7 +98,7 @@ export default function SettingsPage() {
             >
               <SIcon name="check_circle" color={colors.primary} size={14} />
               <SText style={{ fontSize: 12, color: colors.primary, fontFamily: 'semibold' }}>
-                Connected as {oauth.email}
+                {t('settings.connectedAs', { email: oauth.email })}
               </SText>
             </View>
           )}
@@ -98,7 +115,9 @@ export default function SettingsPage() {
             padding: 10,
           }}
         >
-          <SText style={{ fontSize: 14, fontFamily: 'semibold', marginBottom: 2 }}>Folder</SText>
+          <SText style={{ fontSize: 14, fontFamily: 'semibold', marginBottom: 2 }}>
+            {t('settings.folder')}
+          </SText>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View
               style={{
@@ -109,7 +128,7 @@ export default function SettingsPage() {
                 padding: 10,
               }}
             >
-              <SText>{folder ?? 'Select folder'}</SText>
+              <SText>{folder ?? t('settings.selectFolder')}</SText>
             </View>
             <SButton
               onPress={() => getFolder(true)}
@@ -127,7 +146,7 @@ export default function SettingsPage() {
                   fontFamily: 'semibold',
                 }}
               >
-                Browse
+                {t('settings.browse')}
               </SText>
             </SButton>
           </View>

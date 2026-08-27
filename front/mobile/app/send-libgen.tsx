@@ -12,9 +12,11 @@ import { useLibgen } from '../src/hooks/useLibgen';
 import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
 import { Stack, usePathname } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 export default function SendLibgen() {
   const { sending, config, setConfig, send } = useSender('md5');
+  const { t } = useTranslation();
 
   const { selectedBooks, onDelete, clear } = useLibgen(
     useShallow((s) => ({
@@ -27,8 +29,8 @@ export default function SendLibgen() {
   if (sending)
     return (
       <LoadingScreen
-        title="Sending your book…"
-        subtitle="Optimizing for your e-reader. This won't take long."
+        title={t('loading.sendingBook')}
+        subtitle={t('loading.optimizing')}
       />
     );
 
@@ -37,7 +39,7 @@ export default function SendLibgen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Send Books',
+          title: t('sendLibgen.title'),
           headerTitleStyle: { fontFamily: 'semibold', fontSize: 20, color: colors.on_background },
           headerTitleAlign: 'center',
           headerStyle: {
@@ -49,7 +51,7 @@ export default function SendLibgen() {
       <View style={{ flex: 1, paddingBottom: 24, paddingHorizontal: 24 }}>
         <ScrollView style={{ flex: 1, gap: 32 }}>
           <View style={styles.section}>
-            <SText style={styles.title}>BOOKS</SText>
+            <SText style={styles.title}>{t('sendLibgen.books')}</SText>
             {Object.values(selectedBooks).map((e) => (
               <SearchedBookCard
                 key={e.src}
@@ -62,7 +64,7 @@ export default function SendLibgen() {
           </View>
 
           <View>
-            <SText style={styles.title}>READER MODEL</SText>
+            <SText style={styles.title}>{t('sendLibgen.readerModel')}</SText>
             <SSelect
               value={config.model}
               options={eReaderProfiles}
@@ -71,7 +73,7 @@ export default function SendLibgen() {
           </View>
 
           <View style={styles.section}>
-            <SText style={styles.title}>DESTINATION</SText>
+            <SText style={styles.title}>{t('sendLibgen.destination')}</SText>
             <DestinationSelector
               toCloud={config.toCloud}
               onChange={(toCloud) => setConfig((s) => ({ ...s, toCloud: toCloud }))}
@@ -93,7 +95,7 @@ export default function SendLibgen() {
             boxShadow: colors.boxShadow,
           }}
         >
-          <SText style={{ fontFamily: 'semibold', color: colors.on_primary }}>Send</SText>
+          <SText style={{ fontFamily: 'semibold', color: colors.on_primary }}>{t('sendLibgen.send')}</SText>
         </SButton>
       </View>
     </>

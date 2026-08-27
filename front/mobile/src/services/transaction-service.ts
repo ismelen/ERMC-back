@@ -1,9 +1,10 @@
-import { BACKEND_API_URL } from '../constants';
+﻿import { BACKEND_API_URL } from '../constants';
 import { Transaction } from '../models/transaction';
 import RNBlobUtil from 'react-native-blob-util';
 import { TransactionConfig } from '../models/transaction-config';
 import { CloudInfo } from '../hooks/useCloud';
 import { TransactionSource } from '../models/transaction-source';
+import i18n from '../i18n/i18n';
 
 export class TransactionService {
   static async startTransaction(
@@ -25,6 +26,7 @@ export class TransactionService {
           notify_token: notifyToken,
           type: config.mode,
           cant: config.files.length,
+          locale: i18n.language,
         }),
       });
       const data: Transaction = await res.json();
@@ -53,7 +55,7 @@ export class TransactionService {
 
   static async cancelTransaction(tran: Transaction) {
     try {
-      await fetch(`${BACKEND_API_URL}/transactions/${tran.id}/cancel`, {
+      await fetch(`${BACKEND_API_URL}/transactions/${tran.id}/cancel?locale=${i18n.language}`, {
         method: 'PUT',
       });
     } catch (e) {
@@ -76,7 +78,7 @@ export class TransactionService {
           mediaScannable: true,
           path: `${RNBlobUtil.fs.dirs.DownloadDir}/${file.filename}`,
         },
-      }).fetch('GET', `${BACKEND_API_URL}/transactions/${tran.id}/download/${id}`);
+      }).fetch('GET', `${BACKEND_API_URL}/transactions/${tran.id}/download/${id}?locale=${i18n.language}`);
 
       return true;
     } catch (e) {
@@ -94,7 +96,7 @@ export class TransactionService {
       const path = `${RNBlobUtil.fs.dirs.CacheDir}/${file.filename}`;
       await RNBlobUtil.config({ path }).fetch(
         'GET',
-        `${BACKEND_API_URL}/transactions/${tran.id}/download/${id}`
+        `${BACKEND_API_URL}/transactions/${tran.id}/download/${id}?locale=${i18n.language}`
       );
       return path;
     } catch (e) {
@@ -119,9 +121,10 @@ export class TransactionService {
 
   static async checkStatus(tran: Transaction): Promise<Transaction> {
     try {
-      const res = await fetch(`${BACKEND_API_URL}/transactions/${tran.id}/status`, {
-        method: 'GET',
-      });
+      const res = await fetch(
+        `${BACKEND_API_URL}/transactions/${tran.id}/status?locale=${i18n.language}`,
+        { method: 'GET' }
+      );
 
       if (res.status !== 200) {
         return {
@@ -152,6 +155,7 @@ export class TransactionService {
       body = JSON.stringify({
         title: file.name,
         md5: file.src,
+        locale: i18n.language,
       });
     } else {
       const form = new FormData();
@@ -163,7 +167,12 @@ export class TransactionService {
       body = form;
     }
 
-    const res = await fetch(`${BACKEND_API_URL}/transactions/${tran.id}/attach`, {
+    const attachUrl =
+      tran.config.mode !== 'md5'
+        ? `${BACKEND_API_URL}/transactions/${tran.id}/attach?locale=${i18n.language}`
+        : `${BACKEND_API_URL}/transactions/${tran.id}/attach`;
+
+    const res = await fetch(attachUrl, {
       method: 'POST',
       body: body,
     });

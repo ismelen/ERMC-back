@@ -1,5 +1,5 @@
 import { useShallow } from 'zustand/react/shallow';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useQueue } from '../../src/hooks/useQueue';
 import SIcon from '../../src/components/icons/SIcon';
 import { colors } from '../../src/theme/colors';
@@ -10,6 +10,7 @@ import SText from '../../src/components/shared/SText';
 import SButton from '../../src/components/shared/SButton';
 import { router } from 'expo-router';
 import { TransactionMode } from '../../src/models/transaction-config';
+import { useTranslation } from 'react-i18next';
 
 export default function QueuePage() {
   const { transactions, cancel } = useQueue(
@@ -17,10 +18,11 @@ export default function QueuePage() {
   );
   const navigate = useObjectNavigation((s) => s.navigate);
   const areTransactions = transactions.length > 0;
+  const { t } = useTranslation();
 
   return (
     <ScrollView style={{ flex: 1, paddingHorizontal: 24 }}>
-      <Text style={{ fontFamily: 'bold', fontSize: 28 }}>Transaction queue</Text>
+      <SText style={{ fontFamily: 'bold', fontSize: 28 }}>{t('queue.title')}</SText>
 
       {!areTransactions && (
         <View
@@ -37,11 +39,11 @@ export default function QueuePage() {
           </View>
           <View>
             <SText style={{ fontSize: 16, textAlign: 'center', fontFamily: 'semibold' }}>
-              Your queue is empty
+              {t('queue.empty')}
             </SText>
-            <SText style={{ fontSize: 16, textAlign: 'center' }}>Start by sending something.</SText>
+            <SText style={{ fontSize: 16, textAlign: 'center' }}>{t('queue.emptySubtitle1')}</SText>
             <SText style={{ fontSize: 16, textAlign: 'center' }}>
-              Your active and compltede uploads will appear here.
+              {t('queue.emptySubtitle2')}
             </SText>
           </View>
           <SButton
@@ -54,7 +56,7 @@ export default function QueuePage() {
             }}
           >
             <SText style={{ color: colors.on_primary, fontFamily: 'semibold', fontSize: 16 }}>
-              Send something
+              {t('queue.sendSomething')}
             </SText>
           </SButton>
         </View>

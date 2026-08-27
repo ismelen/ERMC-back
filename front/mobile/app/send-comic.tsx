@@ -12,15 +12,17 @@ import SSelect from '../src/components/shared/SSelect';
 import { eReaderProfiles } from '../src/constants';
 import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
+import { useTranslation } from 'react-i18next';
 
 export default function SendComicPage() {
   const { sending, config, setConfig, send } = useSender('cbz');
+  const { t } = useTranslation();
 
   if (sending)
     return (
       <LoadingScreen
-        title="Sending your book…"
-        subtitle="Optimizing for your e-reader. This won't take long."
+        title={t('loading.sendingBook')}
+        subtitle={t('loading.optimizing')}
       />
     );
 
@@ -29,7 +31,7 @@ export default function SendComicPage() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Send Comic',
+          title: t('sendComic.title'),
           headerTitleStyle: { fontFamily: 'semibold', fontSize: 20, color: colors.on_background },
           headerTitleAlign: 'center',
           headerStyle: {
@@ -41,7 +43,7 @@ export default function SendComicPage() {
       <ScrollView style={{ flex: 1, paddingBottom: 24, paddingHorizontal: 24 }}>
         <View style={{ flex: 1, gap: 32, paddingBottom: 24 }}>
           <View style={styles.section}>
-            <SText style={styles.title}>SOURCE</SText>
+            <SText style={styles.title}>{t('sendComic.source')}</SText>
             <SourceSelector
               initFolder={config.folder}
               initFiles={config.files}
@@ -57,8 +59,8 @@ export default function SendComicPage() {
             {config.folder && (
               <OptionCardChecker
                 initialChecked={config.monitoredIdx !== undefined}
-                label="Monitorize folder"
-                text="Monitor changes in this folder"
+                label={t('sendComic.monitorizeFolder')}
+                text={t('sendComic.monitorizeText')}
                 onChange={(checked) =>
                   setConfig((s) => ({ ...s, monitoredIdx: checked ? 1 : undefined }))
                 }
@@ -67,7 +69,7 @@ export default function SendComicPage() {
           </View>
 
           <View>
-            <SText style={styles.title}>READER MODEL</SText>
+            <SText style={styles.title}>{t('sendComic.readerModel')}</SText>
             <SSelect
               value={config.model}
               options={eReaderProfiles}
@@ -76,7 +78,7 @@ export default function SendComicPage() {
           </View>
 
           <View style={styles.section}>
-            <SText style={styles.title}>METADATA</SText>
+            <SText style={styles.title}>{t('sendComic.metadata')}</SText>
             <MetadataSection
               initialMetadata={{ title: config.title, author: config.author }}
               onChange={(meta) =>
@@ -86,7 +88,7 @@ export default function SendComicPage() {
           </View>
 
           <View style={styles.section}>
-            <SText style={styles.title}>DESTINATION</SText>
+            <SText style={styles.title}>{t('sendComic.destination')}</SText>
             <DestinationSelector
               toCloud={config.toCloud}
               onChange={(toCloud) => setConfig((s) => ({ ...s, toCloud: toCloud }))}
@@ -94,11 +96,11 @@ export default function SendComicPage() {
           </View>
 
           <View style={{ gap: 5 }}>
-            <SText style={styles.title}>OPTIONS</SText>
+            <SText style={styles.title}>{t('sendComic.options')}</SText>
             <OptionCardChecker
               initialChecked={config.merge ?? false}
-              label="Merge chapters"
-              text="Combine multiple chapters into a single volume"
+              label={t('sendComic.mergeChapters')}
+              text={t('sendComic.mergeText')}
               onChange={(checked) => setConfig((s) => ({ ...s, merge: checked }))}
             />
           </View>
@@ -116,7 +118,7 @@ export default function SendComicPage() {
           boxShadow: colors.boxShadow,
         }}
       >
-        <SText style={{ fontFamily: 'semibold', color: colors.on_primary }}>Send</SText>
+        <SText style={{ fontFamily: 'semibold', color: colors.on_primary }}>{t('sendComic.send')}</SText>
       </SButton>
     </>
   );

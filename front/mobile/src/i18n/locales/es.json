@@ -1,0 +1,116 @@
+{
+  "settings": {
+    "title": "Ajustes",
+    "readerModel": "MODELO DE LECTOR",
+    "cloudSync": "SINCRONIZACI\u00d3N EN LA NUBE",
+    "connect": "Conectar",
+    "disconnect": "Desconectar",
+    "connectedAs": "Conectado como {{email}}",
+    "folder": "Carpeta",
+    "selectFolder": "Seleccionar carpeta",
+    "browse": "Explorar",
+    "language": "IDIOMA"
+  },
+  "home": {
+    "sendComic": "Enviar C\u00f3mic",
+    "sendComicSubtitle": "Convierte .cbz a .epub y env\u00eda al dispositivo",
+    "sendComicTag": ".cbz a .epub",
+    "sendBook": "Enviar Libro",
+    "sendBookSubtitle": "Gestiona y transfiere archivos .epub",
+    "sendBookTag": "Gesti\u00f3n .epub",
+    "monitoredFolders": "Carpetas monitorizadas",
+    "newFiles": "{{count}} ARCHIVOS NUEVOS",
+    "synced": "SINCRONIZADO"
+  },
+  "queue": {
+    "title": "Cola de transacciones",
+    "empty": "Tu cola est\u00e1 vac\u00eda",
+    "emptySubtitle1": "Empieza enviando algo.",
+    "emptySubtitle2": "Tus subidas activas y completadas aparecer\u00e1n aqu\u00ed.",
+    "sendSomething": "Enviar algo",
+    "uploads": "Subidas",
+    "items": "Elementos",
+    "results": "Resultados",
+    "format": "Formato:",
+    "cloud": "Nube",
+    "local": "Local",
+    "cancelTitle": "Cancelar transacci\u00f3n",
+    "cancelMessage": "\u00bfSeguro que quieres cancelar esta transacci\u00f3n?",
+    "no": "No",
+    "yesCancel": "S\u00ed, cancelar",
+    "cancel": "Cancelar",
+    "downloadAll": "Descargar todos los resultados",
+    "downloading": "Descargando...",
+    "status": {
+      "processing": "EN PROCESO",
+      "merging": "FUSIONANDO",
+      "error": "ERROR",
+      "done": "COMPLETADO",
+      "waiting": "EN ESPERA",
+      "canceled": "CANCELADO",
+      "unknown": "DESCONOCIDO"
+    },
+    "fileStatus": {
+      "converting": "Convirtiendo...",
+      "pending": "Pendiente",
+      "done": "Hecho",
+      "error": "Error",
+      "unknown": "Desconocido"
+    },
+    "uploadStatus": {
+      "sending": "Enviando...",
+      "done": "Hecho",
+      "error": "Error"
+    }
+  },
+  "search": {
+    "title": "Buscar",
+    "placeholder": "Buscar por t\u00edtulo, autor o g\u00e9nero...",
+    "sendBooks": "Enviar libros ({{count}})"
+  },
+  "sendBook": {
+    "title": "Enviar Libro",
+    "source": "ORIGEN",
+    "readerModel": "MODELO DE LECTOR",
+    "destination": "DESTINO",
+    "send": "Enviar",
+    "monitorizeFolder": "Monitorizar carpeta",
+    "monitorizeText": "Monitoriza los cambios en esta carpeta"
+  },
+  "sendComic": {
+    "title": "Enviar C\u00f3mic",
+    "source": "ORIGEN",
+    "readerModel": "MODELO DE LECTOR",
+    "metadata": "METADATOS",
+    "destination": "DESTINO",
+    "options": "OPCIONES",
+    "mergeChapters": "Combinar cap\u00edtulos",
+    "mergeText": "Combina m\u00faltiples cap\u00edtulos en un solo volumen",
+    "send": "Enviar",
+    "monitorizeFolder": "Monitorizar carpeta",
+    "monitorizeText": "Monitoriza los cambios en esta carpeta"
+  },
+  "sendLibgen": {
+    "title": "Enviar Libros",
+    "books": "LIBROS",
+    "readerModel": "MODELO DE LECTOR",
+    "destination": "DESTINO",
+    "send": "Enviar"
+  },
+  "loading": {
+    "sendingBook": "Enviando tu libro\u2026",
+    "optimizing": "Optimizando para tu e-reader. No tardar\u00e1 mucho."
+  },
+  "destination": {
+    "local": "Local",
+    "cloud": "Nube"
+  },
+  "metadata": {
+    "title": "T\u00edtulo",
+    "author": "Autor"
+  },
+  "languages": {
+    "en": "English",
+    "es": "Espa\u00f1ol"
+  }
+}

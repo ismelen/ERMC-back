@@ -1,13 +1,9 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { colors } from '../../theme/colors';
 import SButton from '../shared/SButton';
 import SText from '../shared/SText';
-
-const destinations: { name: string; value: boolean }[] = [
-  { name: 'local', value: false },
-  { name: 'cloud', value: true },
-];
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   toCloud: boolean;
@@ -16,6 +12,12 @@ interface Props {
 
 export default function DestinationSelector({ toCloud, onChange }: Props) {
   const [cloudDestination, setCloudDestination] = useState(toCloud);
+  const { t } = useTranslation();
+
+  const destinations: { labelKey: string; value: boolean }[] = [
+    { labelKey: 'destination.local', value: false },
+    { labelKey: 'destination.cloud', value: true },
+  ];
 
   useEffect(() => {
     onChange(cloudDestination);
@@ -34,7 +36,7 @@ export default function DestinationSelector({ toCloud, onChange }: Props) {
     >
       {destinations.map((dest) => (
         <SButton
-          key={dest.name}
+          key={dest.labelKey}
           onPress={() => setCloudDestination(dest.value)}
           style={{
             flex: 1,
@@ -52,7 +54,7 @@ export default function DestinationSelector({ toCloud, onChange }: Props) {
               color: dest.value === cloudDestination ? colors.on_primary : colors.on_surface,
             }}
           >
-            {dest.name[0].toUpperCase() + dest.name.slice(1)}
+            {t(dest.labelKey)}
           </SText>
         </SButton>
       ))}
