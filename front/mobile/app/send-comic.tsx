@@ -19,12 +19,7 @@ export default function SendComicPage() {
   const { t } = useTranslation();
 
   if (sending)
-    return (
-      <LoadingScreen
-        title={t('loading.sendingBook')}
-        subtitle={t('loading.optimizing')}
-      />
-    );
+    return <LoadingScreen title={t('loading.sendingBook')} subtitle={t('loading.optimizing')} />;
 
   return (
     <>
@@ -47,6 +42,13 @@ export default function SendComicPage() {
             <SourceSelector
               initFolder={config.folder}
               initFiles={config.files}
+              allowedTypes={[
+                'application/pdf',
+                'application/x-cbz',
+                'application/zip',
+                '.cbz',
+                '.pdf',
+              ]}
               onChange={(files, folder) => {
                 setConfig((s) => ({
                   ...s,
@@ -118,7 +120,9 @@ export default function SendComicPage() {
           boxShadow: colors.boxShadow,
         }}
       >
-        <SText style={{ fontFamily: 'semibold', color: colors.on_primary }}>{t('sendComic.send')}</SText>
+        <SText style={{ fontFamily: 'semibold', color: colors.on_primary }}>
+          {t('sendComic.send')}
+        </SText>
       </SButton>
     </>
   );

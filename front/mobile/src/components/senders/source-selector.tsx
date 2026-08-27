@@ -12,12 +12,20 @@ interface Props {
   initFiles: TransactionSource[];
   onChange(files: TransactionSource[], folder?: TransactionSource): void;
   enabled?: boolean;
+  allowedTypes?: string[];
 }
 
-export default function SourceSelector({ initFolder, initFiles, onChange, enabled = true }: Props) {
+export default function SourceSelector({
+  initFolder,
+  initFiles,
+  onChange,
+  enabled = true,
+  allowedTypes,
+}: Props) {
   const { files, folder, addFiles, addFolder, deleteSource, loading } = useSource(
     initFolder,
-    initFiles
+    initFiles,
+    allowedTypes
   );
 
   useEffect(() => {

@@ -21,17 +21,19 @@ export function UploadRow({
   upload,
   idx,
   onRetry,
+  allowedTypes,
 }: {
   upload: TransactionUpload;
   idx: number;
   onRetry(idx: number, newFile?: any): void;
+  allowedTypes?: string[];
 }) {
   const { t } = useTranslation();
   const hasError = !!upload.error;
   const { labelKey, color } = uploadStatusConfig[upload.status];
 
   const handleEdit = async () => {
-    const files = await FilesystemService.pickFiles();
+    const files = await FilesystemService.pickFiles(allowedTypes);
     if (files && files.length > 0) {
       onRetry(idx, files[0]);
     }

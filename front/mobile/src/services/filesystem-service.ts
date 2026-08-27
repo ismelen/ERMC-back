@@ -41,11 +41,11 @@ export class FilesystemService {
     }
   }
 
-  static async pickFiles(): Promise<TransactionSource[] | undefined> {
+  static async pickFiles(allowedTypes?: string[]): Promise<TransactionSource[] | undefined> {
     try {
       const files = await pick({
         allowMultiSelection: true,
-        type: [types.allFiles],
+        type: allowedTypes ?? [types.allFiles],
       });
 
       if (!files || files.length === 0) return;

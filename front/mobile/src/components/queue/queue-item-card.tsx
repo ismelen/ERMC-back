@@ -72,7 +72,17 @@ export default function QueueItemCard({ data, idx }: Props) {
       {hasUploads && (
         <Section sectionKey="queue.uploads">
           {data.uploads.map((u, i) => (
-            <UploadRow key={i} upload={u} idx={i} onRetry={handleRetryUpload} />
+            <UploadRow
+              key={i}
+              upload={u}
+              idx={i}
+              onRetry={handleRetryUpload}
+              allowedTypes={
+                data.config.mode === 'cbz'
+                  ? ['application/pdf', 'application/x-cbz', 'application/zip', '.cbz', '.pdf']
+                  : undefined
+              }
+            />
           ))}
         </Section>
       )}
