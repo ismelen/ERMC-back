@@ -46,7 +46,7 @@ export class TransactionService {
         items: [],
         results: [],
         uploads: [],
-        status: 'waiting',
+        status: data.status,
       };
     } catch (e) {
       console.error('start transaction', e);

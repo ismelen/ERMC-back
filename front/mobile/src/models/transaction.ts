@@ -6,7 +6,8 @@ import { TransactionUpload } from './transaction-upload';
 export interface Transaction {
   id: string;
   timestamp: number;
-  status: 'waiting' | 'processing' | 'done' | 'canceled' | 'error' | 'merging' | 'unknown';
+  status:
+    'waiting' | 'processing' | 'done' | 'canceled' | 'error' | 'merging' | 'unknown' | 'enqueued';
   config: TransactionConfig;
   total: number;
   completed: number;
