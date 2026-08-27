@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import * as Sharing from 'expo-sharing';
 import { Transaction } from '../../models/transaction';
 import { useQueue } from '../../hooks/useQueue';
+import { TransactionService } from '../../services/transaction-service';
 import { colors } from '../../theme/colors';
 import SIcon from '../icons/SIcon';
 import SButton from '../shared/SButton';
@@ -120,6 +122,41 @@ export function DownloadAllButton({ tran, idx }: { tran: Transaction; idx: numbe
   );
 }
 
+export function ShareAllButton({ tran }: { tran: Transaction }) {
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(false);
+
+  const handleShareAll = async () => {
+    setLoading(true);
+    try {
+      for (const result of tran.results) {
+        const path = await TransactionService.downloadToCache(tran, result.id);
+        if (!path) continue;
+
+        const mimeType = TransactionService.getMimeType(result.filename);
+        await Sharing.shareAsync(`file://${path}`, { mimeType, dialogTitle: result.filename });
+      }
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SButton onPress={handleShareAll} disabled={loading} style={s.shareAllBtn}>
+      {loading ? (
+        <ActivityIndicator size={20} color={colors.on_primary} />
+      ) : (
+        <SIcon name="share" color={colors.on_primary} size={22} type="outlined" />
+      )}
+      <SText style={s.shareAllText}>
+        {loading ? t('queue.sharing', 'Compartiendo') : t('queue.shareAll', 'Compartir')}
+      </SText>
+    </SButton>
+  );
+}
+
 const s = StyleSheet.create({
   iconBtn: {
     padding: 4,
@@ -167,5 +204,19 @@ const s = StyleSheet.create({
     fontFamily: 'medium',
     color: colors.on_primary,
     fontSize: 14,
+  },
+  shareAllBtn: {
+    backgroundColor: colors.primary_container,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  shareAllText: {
+    fontFamily: 'semibold',
+    color: colors.on_primary,
+    fontSize: 15,
   },
 });

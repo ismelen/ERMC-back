@@ -13,7 +13,12 @@ import { CardHeader } from './card-header';
 import { UploadRow } from './upload-row';
 import { ItemRow } from './item-row';
 import { ResultRow } from './result-row';
-import { CancelButton, DownloadAllButton, StartUploadsButton } from './queue-buttons';
+import {
+  CancelButton,
+  DownloadAllButton,
+  ShareAllButton,
+  StartUploadsButton,
+} from './queue-buttons';
 
 const SECTION_MAX_HEIGHT = 160;
 
@@ -92,8 +97,17 @@ export default function QueueItemCard({ data, idx }: Props) {
         </Section>
       )}
 
-      {/* Download All button */}
-      {!data.config.toCloud && isDone && hasResults && <DownloadAllButton tran={data} idx={idx} />}
+      {/* Download All & Share buttons */}
+      {!data.config.toCloud && isDone && hasResults && (
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <DownloadAllButton tran={data} idx={idx} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <ShareAllButton tran={data} />
+          </View>
+        </View>
+      )}
 
       {/* Start Uploads button */}
       {canStartUploads && <StartUploadsButton onPress={() => startUploads?.(idx)} />}
