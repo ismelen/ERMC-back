@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"ismelen/inkomi/internal/domain/convert"
+	"ismelen/inkomi/internal/infra/allocator"
 	"ismelen/inkomi/internal/infra/api/handlers"
 	"ismelen/inkomi/internal/infra/api/routes"
 	"ismelen/inkomi/internal/infra/cloud"
@@ -46,7 +48,12 @@ func main() {
 		panic(err)
 	}
 
-	tranStore := store.NewTransactionStore()
+	queue := allocator.NewQueue[convert.Transaction](
+		&allocator.Allocator{},
+		5<<20,
+	)
+
+	tranStore := store.NewTransactionStore(queue)
 
 	imgProcessor := infraImage.NewPageProcessor()
 	dropbox := &cloud.DropboxCloud{}
@@ -55,7 +62,7 @@ func main() {
 	mangaUC := usecases.NewMangaTransactionUC(pushNotifier, imgProcessor, dropbox)
 	md5UC := usecases.NewMd5TransactionUC(pushNotifier, libgenServ, dropbox)
 
-	transactionHandler := handlers.NewTransactionHandler(epubUC, mangaUC, md5UC, tranStore)
+	transactionHandler := handlers.NewTransactionHandler(epubUC, mangaUC, md5UC, tranStore, pushNotifier)
 	routes.SetupTransactionRoutes(api, transactionHandler)
 
 	libgenHandler := handlers.NewLibgenHandler(libgenServ)

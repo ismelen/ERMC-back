@@ -24,6 +24,7 @@ type TransactionsV2Handler struct {
 	epubUC    usecases.TransactionUC
 	mangaUC   usecases.TransactionUC
 	md5UC     usecases.TransactionUC
+	notifier  convert.PushNotifier
 }
 
 func NewTransactionHandler(
@@ -31,6 +32,7 @@ func NewTransactionHandler(
 	mangaUC usecases.TransactionUC,
 	md5UC usecases.TransactionUC,
 	tranStore convert.TransactionStoreI,
+	notifier convert.PushNotifier,
 ) *TransactionsV2Handler {
 	wd, err := os.Getwd()
 	if err != nil {
@@ -43,6 +45,7 @@ func NewTransactionHandler(
 		mangaUC:   mangaUC,
 		md5UC:     md5UC,
 		tranStore: tranStore,
+		notifier:  notifier,
 	}
 }
 
@@ -57,7 +60,15 @@ func (t *TransactionsV2Handler) HandleStartTransaction(r *http.Request) (*dto.Tr
 		return nil, err
 	}
 
-	tran := t.tranStore.StartTransaction(config, t.transPath)
+	tran := t.tranStore.StartTransaction(config, t.transPath, func(id string) {
+		t.notifier.Send(config.NotifyToken, convert.PushMessage{
+			Title:   "Memory allocated",
+			Message: "You can now upload files",
+			Id:      id,
+			Type:    "cancel",
+		})
+	})
+
 	return &dto.TransactionStartResponse{
 		Id:        tran.Id,
 		Timestamp: tran.CreatedAt.Unix(),
@@ -99,6 +110,8 @@ func (t *TransactionsV2Handler) HandleCancel(r *http.Request) (*any, error) {
 
 	tran.Status.Set(convert.TransactionCanceled)
 	os.RemoveAll(filepath.Join(t.transPath, tran.Id))
+	tran.Delete()
+
 	return nil, nil
 }
 

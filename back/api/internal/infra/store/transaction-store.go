@@ -14,28 +14,32 @@ type TransactionStore struct {
 	queue        *allocator.Queue[convert.Transaction]
 }
 
-func NewTransactionStore() *TransactionStore {
+func NewTransactionStore(queue *allocator.Queue[convert.Transaction]) *TransactionStore {
 	return &TransactionStore{
-		queue: allocator.NewQueue[convert.Transaction](
-			&allocator.Allocator{},
-			5<<20,
-		),
+		queue: queue,
 	}
 }
 
-func (t *TransactionStore) StartTransaction(config *convert.TransactionConfig, transPath string) *convert.Transaction {
+func (t *TransactionStore) StartTransaction(config *convert.TransactionConfig, transPath string, onAllocated func(id string)) *convert.Transaction {
 	id := uid.GetRandomID(8)
 	tran := convert.NewTransaction(id, config, transPath)
-	// allocated, error := t.queue.AllocOrPush(tran, config.Size, func() {
-	// 	//TODO: On execute
-	// 	tran.Status()
-	// })
-	// if err != nil {
-	// 	tran.Cancel()
-	// 	return tran
-	// }
 
-	//!TODO: tran.Status(allocated ? Enqueued : Waiting)
+	allocated, err := t.queue.AllocOrPush(tran, config.Size, func() {
+		if tran.Status.Get() != convert.TransactionEnqueued {
+			return
+		}
+
+		tran.Status.Set(convert.TransactionWaiting)
+		onAllocated(id)
+	})
+	if err != nil {
+		tran.Status.Set(convert.TransactionCanceled)
+		return tran
+	}
+
+	if !allocated {
+		tran.Status.Set(convert.TransactionEnqueued)
+	}
 
 	t.transactions.Store(id, tran)
 	time.AfterFunc(4*time.Hour, func() {

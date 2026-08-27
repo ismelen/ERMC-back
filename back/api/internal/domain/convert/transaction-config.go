@@ -17,6 +17,7 @@ type TransactionConfig struct {
 	NotifyToken string
 	Profile     *manga.Profile
 	Cant        int32
+	Size        int32
 	Type        string // cbz, epub, md5
 }
 

@@ -11,6 +11,8 @@ const (
 	TransactionWaiting TransactionState = iota
 	TransactionProcessing
 	TransactionMerging
+	TransactionEnqueued
+	// Do not touch below
 	TransactionCanceled
 	TransactionDone
 	TransactionError
@@ -34,6 +36,8 @@ func (state TransactionState) String() string {
 		return "error"
 	case TransactionMerging:
 		return "merging"
+	case TransactionEnqueued:
+		return "enqueued"
 	default:
 		return "unknown"
 	}
@@ -61,6 +65,8 @@ func (state *TransactionState) UnmarshalJSON(data []byte) error {
 		*state = TransactionError
 	case "merging":
 		*state = TransactionMerging
+	case "enqueued":
+		*state = TransactionEnqueued
 	default:
 		return fmt.Errorf("estado desconocido: %q", str)
 	}

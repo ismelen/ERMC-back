@@ -16,6 +16,7 @@ type TransactionStartRequest struct {
 	NotifyToken string `json:"notify_token,omitempty"`
 	Cant        int32  `json:"cant"`
 	Type        string `json:"type"`
+	Size        int32  `json:"size"`
 }
 
 func (t TransactionStartRequest) ToTransactionConfig() (*convert.TransactionConfig, error) {
@@ -37,6 +38,7 @@ func (t TransactionStartRequest) ToTransactionConfig() (*convert.TransactionConf
 			Profile:     profile,
 			Cant:        t.Cant,
 			Type:        t.Type,
+			Size:        t.Size,
 		}, nil
 	default:
 		return nil, fmt.Errorf("type not supported")
