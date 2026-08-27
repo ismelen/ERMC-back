@@ -27,6 +27,7 @@ export class TransactionService {
           type: config.mode,
           cant: config.files.length,
           locale: i18n.language,
+          size: config.files.map((e) => e.size ?? 0).reduce((prev, current) => prev + current),
         }),
       });
       const data: Transaction = await res.json();
@@ -78,7 +79,10 @@ export class TransactionService {
           mediaScannable: true,
           path: `${RNBlobUtil.fs.dirs.DownloadDir}/${file.filename}`,
         },
-      }).fetch('GET', `${BACKEND_API_URL}/transactions/${tran.id}/download/${id}?locale=${i18n.language}`);
+      }).fetch(
+        'GET',
+        `${BACKEND_API_URL}/transactions/${tran.id}/download/${id}?locale=${i18n.language}`
+      );
 
       return true;
     } catch (e) {
