@@ -1,4 +1,4 @@
-﻿import { BACKEND_API_URL } from '../constants';
+import { BACKEND_API_URL } from '../constants';
 import { Transaction } from '../models/transaction';
 import RNBlobUtil from 'react-native-blob-util';
 import { TransactionConfig } from '../models/transaction-config';
@@ -152,7 +152,11 @@ export class TransactionService {
     }
   }
 
-  static async attachFile(file: TransactionSource, tran: Transaction) {
+  static async attachFile(
+    file: TransactionSource,
+    tran: Transaction,
+    retryFileId?: string
+  ): Promise<string | undefined> {
     let body: BodyInit | null | undefined;
 
     if (tran.config.mode === 'md5') {
@@ -171,12 +175,11 @@ export class TransactionService {
       body = form;
     }
 
-    const attachUrl =
-      tran.config.mode !== 'md5'
-        ? `${BACKEND_API_URL}/transactions/${tran.id}/attach?locale=${i18n.language}`
-        : `${BACKEND_API_URL}/transactions/${tran.id}/attach`;
+    const endpoint = retryFileId
+      ? `${BACKEND_API_URL}/transactions/${tran.id}/retry/${retryFileId}?locale=${i18n.language}`
+      : `${BACKEND_API_URL}/transactions/${tran.id}/attach?locale=${i18n.language}`;
 
-    const res = await fetch(attachUrl, {
+    const res = await fetch(endpoint, {
       method: 'POST',
       body: body,
     });
@@ -185,5 +188,7 @@ export class TransactionService {
     if (res.status !== 200) {
       throw new Error(data.error);
     }
+
+    return data;
   }
 }

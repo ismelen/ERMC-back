@@ -84,9 +84,10 @@ export const useQueue = create(
                 currentTran.uploads.map(async (upload, i) => {
                   let status: TransactionUpload['status'];
                   let error: string | undefined;
+                  let itemId: string | undefined;
 
                   try {
-                    await TransactionService.attachFile(upload.file, currentTran);
+                    itemId = await TransactionService.attachFile(upload.file, currentTran);
                     status = 'done';
                   } catch (e: any) {
                     status = 'error';
@@ -101,6 +102,7 @@ export const useQueue = create(
                       ...t.uploads[i],
                       status: status,
                       error: error,
+                      itemId: itemId,
                     };
 
                     if (t.status === 'waiting') t.status = 'processing';
@@ -113,6 +115,114 @@ export const useQueue = create(
               taskName: 'inkomi-upload',
               taskTitle: 'Inkomi',
               taskDesc: 'Uploading files...',
+              taskIcon: {
+                name: 'ic_launcher',
+                type: 'mipmap',
+              },
+              foregroundServiceType: ['dataSync'],
+            }
+          );
+        },
+
+        async retryUpload(tranIdx: number, uploadIdx: number) {
+          const tranId = get().transactions[tranIdx]?.id;
+          if (!tranId) return;
+
+          set((state) => {
+            const t = state.transactions[tranIdx];
+            if (t) {
+              t.uploads[uploadIdx].status = 'sending';
+              t.uploads[uploadIdx].error = undefined;
+            }
+            StorageService.SetAsync(TRANSACTIONS_KEY, state.transactions);
+          });
+
+          await BackgroundService.start(
+            async () => {
+              const currentTran = get().transactions[tranIdx];
+              if (!currentTran) return;
+
+              const upload = currentTran.uploads[uploadIdx];
+              let status: TransactionUpload['status'];
+              let error: string | undefined;
+              let itemId: string | undefined;
+
+              try {
+                itemId = await TransactionService.attachFile(upload.file, currentTran);
+                status = 'done';
+              } catch (e: any) {
+                status = 'error';
+                error = e.message;
+              }
+
+              set((state) => {
+                const t = state.transactions[tranIdx];
+                if (!t) return;
+                t.uploads[uploadIdx] = {
+                  ...t.uploads[uploadIdx],
+                  status: status,
+                  error: error,
+                  itemId: itemId,
+                };
+                StorageService.SetAsync(TRANSACTIONS_KEY, state.transactions);
+              });
+            },
+            {
+              taskName: 'inkomi-upload-retry',
+              taskTitle: 'Inkomi',
+              taskDesc: 'Retrying upload...',
+              taskIcon: {
+                name: 'ic_launcher',
+                type: 'mipmap',
+              },
+              foregroundServiceType: ['dataSync'],
+            }
+          );
+        },
+
+        async retryItem(tranIdx: number, itemId: string) {
+          const tran = get().transactions[tranIdx];
+          if (!tran) return;
+
+          const uploadMatch = tran.uploads.find((u) => u.itemId === itemId);
+          if (!uploadMatch) {
+            alert('No se encontró el archivo original para reintentar');
+            return;
+          }
+
+          set((state) => {
+            const t = state.transactions[tranIdx];
+            const i = t.items.find((x) => x.id === itemId);
+            if (i) {
+              i.status = 'processing';
+              i.error = undefined;
+            }
+            StorageService.SetAsync(TRANSACTIONS_KEY, state.transactions);
+          });
+
+          await BackgroundService.start(
+            async () => {
+              const currentTran = get().transactions[tranIdx];
+              if (!currentTran) return;
+
+              try {
+                await TransactionService.attachFile(uploadMatch.file, currentTran, itemId);
+              } catch (e: any) {
+                set((state) => {
+                  const t = state.transactions[tranIdx];
+                  const i = t?.items.find((x) => x.id === itemId);
+                  if (i) {
+                    i.status = 'error';
+                    i.error = e.message;
+                  }
+                  StorageService.SetAsync(TRANSACTIONS_KEY, state.transactions);
+                });
+              }
+            },
+            {
+              taskName: 'inkomi-item-retry',
+              taskTitle: 'Inkomi',
+              taskDesc: 'Retrying item...',
               taskIcon: {
                 name: 'ic_launcher',
                 type: 'mipmap',
