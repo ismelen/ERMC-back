@@ -52,8 +52,8 @@ export default function QueueItemCard({ data, idx }: Props) {
     }, [])
   );
 
-  const handleRetryUpload = (uploadIdx: number) => {
-    retryUpload(idx, uploadIdx);
+  const handleRetryUpload = (uploadIdx: number, newFile?: any) => {
+    retryUpload(idx, uploadIdx, newFile);
   };
 
   const handleRetryItem = (itemId: string) => {

@@ -124,13 +124,16 @@ export const useQueue = create(
           );
         },
 
-        async retryUpload(tranIdx: number, uploadIdx: number) {
+        async retryUpload(tranIdx: number, uploadIdx: number, newFile?: any) {
           const tranId = get().transactions[tranIdx]?.id;
           if (!tranId) return;
 
           set((state) => {
             const t = state.transactions[tranIdx];
             if (t) {
+              if (newFile) {
+                t.uploads[uploadIdx].file = newFile;
+              }
               t.uploads[uploadIdx].status = 'sending';
               t.uploads[uploadIdx].error = undefined;
             }

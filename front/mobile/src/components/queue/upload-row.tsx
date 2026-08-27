@@ -5,7 +5,8 @@ import { TransactionUpload } from '../../models/transaction-upload';
 import { colors } from '../../theme/colors';
 import SIcon from '../icons/SIcon';
 import SText from '../shared/SText';
-import { RetryButton } from './queue-buttons';
+import { EditFileButton, RetryButton } from './queue-buttons';
+import { FilesystemService } from '../../services/filesystem-service';
 
 type UploadStatus = TransactionUpload['status'];
 
@@ -23,11 +24,18 @@ export function UploadRow({
 }: {
   upload: TransactionUpload;
   idx: number;
-  onRetry(idx: number): void;
+  onRetry(idx: number, newFile?: any): void;
 }) {
   const { t } = useTranslation();
   const hasError = !!upload.error;
   const { labelKey, color } = uploadStatusConfig[upload.status];
+
+  const handleEdit = async () => {
+    const files = await FilesystemService.pickFiles();
+    if (files && files.length > 0) {
+      onRetry(idx, files[0]);
+    }
+  };
 
   return (
     <View style={{ gap: 2 }}>
@@ -44,7 +52,10 @@ export function UploadRow({
           </SText>
         </View>
         {hasError ? (
-          <RetryButton onPress={() => onRetry(idx)} />
+          <View style={{ flexDirection: 'row', gap: 4 }}>
+            <EditFileButton onPress={handleEdit} />
+            <RetryButton onPress={() => onRetry(idx)} />
+          </View>
         ) : (
           <SText style={[s.meta, { color: color, fontFamily: 'medium' }]}>{t(labelKey)}</SText>
         )}

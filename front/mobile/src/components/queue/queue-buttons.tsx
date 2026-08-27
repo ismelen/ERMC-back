@@ -33,6 +33,29 @@ export function RetryButton({ onPress }: { onPress(): void }) {
   );
 }
 
+export function EditFileButton({ onPress }: { onPress(): void }) {
+  const [loading, setLoading] = useState(false);
+
+  const handle = async () => {
+    setLoading(true);
+    try {
+      await onPress();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SButton onPress={handle} disabled={loading} style={s.iconBtn}>
+      {loading ? (
+        <ActivityIndicator size={16} color={colors.primary} />
+      ) : (
+        <SIcon name="edit" color={colors.primary} size={18} type="outlined" />
+      )}
+    </SButton>
+  );
+}
+
 export function StartUploadsButton({ onPress }: { onPress(): void }) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);

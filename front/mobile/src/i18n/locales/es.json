@@ -13,8 +13,8 @@
   },
   "home": {
     "sendComic": "Enviar C\u00f3mic",
-    "sendComicSubtitle": "Convierte .cbz a .epub y env\u00eda al dispositivo",
-    "sendComicTag": ".cbz a .epub",
+    "sendComicSubtitle": "Convierte .cbz o .pdf a .epub y envía al dispositivo",
+    "sendComicTag": ".cbz / .pdf a .epub",
     "sendBook": "Enviar Libro",
     "sendBookSubtitle": "Gestiona y transfiere archivos .epub",
     "sendBookTag": "Gesti\u00f3n .epub",
