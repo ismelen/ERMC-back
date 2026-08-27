@@ -69,5 +69,6 @@ func (d *DropboxCloud) Upload(path, token, folder string) error {
 		return fmt.Errorf("%s", msg.(string))
 	}
 
+	os.RemoveAll(filepath.Dir(path))
 	return nil
 }

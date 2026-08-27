@@ -48,7 +48,8 @@
       "done": "COMPLETADO",
       "waiting": "EN ESPERA",
       "canceled": "CANCELADO",
-      "unknown": "DESCONOCIDO"
+      "unknown": "DESCONOCIDO",
+      "enqueued": "EN COLA"
     },
     "fileStatus": {
       "converting": "Convirtiendo...",
@@ -60,7 +61,8 @@
     "uploadStatus": {
       "sending": "Enviando...",
       "done": "Hecho",
-      "error": "Error"
+      "error": "Error",
+      "pending": "Pendiente"
     }
   },
   "search": {

@@ -9,29 +9,37 @@ import (
 )
 
 type Transaction struct {
-	Id        string
-	Status    *AtomicTransactionState
-	Items     *listutil.AtomicList[*TransactionFile]
-	Results   *listutil.AtomicList[*TransactionResultFile]
-	Config    *TransactionConfig
-	CreatedAt time.Time
-	BasePath  string
+	Id          string
+	Status      *AtomicTransactionState
+	Items       *listutil.AtomicList[*TransactionFile]
+	Results     *listutil.AtomicList[*TransactionResultFile]
+	Config      *TransactionConfig
+	CreatedAt   time.Time
+	BasePath    string
+	OnFreeSpace func(size int32)
 }
 
 func NewTransaction(id string, config *TransactionConfig, transPath string) *Transaction {
 	t := &Transaction{
-		Id:        id,
-		CreatedAt: time.Now(),
-		Items:     listutil.NewAtomicList[*TransactionFile](),
-		Results:   listutil.NewAtomicList[*TransactionResultFile](),
-		Config:    config,
-		BasePath:  filepath.Join(transPath, id),
+		Id:          id,
+		CreatedAt:   time.Now(),
+		Items:       listutil.NewAtomicList[*TransactionFile](),
+		Results:     listutil.NewAtomicList[*TransactionResultFile](),
+		Config:      config,
+		BasePath:    filepath.Join(transPath, id),
+		OnFreeSpace: func(size int32) {},
 	}
 
 	status, _ := NewAtomicTransactionState(TransactionWaiting)
 	t.Status = status
 
 	return t
+}
+
+func (t *Transaction) Cancel() {
+	t.Status.Set(TransactionCanceled)
+	t.Delete()
+	t.OnFreeSpace(t.Config.Size)
 }
 
 func (t *Transaction) Delete() {

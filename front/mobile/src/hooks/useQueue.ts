@@ -43,7 +43,15 @@ export const useQueue = create(
 
         async checkProgress(idx: number) {
           const tran = get().transactions[idx];
-          if (!tran || !(tran.status === 'processing' || tran.status === 'merging')) return;
+          if (
+            !tran ||
+            !(
+              tran.status === 'processing' ||
+              tran.status === 'merging' ||
+              tran.status === 'enqueued'
+            )
+          )
+            return;
 
           const updated = await TransactionService.checkStatus(tran);
 
@@ -53,38 +61,32 @@ export const useQueue = create(
           StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
         },
 
-        async send(config: TransactionConfig, pathname?: string): Promise<boolean> {
-          if (config.files.length === 0) return false;
+        async startUploads(idx: number) {
+          const tranId = get().transactions[idx]?.id;
+          if (!tranId) return;
 
-          const notifyToken = await NotificationService.getToken();
-          const cloud = config.toCloud
-            ? await useCloud.getState().getCloudInfo(`${pathname}?last=true`)
-            : undefined;
-
-          const tran = await TransactionService.startTransaction(config, cloud, notifyToken);
-          if (!tran) return false;
-
-          tran.uploads = tran.config.files.map(
-            (e) =>
-              ({
-                file: e,
-                status: 'sending',
-              }) as TransactionUpload
-          );
           set((state) => {
-            state.transactions.unshift(tran);
+            const t = state.transactions.find((e) => e.id === tranId);
+            if (t) {
+              t.uploads.forEach((u) => {
+                if (u.status === 'pending') u.status = 'sending';
+              });
+            }
+            StorageService.SetAsync(TRANSACTIONS_KEY, state.transactions);
           });
-          StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
 
           await BackgroundService.start(
             async () => {
+              const currentTran = get().transactions.find((e) => e.id === tranId);
+              if (!currentTran) return;
+
               await Promise.all(
-                tran.uploads.map(async (upload, i) => {
+                currentTran.uploads.map(async (upload, i) => {
                   let status: TransactionUpload['status'];
                   let error: string | undefined;
 
                   try {
-                    await TransactionService.attachFile(upload.file, tran);
+                    await TransactionService.attachFile(upload.file, currentTran);
                     status = 'done';
                   } catch (e: any) {
                     status = 'error';
@@ -92,10 +94,11 @@ export const useQueue = create(
                   }
 
                   set((state) => {
-                    const index = state.transactions.findIndex((e) => e.id === tran.id);
+                    const index = state.transactions.findIndex((e) => e.id === tranId);
+                    if (index === -1) return;
                     const t = state.transactions[index];
                     t.uploads[i] = {
-                      ...upload,
+                      ...t.uploads[i],
                       status: status,
                       error: error,
                     };
@@ -117,6 +120,36 @@ export const useQueue = create(
               foregroundServiceType: ['dataSync'],
             }
           );
+        },
+
+        async send(config: TransactionConfig, pathname?: string): Promise<boolean> {
+          if (config.files.length === 0) return false;
+
+          const notifyToken = await NotificationService.getToken();
+          const cloud = config.toCloud
+            ? await useCloud.getState().getCloudInfo(`${pathname}?last=true`)
+            : undefined;
+
+          const tran = await TransactionService.startTransaction(config, cloud, notifyToken);
+          if (!tran) return false;
+
+          const isWaiting = tran.status === 'waiting';
+
+          tran.uploads = tran.config.files.map(
+            (e) =>
+              ({
+                file: e,
+                status: isWaiting ? 'sending' : 'pending',
+              }) as TransactionUpload
+          );
+          set((state) => {
+            state.transactions.unshift(tran);
+          });
+          StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
+
+          if (isWaiting) {
+            (get() as any).startUploads(0);
+          }
           return true;
         },
       })

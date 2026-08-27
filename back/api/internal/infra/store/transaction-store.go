@@ -33,8 +33,12 @@ func (t *TransactionStore) StartTransaction(config *convert.TransactionConfig, t
 		onAllocated(id)
 	})
 	if err != nil {
-		tran.Status.Set(convert.TransactionCanceled)
+		tran.Cancel()
 		return tran
+	}
+
+	tran.OnFreeSpace = func(size int32) {
+		t.queue.Free(size)
 	}
 
 	if !allocated {

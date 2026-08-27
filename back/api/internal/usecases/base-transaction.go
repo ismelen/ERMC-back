@@ -211,6 +211,8 @@ func (b *BaseTransactionUC) SendAndNotify(tran *convert.Transaction, result *con
 				convert.NewErrorMessage(tran, fmt.Errorf("Cannot send %s to cloud", result.Name)),
 			)
 			result.SetError(err)
+		} else {
+			tran.OnFreeSpace(tran.Config.Size)
 		}
 		return
 	}

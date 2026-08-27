@@ -26,8 +26,8 @@ export const mockTransactions: Transaction[] = [
       ],
     },
     uploads: [
-      { file: { name: 'vol1_raw.zip', src: 'file:///vol1_raw.zip' } },
-      { file: { name: 'vol2_raw.zip', src: 'file:///vol2_raw.zip' } },
+      { file: { name: 'vol1_raw.zip', src: 'file:///vol1_raw.zip' }, status: 'done' },
+      { file: { name: 'vol2_raw.zip', src: 'file:///vol2_raw.zip' }, status: 'done' },
     ],
     items: [
       { id: 'item-1a', title: 'vol1_raw.zip', status: 'processing' },
@@ -49,13 +49,12 @@ export const mockTransactions: Transaction[] = [
       toCloud: true,
       merge: false,
       mode: 'epub',
-      files: [
-        { name: 'shrine_ch1-5.rar', src: 'file:///shrine_ch1-5.rar' },
-      ],
+      files: [{ name: 'shrine_ch1-5.rar', src: 'file:///shrine_ch1-5.rar' }],
     },
     uploads: [
       {
         file: { name: 'shrine_ch1-5.rar', src: 'file:///shrine_ch1-5.rar' },
+        status: 'error',
         error: 'Network timeout',
       },
     ],
@@ -67,9 +66,7 @@ export const mockTransactions: Transaction[] = [
         error: 'Corrupt source file',
       },
     ],
-    results: [
-      { id: 'res-2a', title: 'Shrine Collection', filename: 'shrine_collection.zip' },
-    ],
+    results: [{ id: 'res-2a', title: 'Shrine Collection', filename: 'shrine_collection.zip' }],
   },
 
   // ─── 3. DONE: items completed + results ready ───
@@ -85,17 +82,11 @@ export const mockTransactions: Transaction[] = [
       toCloud: false,
       merge: false,
       mode: 'md5',
-      files: [
-        { name: 'neon_drift_1.zip', src: 'file:///neon_drift_1.zip' },
-      ],
+      files: [{ name: 'neon_drift_1.zip', src: 'file:///neon_drift_1.zip' }],
     },
     uploads: [],
-    items: [
-      { id: 'item-3a', title: 'neon_drift_1.zip', status: 'done' },
-    ],
-    results: [
-      { id: 'res-3a', title: 'Neon Drift 1', filename: 'neon_drift_1.md5' },
-    ],
+    items: [{ id: 'item-3a', title: 'neon_drift_1.zip', status: 'done' }],
+    results: [{ id: 'res-3a', title: 'Neon Drift 1', filename: 'neon_drift_1.md5' }],
   },
 
   // ─── 4. WAITING: just created, no uploads yet ───
@@ -134,16 +125,10 @@ export const mockTransactions: Transaction[] = [
       toCloud: false,
       merge: false,
       mode: 'cbz',
-      files: [
-        { name: 'manga_vol3.zip', src: 'file:///manga_vol3.zip' },
-      ],
+      files: [{ name: 'manga_vol3.zip', src: 'file:///manga_vol3.zip' }],
     },
-    uploads: [
-      { file: { name: 'manga_vol3.zip', src: 'file:///manga_vol3.zip' } },
-    ],
-    items: [
-      { id: 'item-5a', title: 'manga_vol3.zip', status: 'done' },
-    ],
+    uploads: [{ file: { name: 'manga_vol3.zip', src: 'file:///manga_vol3.zip' }, status: 'done' }],
+    items: [{ id: 'item-5a', title: 'manga_vol3.zip', status: 'done' }],
     results: [],
   },
 ];

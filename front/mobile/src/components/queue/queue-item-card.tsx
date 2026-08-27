@@ -20,13 +20,38 @@ import { useTranslation } from 'react-i18next';
 type TransactionStatus = Transaction['status'];
 
 const statusConfig: Record<TransactionStatus, { labelKey: string; bg: string; fg: string }> = {
-  processing: { labelKey: 'queue.status.processing', bg: colors.primary_fixed, fg: colors.on_primary },
-  merging: { labelKey: 'queue.status.merging', bg: colors.secondary_fixed, fg: colors.on_secondary_fixed },
+  processing: {
+    labelKey: 'queue.status.processing',
+    bg: colors.primary_fixed,
+    fg: colors.on_primary,
+  },
+  merging: {
+    labelKey: 'queue.status.merging',
+    bg: colors.secondary_fixed,
+    fg: colors.on_secondary_fixed,
+  },
   error: { labelKey: 'queue.status.error', bg: colors.error_container, fg: colors.error },
   done: { labelKey: 'queue.status.done', bg: colors.ok, fg: '#ffffff' },
-  waiting: { labelKey: 'queue.status.waiting', bg: colors.surface_container_high, fg: colors.on_surface_variant },
-  canceled: { labelKey: 'queue.status.canceled', bg: colors.outline_variant, fg: colors.on_surface_variant },
-  unknown: { labelKey: 'queue.status.unknown', bg: colors.surface_container_high, fg: colors.on_surface_variant },
+  waiting: {
+    labelKey: 'queue.status.waiting',
+    bg: colors.surface_container_high,
+    fg: colors.on_surface_variant,
+  },
+  canceled: {
+    labelKey: 'queue.status.canceled',
+    bg: colors.outline_variant,
+    fg: colors.on_surface_variant,
+  },
+  unknown: {
+    labelKey: 'queue.status.unknown',
+    bg: colors.surface_container_high,
+    fg: colors.on_surface_variant,
+  },
+  enqueued: {
+    labelKey: 'queue.status.enqueued',
+    bg: colors.surface_container_high,
+    fg: colors.outline,
+  },
 };
 
 type FileStatus = TransactionFile['status'];
@@ -45,6 +70,7 @@ const uploadStatusConfig: Record<UploadStatus, { labelKey: string; color: string
   sending: { labelKey: 'queue.uploadStatus.sending', color: colors.primary },
   done: { labelKey: 'queue.uploadStatus.done', color: colors.ok },
   error: { labelKey: 'queue.uploadStatus.error', color: colors.error },
+  pending: { labelKey: 'queue.uploadStatus.pending', color: colors.outline },
 };
 
 const SECTION_MAX_HEIGHT = 160;
@@ -65,8 +91,12 @@ export default function QueueItemCard({ data, idx, onRetry }: Props) {
   const isDone = data.status === 'done';
   const isCancellable = data.status === 'processing' || data.status === 'waiting';
 
-  const { checkProgress, cancel } = useQueue(
-    useShallow((s) => ({ checkProgress: s.checkProgress, cancel: s.cancel }))
+  const { checkProgress, cancel, startUploads } = useQueue(
+    useShallow((s) => ({
+      checkProgress: s.checkProgress,
+      cancel: s.cancel,
+      startUploads: s.startUploads,
+    }))
   );
 
   useFocusEffect(
@@ -77,6 +107,9 @@ export default function QueueItemCard({ data, idx, onRetry }: Props) {
   );
 
   const handleRetry = () => {};
+
+  const canStartUploads =
+    data.status === 'waiting' && data.uploads.some((u) => u.status === 'pending');
 
   return (
     <SButton onPress={() => onRetry?.(data.id)} style={[s.card, isError && s.cardError]}>
@@ -114,6 +147,9 @@ export default function QueueItemCard({ data, idx, onRetry }: Props) {
 
       {/* Download All button */}
       {!data.config.toCloud && isDone && hasResults && <DownloadAllButton tran={data} idx={idx} />}
+
+      {/* Start Uploads button */}
+      {canStartUploads && <StartUploadsButton onPress={() => startUploads?.(idx)} />}
 
       {/* Cancel button */}
       {isCancellable && <CancelButton onPress={() => cancel(idx)} />}
@@ -358,6 +394,33 @@ function RetryButton({ onPress }: { onPress(): void }) {
   );
 }
 
+// --- Start Uploads Button ---
+
+function StartUploadsButton({ onPress }: { onPress(): void }) {
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(false);
+
+  const handle = async () => {
+    setLoading(true);
+    try {
+      await onPress();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SButton onPress={handle} disabled={loading} style={s.startUploadsBtn}>
+      {loading ? (
+        <ActivityIndicator size={16} color={colors.on_primary} />
+      ) : (
+        <SIcon name="cloud_upload" color={colors.on_primary} size={18} type="outlined" />
+      )}
+      <SText style={s.startUploadsText}>{t('queue.startUploads', 'Iniciar subidas')}</SText>
+    </SButton>
+  );
+}
+
 // --- Cancel Button ---
 
 function CancelButton({ onPress }: { onPress(): void }) {
@@ -419,7 +482,9 @@ function DownloadAllButton({ tran, idx }: { tran: Transaction; idx: number }) {
       ) : (
         <SIcon name="download" color={colors.on_primary} size={22} type="outlined" />
       )}
-      <SText style={s.downloadAllText}>{loading ? t('queue.downloading') : t('queue.downloadAll')}</SText>
+      <SText style={s.downloadAllText}>
+        {loading ? t('queue.downloading') : t('queue.downloadAll')}
+      </SText>
     </SButton>
   );
 }
@@ -519,6 +584,20 @@ const s = StyleSheet.create({
   cancelText: {
     fontFamily: 'medium',
     color: colors.error,
+    fontSize: 14,
+  },
+  startUploadsBtn: {
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    flexDirection: 'row',
+    gap: 6,
+    backgroundColor: colors.primary,
+  },
+  startUploadsText: {
+    fontFamily: 'medium',
+    color: colors.on_primary,
     fontSize: 14,
   },
 });
