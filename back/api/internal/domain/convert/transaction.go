@@ -2,57 +2,45 @@ package convert
 
 import (
 	"fmt"
+	"ismelen/inkomi/internal/shared/listutil"
 	"os"
 	"path/filepath"
-	"sync/atomic"
 	"time"
 )
 
 type Transaction struct {
-	Id             string
-	status         atomic.Int32 // Waiting, Processing, Done, Canceled, Error, Merging
-	Items          []*TransactionFile
-	completedFiles atomic.Int32
-	attachedItems  atomic.Int32
-	Config         *TransactionConfig
-	CreatedAt      time.Time
-	ResultFiles    []*TransactionResultFile
-	BasePath       string
+	Id        string
+	Status    *AtomicTransactionState
+	Items     *listutil.AtomicList[*TransactionFile]
+	Results   *listutil.AtomicList[*TransactionResultFile]
+	Config    *TransactionConfig
+	CreatedAt time.Time
+	BasePath  string
 }
 
 func NewTransaction(id string, config *TransactionConfig, transPath string) *Transaction {
 	t := &Transaction{
-		Id:          id,
-		CreatedAt:   time.Now(),
-		Items:       make([]*TransactionFile, config.Cant),
-		ResultFiles: make([]*TransactionResultFile, config.Cant),
-		Config:      config,
-		BasePath:    filepath.Join(transPath, id),
+		Id:        id,
+		CreatedAt: time.Now(),
+		Items:     listutil.NewAtomicList[*TransactionFile](),
+		Results:   listutil.NewAtomicList[*TransactionResultFile](),
+		Config:    config,
+		BasePath:  filepath.Join(transPath, id),
 	}
 
-	t.status.Store(int32(TransactionWaiting))
-	return t
-}
+	status, _ := NewAtomicTransactionState(TransactionWaiting)
+	t.Status = status
 
-func (t *Transaction) Error() {
-	t.status.Store(int32(TransactionError))
+	return t
 }
 
 func (t *Transaction) Delete() {
 	os.RemoveAll(t.BasePath)
 }
 
-func (t *Transaction) AttachedItems() int32 {
-	return t.attachedItems.Load()
-}
-
-func (t *Transaction) Status() TransactionStatus {
-	return TransactionStatus(t.status.Load())
-}
-
 func (t *Transaction) GetResultFile(id string) (*TransactionResultFile, error) {
-	for i := range t.CompletedFiles() {
-		result := t.ResultFiles[i]
+	results := t.Results.GetAll()
+	for _, result := range results {
 		if result.Id == id {
 			return result, nil
 		}
@@ -62,29 +50,11 @@ func (t *Transaction) GetResultFile(id string) (*TransactionResultFile, error) {
 }
 
 func (t *Transaction) assertActive() error {
-	status := t.Status()
-
-	if status == TransactionCanceled {
-		return fmt.Errorf("transaction canceled")
-	}
-
-	if status == TransactionDone {
+	if t.Status.Get() >= TransactionCanceled {
 		return fmt.Errorf("transaction finished")
 	}
 
 	return nil
-}
-
-func (t *Transaction) Done() {
-	t.status.Store(int32(TransactionDone))
-}
-
-func (t *Transaction) Merging() {
-	t.status.Store(int32(TransactionMerging))
-}
-
-func (t *Transaction) Processing() {
-	t.status.Store(int32(TransactionProcessing))
 }
 
 func (t *Transaction) AttachFile(file *TransactionFile) (string, error) {
@@ -92,39 +62,17 @@ func (t *Transaction) AttachFile(file *TransactionFile) (string, error) {
 		return "", err
 	}
 
-	attachedItems := t.attachedItems.Load()
-	if attachedItems >= t.Config.Cant {
-		return "", fmt.Errorf("files limit exceded")
+	if t.Items.Len() >= t.Config.Cant {
+		return "", fmt.Errorf("files limit reached")
 	}
 
-	if !t.attachedItems.CompareAndSwap(attachedItems, attachedItems+1) {
-		return "", fmt.Errorf("files limit exceded")
-	}
+	t.Items.Append(file)
 
-	t.Items[attachedItems] = file
-
-	if t.Status() == TransactionWaiting {
-		t.status.Store(int32(TransactionProcessing))
+	if t.Status.Get() == TransactionWaiting {
+		t.Status.Set(TransactionProcessing)
 	}
 
 	return file.Id, nil
-}
-
-func (t *Transaction) Cancel() {
-	t.status.Store(int32(TransactionCanceled))
-}
-
-func (t *Transaction) CompletedFiles() int32 {
-	status := t.Status()
-	if status == TransactionDone || status == TransactionMerging {
-		return int32(len(t.ResultFiles))
-	}
-
-	return int32(t.completedFiles.Load())
-}
-
-func (t *Transaction) SetResults(files []*TransactionResultFile) {
-	t.ResultFiles = files
 }
 
 func (t *Transaction) AddResult(file *TransactionResultFile) (bool, error) {
@@ -132,15 +80,14 @@ func (t *Transaction) AddResult(file *TransactionResultFile) (bool, error) {
 		return true, err
 	}
 
-	completedFiles := t.completedFiles.Add(1) - 1
-	t.ResultFiles[completedFiles] = file
+	newSize := t.Results.Append(file)
+	completed := newSize >= t.Config.Cant
 
-	completed := (completedFiles + 1) >= t.Config.Cant
 	if completed {
 		if t.Config.Merge {
-			t.Merging()
+			t.Status.Set(TransactionMerging)
 		} else {
-			t.Done()
+			t.Status.Set(TransactionDone)
 		}
 	}
 

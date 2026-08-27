@@ -5,18 +5,22 @@ import (
 	"fmt"
 )
 
-type TransactionStatus int32
+type TransactionState int32
 
 const (
-	TransactionWaiting TransactionStatus = iota
+	TransactionWaiting TransactionState = iota
 	TransactionProcessing
-	TransactionDone
-	TransactionCanceled
-	TransactionError
 	TransactionMerging
+	TransactionCanceled
+	TransactionDone
+	TransactionError
 )
 
-func (state TransactionStatus) String() string {
+func (s TransactionState) IsValid() bool {
+	return s <= TransactionError
+}
+
+func (state TransactionState) String() string {
 	switch state {
 	case TransactionWaiting:
 		return "waiting"
@@ -35,11 +39,11 @@ func (state TransactionStatus) String() string {
 	}
 }
 
-func (s TransactionStatus) MarshalJSON() ([]byte, error) {
+func (s TransactionState) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.String())
 }
 
-func (state *TransactionStatus) UnmarshalJSON(data []byte) error {
+func (state *TransactionState) UnmarshalJSON(data []byte) error {
 	var str string
 	if err := json.Unmarshal(data, &str); err != nil {
 		return err

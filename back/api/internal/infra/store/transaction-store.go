@@ -26,14 +26,14 @@ func NewTransactionStore() *TransactionStore {
 func (t *TransactionStore) StartTransaction(config *convert.TransactionConfig, transPath string) *convert.Transaction {
 	id := uid.GetRandomID(8)
 	tran := convert.NewTransaction(id, config, transPath)
-	allocated, error := t.queue.AllocOrPush(tran, config.Size, func() {
-		//TODO: On execute
-		tran.Status()
-	})
-	if err != nil {
-		tran.Cancel()
-		return tran
-	}
+	// allocated, error := t.queue.AllocOrPush(tran, config.Size, func() {
+	// 	//TODO: On execute
+	// 	tran.Status()
+	// })
+	// if err != nil {
+	// 	tran.Cancel()
+	// 	return tran
+	// }
 
 	//!TODO: tran.Status(allocated ? Enqueued : Waiting)
 

@@ -65,14 +65,15 @@ func (m BaseTransactionUC) Execute(file *convert.TransactionFile, tran *convert.
 	}
 
 	m.ChopAndMerge(tran, transPath)
-	for _, result := range tran.ResultFiles {
+	for _, result := range tran.Results.GetAll() {
 		m.SendAndNotify(tran, result)
 	}
-	tran.Done()
+	tran.Status.Set(convert.TransactionDone)
 }
 
 func (m BaseTransactionUC) ChopAndMerge(tran *convert.Transaction, transPath string) {
-	slices.SortFunc(tran.ResultFiles, func(a, b *convert.TransactionResultFile) int {
+	resultFiles := tran.Results.GetAll()
+	slices.SortFunc(resultFiles, func(a, b *convert.TransactionResultFile) int {
 		if natsort.Compare(a.Name, b.Name) {
 			return -1
 		}
@@ -83,11 +84,11 @@ func (m BaseTransactionUC) ChopAndMerge(tran *convert.Transaction, transPath str
 	var filesToMerge []*convert.TransactionResultFile
 	var size int64
 
-	for _, result := range tran.ResultFiles {
+	for _, result := range resultFiles {
 		if size+result.Size >= MAX_CHUNK_SIZE {
 			result, err := m.MergeFiles(filesToMerge, size, tran, transPath)
 			if err != nil {
-				tran.Error()
+				tran.Status.Set(convert.TransactionError)
 				m.NotifyError(tran, err)
 				for _, fileToMerge := range filesToMerge {
 					fileToMerge.SetError(err)
@@ -108,18 +109,18 @@ func (m BaseTransactionUC) ChopAndMerge(tran *convert.Transaction, transPath str
 	if len(filesToMerge) > 0 {
 		result, err := m.MergeFiles(filesToMerge, size, tran, transPath)
 		if err != nil {
-			tran.Error()
+			tran.Status.Set(convert.TransactionError)
 			m.NotifyError(tran, err)
 			return
 		}
 		mergedFiles = append(mergedFiles, result)
 	}
 
-	tran.SetResults(mergedFiles)
+	tran.Results.Set(mergedFiles)
 }
 
 func (m BaseTransactionUC) MergeFiles(results []*convert.TransactionResultFile, size int64, tran *convert.Transaction, transPath string) (*convert.TransactionResultFile, error) {
-	title := tran.Config.GetTitle(tran.ResultFiles)
+	title := tran.Config.GetTitle(tran.Results.GetAll())
 	filename := fmt.Sprintf("%s%s", title, ".epub")
 	resultId := uid.GetRandomID(6)
 

@@ -97,7 +97,7 @@ func (t *TransactionsV2Handler) HandleCancel(r *http.Request) (*any, error) {
 		return nil, err
 	}
 
-	tran.Cancel()
+	tran.Status.Set(convert.TransactionCanceled)
 	os.RemoveAll(filepath.Join(t.transPath, tran.Id))
 	return nil, nil
 }

@@ -2,12 +2,11 @@ package dto
 
 import (
 	"ismelen/inkomi/internal/domain/convert"
-	"log"
 )
 
 type TransactionStatusResponse struct {
 	Id        string                                    `json:"id"`
-	Status    convert.TransactionStatus                 `json:"status"`
+	Status    convert.TransactionState                  `json:"status"`
 	Total     int32                                     `json:"total"`
 	Completed int32                                     `json:"completed"`
 	Items     []TransactionStatusResponseItem           `json:"items"`
@@ -32,14 +31,12 @@ func NewTransactionStatusResponse(tran *convert.Transaction) *TransactionStatusR
 	t := &TransactionStatusResponse{}
 
 	t.Id = tran.Id
-	t.Status = tran.Status()
+	t.Status = tran.Status.Get()
 	t.Total = tran.Config.Cant
-	t.Completed = tran.CompletedFiles()
+	t.Completed = tran.Results.Len()
 
 	t.Items = []TransactionStatusResponseItem{}
-	for i := range tran.AttachedItems() {
-		file := tran.Items[i]
-
+	for _, file := range tran.Items.GetAll() {
 		resultId := ""
 		if file.Result != nil {
 			resultId = file.Result.Id
@@ -60,12 +57,8 @@ func NewTransactionStatusResponse(tran *convert.Transaction) *TransactionStatusR
 	}
 
 	t.Results = []TransactionStatusResultFileResponseItem{}
-	max := tran.CompletedFiles()
-	log.Println(max)
 
-	for i := range max {
-		result := tran.ResultFiles[i]
-
+	for _, result := range tran.Results.GetAll() {
 		t.Results = append(t.Results, TransactionStatusResultFileResponseItem{
 			Id:       result.Id,
 			Title:    result.Name,
