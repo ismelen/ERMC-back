@@ -14,11 +14,11 @@ type TransactionStatusResponse struct {
 }
 
 type TransactionStatusResponseItem struct {
-	Id       string                        `json:"id"`
-	Title    string                        `json:"title"`
-	Status   convert.TransactionFileStatus `json:"status"`
-	ResultId string                        `json:"resultId"`
-	Error    string                        `json:"error,omitempty"`
+	Id       string                       `json:"id"`
+	Title    string                       `json:"title"`
+	Status   convert.TransactionFileState `json:"status"`
+	ResultId string                       `json:"resultId"`
+	Error    string                       `json:"error,omitempty"`
 }
 
 type TransactionStatusResultFileResponseItem struct {

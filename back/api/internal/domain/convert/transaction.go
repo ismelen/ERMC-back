@@ -38,6 +38,17 @@ func (t *Transaction) Delete() {
 	os.RemoveAll(t.BasePath)
 }
 
+func (t *Transaction) DeleteItem(id string) bool {
+	for i, item := range t.Items.GetAll() {
+		if item.Id == id {
+			t.Items.Delete(i)
+			return true
+		}
+	}
+
+	return false
+}
+
 func (t *Transaction) GetResultFile(id string) (*TransactionResultFile, error) {
 	results := t.Results.GetAll()
 	for _, result := range results {

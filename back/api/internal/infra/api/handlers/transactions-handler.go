@@ -124,6 +124,18 @@ func (t *TransactionsV2Handler) HandleGetStatus(r *http.Request) (*dto.Transacti
 	return dto.NewTransactionStatusResponse(tran), nil
 }
 
+func (t *TransactionsV2Handler) HandleRetryFile(r *http.Request) (*string, error) {
+	fileId := chi.URLParam(r, "fileId")
+	tran, err := t.getTransaction(r)
+	if err != nil {
+		return nil, err
+	}
+
+	tran.DeleteItem(fileId)
+
+	return t.HandleAttachFile(r)
+}
+
 func (t *TransactionsV2Handler) HandleAttachFile(r *http.Request) (*string, error) {
 	tran, err := t.getTransaction(r)
 	if err != nil {

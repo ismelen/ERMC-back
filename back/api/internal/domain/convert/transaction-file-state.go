@@ -5,16 +5,16 @@ import (
 	"fmt"
 )
 
-type TransactionFileStatus int32
+type TransactionFileState int32
 
 const (
-	TransactionFilePending TransactionFileStatus = iota
+	TransactionFilePending TransactionFileState = iota
 	TransactionFileProcessing
 	TransactionFileDone
 	TransactionFileError
 )
 
-func (state TransactionFileStatus) String() string {
+func (state TransactionFileState) String() string {
 	switch state {
 	case TransactionFilePending:
 		return "pending"
@@ -29,11 +29,11 @@ func (state TransactionFileStatus) String() string {
 	}
 }
 
-func (s TransactionFileStatus) MarshalJSON() ([]byte, error) {
+func (s TransactionFileState) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.String())
 }
 
-func (state *TransactionFileStatus) UnmarshalJSON(data []byte) error {
+func (state *TransactionFileState) UnmarshalJSON(data []byte) error {
 	var str string
 	if err := json.Unmarshal(data, &str); err != nil {
 		return err

@@ -9,7 +9,7 @@ type TransactionFile struct {
 	Id      string
 	Name    string
 	Size    int64
-	status  TransactionFileStatus // Pending, Processing, Done, Error
+	status  TransactionFileState // Pending, Processing, Done, Error
 	SrcPath string
 	Error   error
 	Result  *TransactionResultFile
@@ -28,7 +28,7 @@ func NewTransactionFile(id, filename, path string, size int64) *TransactionFile 
 	return t
 }
 
-func (t *TransactionFile) Status() TransactionFileStatus {
+func (t *TransactionFile) Status() TransactionFileState {
 	return t.status
 }
 

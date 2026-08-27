@@ -1,6 +1,9 @@
 package listutil
 
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
 type AtomicList[T any] struct {
 	mu    sync.RWMutex
@@ -33,6 +36,13 @@ func (a *AtomicList[T]) GetAll() []T {
 	defer a.mu.RUnlock()
 
 	return a.items
+}
+
+func (a *AtomicList[T]) Delete(idx int) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	a.items = slices.Delete(a.items, idx, idx+1)
 }
 
 func (a *AtomicList[T]) Set(values []T) {
