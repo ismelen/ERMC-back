@@ -8,16 +8,16 @@ require (
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/facette/natsort v0.0.0-20181210072756-2cd4dd1e2dcb
-	github.com/gen2brain/go-fitz v1.28.2
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-chi/cors v1.2.2
 	github.com/go-chi/render v1.0.3
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
+	github.com/pdfcpu/pdfcpu v0.15.0
 	github.com/pgaskin/kepubify/v4 v4.0.4
-	golang.org/x/image v0.43.0
-	golang.org/x/sync v0.21.0
-	golang.org/x/text v0.38.0
+	golang.org/x/image v0.44.0
+	golang.org/x/sync v0.22.0
+	golang.org/x/text v0.40.0
 	google.golang.org/api v0.285.0
 )
 
@@ -40,8 +40,8 @@ require (
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 // indirect
-	github.com/ebitengine/purego v0.10.1 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.37.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -53,7 +53,9 @@ require (
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.16 // indirect
 	github.com/googleapis/gax-go/v2 v2.22.0 // indirect
+	github.com/hhrutter/tiff v1.0.6 // indirect
 	github.com/kr/smartypants v0.1.0 // indirect
+	github.com/mattn/go-runewidth v0.0.27 // indirect
 	github.com/pgaskin/kepubify/_/go116-zip.go117 v0.0.0-20210611152744-2d89b3182523 // indirect
 	github.com/pgaskin/kepubify/_/html v0.0.0-20211223234002-6ee2cc632cdc // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
@@ -67,10 +69,11 @@ require (
 	go.opentelemetry.io/otel/sdk v1.43.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
-	golang.org/x/crypto v0.53.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
+	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	google.golang.org/appengine/v2 v2.0.6 // indirect
 	google.golang.org/genproto v0.0.0-20260511170946-3700d4141b60 // indirect

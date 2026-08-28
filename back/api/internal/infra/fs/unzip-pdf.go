@@ -2,13 +2,18 @@ package fs
 
 import (
 	"fmt"
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
+	"io"
 	"ismelen/inkomi/internal/shared/fsutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	nativewebp "github.com/HugoSmits86/nativewebp"
-	"github.com/gen2brain/go-fitz"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
 )
 
 func UnzipPdf(file string, dstPath string) (string, string, []string, error) {
@@ -25,35 +30,65 @@ func UnzipPdf(file string, dstPath string) (string, string, []string, error) {
 		return "", "", nil, err
 	}
 
-	doc, err := fitz.New(file)
+	fPdf, err := os.Open(file)
 	if err != nil {
 		return "", "", nil, err
 	}
-	defer doc.Close()
+	defer fPdf.Close()
 
-	numPages := doc.NumPage()
-	paths := make([]string, 0, numPages)
+	// Extract images directly from PDF streams
+	images, err := api.ExtractImagesRaw(fPdf, nil, nil)
+	if err != nil {
+		return "", "", nil, err
+	}
 
-	for n := 0; n < numPages; n++ {
-		img, err := doc.Image(n)
-		if err != nil {
-			return "", "", nil, fmt.Errorf("UnzipPdf: error rendering page %d: %w", n, err)
+	paths := make([]string, 0)
+	pageCounter := 0
+
+	for _, pageImages := range images {
+		if len(pageImages) == 0 {
+			continue
 		}
 
-		pagePath := filepath.Join(folderPath, fmt.Sprintf("page%03d.webp", n+1))
-		f, err := os.Create(pagePath)
-		if err != nil {
-			return "", "", nil, err
+		// Sort images by object number to ensure consistent order if there are multiple
+		objNrs := make([]int, 0, len(pageImages))
+		for objNr := range pageImages {
+			objNrs = append(objNrs, objNr)
 		}
+		sort.Ints(objNrs)
 
-		opts := &nativewebp.Options{CompressionLevel: nativewebp.DefaultCompression}
-		if err := nativewebp.Encode(f, img, opts); err != nil {
+		for _, objNr := range objNrs {
+			imgObj := pageImages[objNr]
+			pageCounter++
+
+			// Decode the extracted image stream
+			img, _, err := image.Decode(imgObj)
+			if err != nil {
+				// If image format is unsupported, skip or return error.
+				// We return an error for now.
+				return "", "", nil, fmt.Errorf("UnzipPdf: error decoding image %d: %w", pageCounter, err)
+			}
+
+			// Ensure reader is closed if it implements io.ReadCloser (model.Image embeds io.Reader)
+			if rc, ok := imgObj.Reader.(io.ReadCloser); ok {
+				rc.Close()
+			}
+
+			pagePath := filepath.Join(folderPath, fmt.Sprintf("page%03d.webp", pageCounter))
+			f, err := os.Create(pagePath)
+			if err != nil {
+				return "", "", nil, err
+			}
+
+			opts := &nativewebp.Options{CompressionLevel: nativewebp.DefaultCompression}
+			if err := nativewebp.Encode(f, img, opts); err != nil {
+				f.Close()
+				return "", "", nil, fmt.Errorf("UnzipPdf: error encoding page %d: %w", pageCounter, err)
+			}
 			f.Close()
-			return "", "", nil, fmt.Errorf("UnzipPdf: error encoding page %d: %w", n, err)
-		}
-		f.Close()
 
-		paths = append(paths, pagePath)
+			paths = append(paths, pagePath)
+		}
 	}
 
 	return fileName, folderPath, paths, nil
