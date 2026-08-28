@@ -42,9 +42,7 @@ export default function QueuePage() {
               {t('queue.empty')}
             </SText>
             <SText style={{ fontSize: 16, textAlign: 'center' }}>{t('queue.emptySubtitle1')}</SText>
-            <SText style={{ fontSize: 16, textAlign: 'center' }}>
-              {t('queue.emptySubtitle2')}
-            </SText>
+            <SText style={{ fontSize: 16, textAlign: 'center' }}>{t('queue.emptySubtitle2')}</SText>
           </View>
           <SButton
             onPress={() => router.navigate('/(tabs)/')}
@@ -65,14 +63,7 @@ export default function QueuePage() {
       {areTransactions && (
         <View style={{ marginTop: 16, gap: 10 }}>
           {transactions.map((e, i) => (
-            <QueueItemCard
-              key={e.id}
-              data={e}
-              idx={i}
-              onRetry={(tranId) => {
-                navigate(getPath(e.config.mode), e.config);
-              }}
-            />
+            <QueueItemCard key={e.id} data={e} idx={i} />
           ))}
         </View>
       )}

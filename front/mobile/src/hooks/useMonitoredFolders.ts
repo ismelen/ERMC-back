@@ -35,22 +35,30 @@ export const useMonitoredFolders = create(
           if (!folders) return;
 
           set({ folders });
-          set(async (state) => {
-            for (const monitored of state.folders as MonitoredFolder[]) {
-              const src = monitored.folder;
-              if (!src) continue;
+          set({ folders });
 
-              const newFiles = await FilesystemService.filesFromFolder(src.src);
-              const oldFiles = new Set(monitored.files);
+          const updatedFolders = [...folders];
+          let changed = false;
 
-              const diff = newFiles.filter((s) => !oldFiles.has(s));
-              if (diff.length === 0) continue;
+          for (const monitored of updatedFolders) {
+            const src = monitored.folder;
+            if (!src) continue;
 
-              monitored.oldFiles = monitored.files;
-              monitored.files = diff;
-              monitored.diff = diff.length;
-            }
-          });
+            const newFiles = await FilesystemService.filesFromFolder(src.src);
+            const oldFiles = new Set(monitored.files.map((f) => f.src));
+
+            const diff = newFiles.filter((s) => !oldFiles.has(s.src));
+            if (diff.length === 0) continue;
+
+            monitored.oldFiles = monitored.files;
+            monitored.files = diff;
+            monitored.diff = diff.length;
+            changed = true;
+          }
+
+          if (changed) {
+            set({ folders: updatedFolders });
+          }
         },
 
         async add(config: TransactionConfig) {
