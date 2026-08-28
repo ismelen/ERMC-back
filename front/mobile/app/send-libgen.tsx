@@ -27,12 +27,7 @@ export default function SendLibgen() {
   );
 
   if (sending)
-    return (
-      <LoadingScreen
-        title={t('loading.sendingBook')}
-        subtitle={t('loading.optimizing')}
-      />
-    );
+    return <LoadingScreen title={t('loading.sendingBook')} subtitle={t('loading.optimizing')} />;
 
   return (
     <>
@@ -83,8 +78,9 @@ export default function SendLibgen() {
 
         <SButton
           onPress={async () => {
-            setConfig((s) => ({ ...s, files: Object.values(selectedBooks) }));
-            if (await send()) clear();
+            const finalFiles = Object.values(selectedBooks);
+            setConfig((s) => ({ ...s, files: finalFiles }));
+            if (await send(finalFiles)) clear();
           }}
           style={{
             backgroundColor: colors.primary_container,
@@ -95,7 +91,9 @@ export default function SendLibgen() {
             boxShadow: colors.boxShadow,
           }}
         >
-          <SText style={{ fontFamily: 'semibold', color: colors.on_primary }}>{t('sendLibgen.send')}</SText>
+          <SText style={{ fontFamily: 'semibold', color: colors.on_primary }}>
+            {t('sendLibgen.send')}
+          </SText>
         </SButton>
       </View>
     </>

@@ -59,37 +59,49 @@ export function useSender(mode: TransactionMode) {
 
   const send = useQueue((s) => s.send);
   const [sending, setSending] = useState(false);
-  const handleSend = async (): Promise<boolean> => {
-    if (!config.model || config.model === '') return false;
+  const handleSend = async (
+    files?: any[],
+    overrideConfig?: TransactionConfig
+  ): Promise<boolean> => {
+    const finalConfig = overrideConfig ?? config;
+    if (files) finalConfig.files = files;
+
+    if (!finalConfig.model || finalConfig.model === '') return false;
 
     if (settings.model) {
-      const differentModel = config.model !== settings.model;
+      const differentModel = finalConfig.model !== settings.model;
       if (differentModel) alert('Different model selected'); // TODO: Better dialogs with cancel...
     }
 
     setSending(true);
     await StorageService.SetAsync<State>(LAST_STATE, {
-      config: config,
+      config: finalConfig,
       sending: true,
       monitoredIdx: monitoredIdx,
     });
-    const done = await send(config, pathname);
+
+    // Refresh pathname because it might be different if called inside useEffect
+    const done = await send(finalConfig, router.canGoBack() ? pathname : undefined);
     setSending(false);
 
-    if (!done) return false;
+    if (!done) {
+      // If we failed (e.g. user cancelled login), clear LAST_STATE so it doesn't loop
+      await StorageService.SetAsync<State>(LAST_STATE, { config: finalConfig, sending: false });
+      return false;
+    }
 
     router.navigate('/(tabs)/queue');
     if (!monitoredIdx) {
-      setSettings({ ...config, model: settings.model });
-      if (config.model !== settings.model) {
+      setSettings({ ...finalConfig, model: settings.model });
+      if (finalConfig.model !== settings.model) {
         // TODO: Ask if user wants to change model (dialog)
-        setModel(config.model);
+        setModel(finalConfig.model);
       }
 
-      if (config.monitoredIdx && config.folder) addMonitored(config);
+      if (finalConfig.monitoredIdx && finalConfig.folder) addMonitored(finalConfig);
     } else {
-      if (config.monitoredIdx && config.folder) {
-        updateMonitored(config, monitoredIdx);
+      if (finalConfig.monitoredIdx && finalConfig.folder) {
+        updateMonitored(finalConfig, monitoredIdx);
       } else {
         removeMonitored(monitoredIdx);
       }
@@ -109,10 +121,14 @@ export function useSender(mode: TransactionMode) {
         if (!e) return;
         setConfig(e.config);
         setMonitoredIdx(e.monitoredIdx);
-        setSending(e.sending);
+
+        if (e.sending) {
+          // We just returned from auth, try sending again automatically
+          handleSend(undefined, e.config);
+        }
       });
     }
-  }, []);
+  }, [last]);
 
   return { config, setConfig, sending, send: handleSend };
 }

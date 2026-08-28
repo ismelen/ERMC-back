@@ -22,7 +22,12 @@ export const useLibgen = create<State>((set, get) => ({
       });
 
       if (!resp.ok || resp.status !== 200) return;
-      return await resp.json();
+      const data = await resp.json();
+      return data.map((b: any) => ({
+        ...b,
+        name: b.name || b.title || 'Unknown Title',
+        src: b.src || b.md5 || Math.random().toString(),
+      })) as TransactionSource[];
     } catch (e) {
       console.error('books search', e);
       return;

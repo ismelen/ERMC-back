@@ -21,7 +21,7 @@ const languageOptions: { value: SupportedLanguage; label: string }[] = [
 
 export default function SettingsPage() {
   const pathname = usePathname();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const { settings, setModel, setLanguage } = useSettings(
     useShallow((s) => ({ settings: s.settings, setModel: s.setModel, setLanguage: s.setLanguage }))
@@ -52,7 +52,7 @@ export default function SettingsPage() {
       <View style={{ marginTop: 32, gap: 4 }}>
         <SText style={styles.title}>{t('settings.language')}</SText>
         <SSelect
-          value={settings.language ?? 'en'}
+          value={settings.language ?? (i18n.resolvedLanguage || i18n.language || 'en')}
           options={languageOptions}
           onOptionChange={(opt) => setLanguage(opt.value as SupportedLanguage)}
         />
