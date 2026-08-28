@@ -5,7 +5,9 @@ import (
 	"ismelen/inkomi/internal/domain/book"
 	bookfilters "ismelen/inkomi/internal/domain/book/filters"
 	"ismelen/inkomi/internal/shared/filter"
+	"sync"
 	"sync/atomic"
+	"time"
 
 	"golang.org/x/sync/singleflight"
 )
@@ -13,6 +15,8 @@ import (
 type LibgenService struct {
 	mirror        atomic.Value
 	singleUpdater singleflight.Group
+	lastCheckMu   sync.RWMutex
+	lastCheck     time.Time
 }
 
 func New() *LibgenService {

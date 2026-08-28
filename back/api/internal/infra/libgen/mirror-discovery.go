@@ -46,6 +46,11 @@ func (l *LibgenService) updateMirror() {
 	mirrors := getMirrors()
 
 	fastest, ok := l.getFastestMirror(mirrors)
+
+	l.lastCheckMu.Lock()
+	l.lastCheck = time.Now()
+	l.lastCheckMu.Unlock()
+
 	if !ok {
 		log.Println("Could't update mirror")
 		return
@@ -97,4 +102,63 @@ func (l *LibgenService) getFastestMirror(mirrors []book.LibgenMirror) (book.Libg
 	case <-ctx.Done():
 		return nil, false
 	}
+}
+
+func (l *LibgenService) CheckMirror(ctx context.Context) (bool, error) {
+	mirror, ok := l.getMirror()
+	if ok && l.pingMirror(ctx, mirror) {
+		return true, nil
+	}
+
+	l.lastCheckMu.RLock()
+	cooldown := time.Since(l.lastCheck) < time.Hour
+	l.lastCheckMu.RUnlock()
+
+	if cooldown {
+		return false, nil
+	}
+
+	_, _, _ = l.singleUpdater.Do("refresh", func() (any, error) {
+		l.lastCheckMu.RLock()
+		if time.Since(l.lastCheck) < time.Hour {
+			l.lastCheckMu.RUnlock()
+			return nil, nil
+		}
+		l.lastCheckMu.RUnlock()
+
+		l.updateMirror()
+		return nil, nil
+	})
+
+	mirror, ok = l.getMirror()
+	if ok {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (l *LibgenService) pingMirror(ctx context.Context, m book.LibgenMirror) bool {
+	reqCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(reqCtx, "GET", m.GetURL()+"/", nil)
+	if err != nil {
+		return false
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0")
+
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+
+	return resp.StatusCode == http.StatusOK
 }

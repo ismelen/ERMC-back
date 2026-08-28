@@ -21,6 +21,19 @@ func NewLibgenHandler(libgenServ book.LibgenService) *LibgenHandler {
 	return &LibgenHandler{libgenServ}
 }
 
+type CheckMirrorResponse struct {
+	Active bool `json:"active"`
+}
+
+func (l *LibgenHandler) HandleCheckMirror(r *http.Request) (*CheckMirrorResponse, error) {
+	active, err := l.libgenServ.CheckMirror(r.Context())
+	if err != nil {
+		return nil, err
+	}
+
+	return &CheckMirrorResponse{Active: active}, nil
+}
+
 func (l *LibgenHandler) HandleSearchBook(r *http.Request) (*[]book.Book, error) {
 	query := r.URL.Query().Get("q")
 	if query == "" {

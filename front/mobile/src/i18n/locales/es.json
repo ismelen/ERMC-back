@@ -68,7 +68,8 @@
   "search": {
     "title": "Buscar",
     "placeholder": "Buscar por t\u00edtulo, autor o g\u00e9nero...",
-    "sendBooks": "Enviar libros ({{count}})"
+    "sendBooks": "Enviar libros ({{count}})",
+    "serviceDown": "Servicio no disponible en este momento."
   },
   "sendBook": {
     "title": "Enviar Libro",

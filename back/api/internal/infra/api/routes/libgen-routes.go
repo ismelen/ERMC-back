@@ -14,4 +14,5 @@ func SetupLibgenRoutes(api *chi.Mux, handler *handlers.LibgenHandler) {
 
 	r.Get("/search", requtil.Wrap[[]book.Book](handler.HandleSearchBook))
 	r.Get("/download/{md5}", requtil.Wrap[requtil.FileResponse](handler.HandleDownloadBook))
+	r.Get("/check-mirror", requtil.Wrap[handlers.CheckMirrorResponse](handler.HandleCheckMirror))
 }

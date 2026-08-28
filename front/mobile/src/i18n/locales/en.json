@@ -68,7 +68,8 @@
   "search": {
     "title": "Search",
     "placeholder": "Search by title, author or genre...",
-    "sendBooks": "Send books ({{count}})"
+    "sendBooks": "Send books ({{count}})",
+    "serviceDown": "Service currently unavailable."
   },
   "sendBook": {
     "title": "Send Book",

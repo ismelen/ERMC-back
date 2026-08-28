@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
 import SText from '../../src/components/shared/SText';
 import { colors, hexToRgba } from '../../src/theme/colors';
@@ -13,6 +13,7 @@ import SearchedBookCardSkeleton from '../../src/components/search/search-book-ca
 import STextInput from '../../src/components/shared/STextInput';
 import { TransactionSource } from '../../src/models/transaction-source';
 import { useTranslation } from 'react-i18next';
+import { BACKEND_API_URL } from '../../src/constants';
 
 export default function Search() {
   const { search, selectBook, selectedBooks } = useLibgen(
@@ -30,6 +31,20 @@ export default function Search() {
 
   const [results, setResults] = useState<TransactionSource[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [serviceActive, setServiceActive] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkMirror = async () => {
+      try {
+        const res = await fetch(`${BACKEND_API_URL}/books/check-mirror`);
+        const data = await res.json();
+        setServiceActive(data.active);
+      } catch (e) {
+        setServiceActive(false);
+      }
+    };
+    checkMirror();
+  }, []);
 
   const handleSearch = async () => {
     setIsSearching(true);
@@ -41,9 +56,19 @@ export default function Search() {
   return (
     <View style={{ flex: 1 }}>
       <View style={{ paddingHorizontal: 24 }}>
-        <SText style={{ fontFamily: 'bold', fontSize: 28 }}>{t('search.title')}</SText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <SText style={{ fontFamily: 'bold', fontSize: 28 }}>{t('search.title')}</SText>
+          {serviceActive === false && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 }}>
+              <SIcon name="error" color={colors.error} size={24} />
+              <SText style={{ color: colors.error, fontSize: 12, flexShrink: 1 }}>
+                {t('search.serviceDown')}
+              </SText>
+            </View>
+          )}
+        </View>
 
-        <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
           <STextInput
             placeholder={t('search.placeholder')}
             onChangeText={setQuery}
