@@ -72,6 +72,7 @@ func (t *TransactionsV2Handler) HandleStartTransaction(r *http.Request) (*dto.Tr
 	return &dto.TransactionStartResponse{
 		Id:        tran.Id,
 		Timestamp: tran.CreatedAt.Unix(),
+		Status:    tran.Status.Get(),
 	}, nil
 }
 
