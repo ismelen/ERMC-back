@@ -27,13 +27,24 @@ export const useQueue = create(
         async init() {
           await DatabaseService.initDb();
 
-          const trans = await DatabaseService.getTransactions(3, 0);
+          const legacyTrans = await StorageService.GetAsync<Transaction[]>(TRANSACTIONS_KEY);
+          if (legacyTrans && legacyTrans.length > 0) {
+            await DatabaseService.saveTransactions(legacyTrans);
+            await StorageService.RemoveAsync(TRANSACTIONS_KEY);
+          }
+
+          const trans = await DatabaseService.getTransactions(3);
           set({ transactions: trans ?? [] });
         },
 
         async loadMore() {
-          const currentLength = get().transactions.length;
-          const moreTrans = await DatabaseService.getTransactions(3, currentLength);
+          const transactions = get().transactions;
+          if (transactions.length === 0) return;
+          const lastTran = transactions[transactions.length - 1];
+          const moreTrans = await DatabaseService.getTransactions(3, {
+            timestamp: lastTran.timestamp,
+            id: lastTran.id,
+          });
           if (moreTrans.length > 0) {
             set((state) => {
               state.transactions.push(...moreTrans);
@@ -86,8 +97,8 @@ export const useQueue = create(
                 if (u.status === 'pending') u.status = 'sending';
               });
             }
-            StorageService.SetAsync(TRANSACTIONS_KEY, state.transactions);
           });
+          DatabaseService.saveTransaction(get().transactions.find((e) => e.id === tranId)!);
 
           await BackgroundService.start(
             async () => {
@@ -120,8 +131,8 @@ export const useQueue = create(
                     };
 
                     if (t.status === 'waiting') t.status = 'processing';
-                    StorageService.SetAsync(TRANSACTIONS_KEY, state.transactions);
                   });
+                  DatabaseService.saveTransaction(get().transactions.find((e) => e.id === tranId)!);
                 })
               );
             },
@@ -151,8 +162,8 @@ export const useQueue = create(
               t.uploads[uploadIdx].status = 'sending';
               t.uploads[uploadIdx].error = undefined;
             }
-            StorageService.SetAsync(TRANSACTIONS_KEY, state.transactions);
           });
+          DatabaseService.saveTransaction(get().transactions[tranIdx]);
 
           await BackgroundService.start(
             async () => {
@@ -181,8 +192,8 @@ export const useQueue = create(
                   error: error,
                   itemId: itemId,
                 };
-                StorageService.SetAsync(TRANSACTIONS_KEY, state.transactions);
               });
+              DatabaseService.saveTransaction(get().transactions[tranIdx]);
             },
             {
               taskName: 'inkomi-upload-retry',
@@ -214,8 +225,8 @@ export const useQueue = create(
               i.status = 'processing';
               i.error = undefined;
             }
-            StorageService.SetAsync(TRANSACTIONS_KEY, state.transactions);
           });
+          DatabaseService.saveTransaction(get().transactions[tranIdx]);
 
           await BackgroundService.start(
             async () => {
@@ -232,8 +243,8 @@ export const useQueue = create(
                     i.status = 'error';
                     i.error = e.message;
                   }
-                  StorageService.SetAsync(TRANSACTIONS_KEY, state.transactions);
                 });
+                DatabaseService.saveTransaction(get().transactions[tranIdx]);
               }
             },
             {

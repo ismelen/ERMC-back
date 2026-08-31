@@ -16,12 +16,21 @@ export class DatabaseService {
     `);
   }
 
-  static async getTransactions(limit: number, offset: number): Promise<Transaction[]> {
+  static async getTransactions(
+    limit: number,
+    cursor?: { timestamp: number; id: string }
+  ): Promise<Transaction[]> {
     const db = await SQLite.openDatabaseAsync(DB_NAME);
-    const result = await db.getAllAsync<{ data: string }>(
-      'SELECT data FROM transactions ORDER BY timestamp DESC LIMIT ? OFFSET ?',
-      [limit, offset]
-    );
+    let query = 'SELECT data FROM transactions ORDER BY timestamp DESC, id DESC LIMIT ?';
+    let params: any[] = [limit];
+
+    if (cursor) {
+      query =
+        'SELECT data FROM transactions WHERE timestamp < ? OR (timestamp = ? AND id < ?) ORDER BY timestamp DESC, id DESC LIMIT ?';
+      params = [cursor.timestamp, cursor.timestamp, cursor.id, limit];
+    }
+
+    const result = await db.getAllAsync<{ data: string }>(query, params);
 
     return result.map((row) => JSON.parse(row.data) as Transaction);
   }
