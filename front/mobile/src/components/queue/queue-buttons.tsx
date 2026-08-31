@@ -145,6 +145,16 @@ export function DownloadAllButton({ tran, idx }: { tran: Transaction; idx: numbe
   );
 }
 
+export function RedoButton({ onPress }: { onPress(): void }) {
+  const { t } = useTranslation();
+  return (
+    <SButton onPress={onPress} style={s.redoBtn}>
+      <SIcon name="refresh" color={colors.primary} size={22} type="outlined" />
+      <SText style={s.redoText}>{t('queue.redo', 'Reenviar')}</SText>
+    </SButton>
+  );
+}
+
 export function ShareAllButton({ tran }: { tran: Transaction }) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -212,6 +222,21 @@ const s = StyleSheet.create({
   cancelText: {
     fontFamily: 'medium',
     color: colors.error,
+    fontSize: 14,
+  },
+  redoBtn: {
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    flexDirection: 'row',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: colors.primary_container,
+  },
+  redoText: {
+    fontFamily: 'medium',
+    color: colors.primary,
     fontSize: 14,
   },
   startUploadsBtn: {

@@ -16,11 +16,25 @@ import { ResultRow } from './result-row';
 import {
   CancelButton,
   DownloadAllButton,
+  RedoButton,
   ShareAllButton,
   StartUploadsButton,
 } from './queue-buttons';
+import { useObjectNavigation } from '../../hooks/useObjectNavigation';
+import { TransactionMode } from '../../models/transaction-config';
 
 const SECTION_MAX_HEIGHT = 160;
+
+function getPath(mode: TransactionMode): string {
+  switch (mode) {
+    case 'cbz':
+      return '/send-comic';
+    case 'epub':
+      return '/send-book';
+    case 'md5':
+      return '/send-libgen';
+  }
+}
 
 interface Props {
   data: Transaction;
@@ -34,6 +48,10 @@ export default function QueueItemCard({ data, idx }: Props) {
   const isError = data.status === 'error';
   const isDone = data.status === 'done';
   const isCancellable = data.status === 'processing' || data.status === 'waiting';
+
+  const navigate = useObjectNavigation((s) => s.navigate);
+  const isFinished =
+    data.status === 'done' || data.status === 'error' || data.status === 'canceled';
 
   const { checkProgress, cancel, startUploads, retryUpload, retryItem } = useQueue(
     useShallow((s) => ({
@@ -49,7 +67,7 @@ export default function QueueItemCard({ data, idx }: Props) {
     useCallback(() => {
       const interval = setInterval(() => checkProgress(idx), 2000);
       return () => clearInterval(interval);
-    }, [])
+    }, [idx, checkProgress])
   );
 
   const handleRetryUpload = (uploadIdx: number, newFile?: any) => {
@@ -58,6 +76,11 @@ export default function QueueItemCard({ data, idx }: Props) {
 
   const handleRetryItem = (itemId: string) => {
     retryItem(idx, itemId);
+  };
+
+  const handleRedo = () => {
+    const path = getPath(data.config.mode);
+    navigate(path, data.config);
   };
 
   const canStartUploads =
@@ -121,6 +144,9 @@ export default function QueueItemCard({ data, idx }: Props) {
 
       {/* Start Uploads button */}
       {canStartUploads && <StartUploadsButton onPress={() => startUploads?.(idx)} />}
+
+      {/* Redo button */}
+      {isFinished && <RedoButton onPress={handleRedo} />}
 
       {/* Cancel button */}
       {isCancellable && <CancelButton onPress={() => cancel(idx)} />}

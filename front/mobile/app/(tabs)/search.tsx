@@ -59,9 +59,19 @@ export default function Search() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <SText style={{ fontFamily: 'bold', fontSize: 28 }}>{t('search.title')}</SText>
           {serviceActive === false && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 }}>
-              <SIcon name="error" color={colors.error} size={24} />
-              <SText style={{ color: colors.error, fontSize: 12, flexShrink: 1 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                backgroundColor: colors.error_container,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 12,
+              }}
+            >
+              <SIcon name="info" color={colors.error} size={14} type="outlined" />
+              <SText style={{ color: colors.error, fontSize: 10, fontFamily: 'semibold' }}>
                 {t('search.serviceDown')}
               </SText>
             </View>

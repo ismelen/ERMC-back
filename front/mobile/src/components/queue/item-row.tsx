@@ -19,7 +19,7 @@ const fileStatusConfig: Record<FileStatus, { labelKey: string; color: string; ic
 
 export function ItemRow({ item, onRetry }: { item: TransactionFile; onRetry(id: string): void }) {
   const { t } = useTranslation();
-  const cfg = fileStatusConfig[item.status];
+  const cfg = fileStatusConfig[item.status] || fileStatusConfig['unknown'];
   const hasError = item.status === 'error';
   const isProcessing = item.status === 'processing';
 

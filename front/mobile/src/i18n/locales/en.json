@@ -23,7 +23,7 @@
     "synced": "SYNCED"
   },
   "queue": {
-    "title": "Transaction queue",
+    "title": "Transactions",
     "empty": "Your queue is empty",
     "emptySubtitle1": "Start by sending something.",
     "emptySubtitle2": "Your active and completed uploads will appear here.",

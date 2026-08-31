@@ -23,7 +23,7 @@
     "synced": "SINCRONIZADO"
   },
   "queue": {
-    "title": "Cola de transacciones",
+    "title": "Transacciones",
     "empty": "Tu cola est\u00e1 vac\u00eda",
     "emptySubtitle1": "Empieza enviando algo.",
     "emptySubtitle2": "Tus subidas activas y completadas aparecer\u00e1n aqu\u00ed.",

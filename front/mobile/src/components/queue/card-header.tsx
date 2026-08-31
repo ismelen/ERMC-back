@@ -46,8 +46,8 @@ export const statusConfig: Record<TransactionStatus, { labelKey: string; bg: str
 
 export function CardHeader({ data }: { data: Transaction }) {
   const { t } = useTranslation();
-  const title = data.config.title || `Transaction ${data.id.slice(0, 8)}`;
-  const cfg = statusConfig[data.status];
+  const title = data.config.title || data.id.slice(0, 8);
+  const cfg = statusConfig[data.status] || statusConfig['unknown'];
   const isProcessing = data.status === 'processing';
 
   return (

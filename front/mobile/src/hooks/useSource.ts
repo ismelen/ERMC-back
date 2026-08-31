@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FilesystemService } from '../services/filesystem-service';
 import { TransactionSource } from '../models/transaction-source';
 
@@ -10,6 +10,14 @@ export function useSource(
   const [folder, setFolder] = useState<TransactionSource | undefined>(initFolder);
   const [files, setFiles] = useState<TransactionSource[]>(initFiles ?? []);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (initFolder !== undefined) setFolder(initFolder);
+  }, [initFolder]);
+
+  useEffect(() => {
+    if (initFiles !== undefined) setFiles(initFiles);
+  }, [initFiles]);
 
   const addFiles = async () => {
     setLoading(true);

@@ -1,3 +1,4 @@
+import React from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { colors } from '../src/theme/colors';
 import { StyleSheet, View } from 'react-native';
@@ -13,18 +14,29 @@ import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
 import { Stack, usePathname } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { useCloud } from '../src/hooks/useCloud';
 
 export default function SendLibgen() {
   const { sending, config, setConfig, send } = useSender('md5');
   const { t } = useTranslation();
+  const { oauth, folder } = useCloud();
 
-  const { selectedBooks, onDelete, clear } = useLibgen(
+  const isSendDisabled = config.toCloud ? !oauth?.email || !folder : false;
+
+  const { selectedBooks, onDelete, clear, setBooks } = useLibgen(
     useShallow((s) => ({
       selectedBooks: s.selected,
       onDelete: s.selectBook,
       clear: s.clear,
+      setBooks: s.setBooks,
     }))
   );
+
+  React.useEffect(() => {
+    if (config.files && config.files.length > 0 && Object.keys(selectedBooks).length === 0) {
+      setBooks(config.files);
+    }
+  }, [config.files]);
 
   if (sending)
     return <LoadingScreen title={t('loading.sendingBook')} subtitle={t('loading.optimizing')} />;
@@ -82,8 +94,9 @@ export default function SendLibgen() {
             setConfig((s) => ({ ...s, files: finalFiles }));
             if (await send(finalFiles)) clear();
           }}
+          disabled={isSendDisabled}
           style={{
-            backgroundColor: colors.primary_container,
+            backgroundColor: isSendDisabled ? colors.surface_variant : colors.primary_container,
             paddingVertical: 12,
             alignItems: 'center',
             justifyContent: 'center',
@@ -91,7 +104,12 @@ export default function SendLibgen() {
             boxShadow: colors.boxShadow,
           }}
         >
-          <SText style={{ fontFamily: 'semibold', color: colors.on_primary }}>
+          <SText
+            style={{
+              fontFamily: 'semibold',
+              color: isSendDisabled ? colors.on_surface_variant : colors.on_primary,
+            }}
+          >
             {t('sendLibgen.send')}
           </SText>
         </SButton>

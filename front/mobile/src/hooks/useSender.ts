@@ -41,7 +41,7 @@ export function useSender(mode: TransactionMode) {
   const [config, setConfig] = useState<TransactionConfig>({
     title: '',
     author: '',
-    merge: settings.merge,
+    merge: mode === 'md5' ? false : settings.merge,
     model: settings.model,
     toCloud: settings.toCloud,
     ...initData,
@@ -112,6 +112,7 @@ export function useSender(mode: TransactionMode) {
 
   useEffect(() => {
     if (initData) {
+      setConfig((s) => ({ ...s, ...initData }));
       setMonitoredIdx(initData?.monitoredIdx);
     }
     clear();

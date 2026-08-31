@@ -13,10 +13,14 @@ import { eReaderProfiles } from '../src/constants';
 import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
 import { useTranslation } from 'react-i18next';
+import { useCloud } from '../src/hooks/useCloud';
 
 export default function SendComicPage() {
   const { sending, config, setConfig, send } = useSender('cbz');
   const { t } = useTranslation();
+  const { oauth, folder } = useCloud();
+
+  const isSendDisabled = config.toCloud ? !oauth?.email || !folder : false;
 
   if (sending)
     return <LoadingScreen title={t('loading.sendingBook')} subtitle={t('loading.optimizing')} />;
@@ -110,8 +114,9 @@ export default function SendComicPage() {
       </ScrollView>
       <SButton
         onPress={() => send()}
+        disabled={isSendDisabled}
         style={{
-          backgroundColor: colors.primary_container,
+          backgroundColor: isSendDisabled ? colors.surface_variant : colors.primary_container,
           margin: 24,
           paddingVertical: 12,
           alignItems: 'center',
@@ -120,7 +125,12 @@ export default function SendComicPage() {
           boxShadow: colors.boxShadow,
         }}
       >
-        <SText style={{ fontFamily: 'semibold', color: colors.on_primary }}>
+        <SText
+          style={{
+            fontFamily: 'semibold',
+            color: isSendDisabled ? colors.on_surface_variant : colors.on_primary,
+          }}
+        >
           {t('sendComic.send')}
         </SText>
       </SButton>

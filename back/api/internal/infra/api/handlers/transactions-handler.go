@@ -65,7 +65,7 @@ func (t *TransactionsV2Handler) HandleStartTransaction(r *http.Request) (*dto.Tr
 			Title:   "Memory allocated",
 			Message: "You can now upload files",
 			Id:      id,
-			Type:    "cancel",
+			Type:    "success",
 		})
 	})
 

@@ -7,11 +7,20 @@ interface State {
   selected: Record<string, TransactionSource>;
 
   selectBook(book: TransactionSource): void;
+  setBooks(books: TransactionSource[]): void;
   clear(): void;
 }
 
 export const useLibgen = create<State>((set, get) => ({
   selected: {},
+
+  setBooks(books: TransactionSource[]) {
+    const selected: Record<string, TransactionSource> = {};
+    for (const book of books) {
+      selected[book.src] = book;
+    }
+    set({ selected });
+  },
 
   async search(query?: string): Promise<TransactionSource[] | undefined> {
     try {

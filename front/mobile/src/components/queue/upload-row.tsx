@@ -30,7 +30,8 @@ export function UploadRow({
 }) {
   const { t } = useTranslation();
   const hasError = !!upload.error;
-  const { labelKey, color } = uploadStatusConfig[upload.status];
+  const cfg = uploadStatusConfig[upload.status] || uploadStatusConfig['pending'];
+  const { labelKey, color } = cfg;
 
   const handleEdit = async () => {
     const files = await FilesystemService.pickFiles(allowedTypes);

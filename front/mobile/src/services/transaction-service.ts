@@ -27,7 +27,8 @@ export class TransactionService {
           type: config.mode,
           cant: config.files.length,
           locale: i18n.language,
-          size: config.files.map((e) => e.size ?? 0).reduce((prev, current) => prev + current),
+          size:
+            config.files.map((e) => e.size ?? 0).reduce((prev, current) => prev + current) >> 10,
         }),
       });
       const data: Transaction = await res.json();

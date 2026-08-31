@@ -13,10 +13,9 @@ import { TransactionMode } from '../../src/models/transaction-config';
 import { useTranslation } from 'react-i18next';
 
 export default function QueuePage() {
-  const { transactions, cancel } = useQueue(
+  const { transactions } = useQueue(
     useShallow((s) => ({ transactions: s.transactions, cancel: s.cancel }))
   );
-  const navigate = useObjectNavigation((s) => s.navigate);
   const areTransactions = transactions.length > 0;
   const { t } = useTranslation();
 
@@ -61,7 +60,7 @@ export default function QueuePage() {
       )}
 
       {areTransactions && (
-        <View style={{ marginTop: 16, gap: 10 }}>
+        <View style={{ marginTop: 16, gap: 10, paddingBottom: 16 }}>
           {transactions.map((e, i) => (
             <QueueItemCard key={e.id} data={e} idx={i} />
           ))}
@@ -69,15 +68,4 @@ export default function QueuePage() {
       )}
     </ScrollView>
   );
-}
-
-function getPath(mode: TransactionMode): string {
-  switch (mode) {
-    case 'cbz':
-      return '/send-comic';
-    case 'epub':
-      return '/send-book';
-    case 'md5':
-      return '/send-libgen';
-  }
 }

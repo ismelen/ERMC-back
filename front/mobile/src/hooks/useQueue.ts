@@ -43,6 +43,7 @@ export const useQueue = create(
 
         async checkProgress(idx: number) {
           const tran = get().transactions[idx];
+
           if (
             !tran ||
             !(
