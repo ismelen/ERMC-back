@@ -8,6 +8,7 @@ import { TransactionUpload } from '../models/transaction-upload';
 import { NotificationService } from '../services/notification-service';
 import { StorageService } from '../services/storage-service';
 import { TransactionService } from '../services/transaction-service';
+import { DatabaseService } from '../services/database-service';
 import { useCloud } from './useCloud';
 
 export const TRANSACTIONS_KEY = 'transactions';
@@ -24,8 +25,20 @@ export const useQueue = create(
       } as State,
       (set, get) => ({
         async init() {
-          const trans = await StorageService.GetAsync<Transaction[]>(TRANSACTIONS_KEY);
+          await DatabaseService.initDb();
+
+          const trans = await DatabaseService.getTransactions(3, 0);
           set({ transactions: trans ?? [] });
+        },
+
+        async loadMore() {
+          const currentLength = get().transactions.length;
+          const moreTrans = await DatabaseService.getTransactions(3, currentLength);
+          if (moreTrans.length > 0) {
+            set((state) => {
+              state.transactions.push(...moreTrans);
+            });
+          }
         },
 
         async cancel(idx: number) {
@@ -59,7 +72,7 @@ export const useQueue = create(
           set((state) => {
             state.transactions[idx] = updated;
           });
-          StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
+          DatabaseService.saveTransaction(get().transactions[idx]);
         },
 
         async startUploads(idx: number) {
@@ -259,7 +272,7 @@ export const useQueue = create(
           set((state) => {
             state.transactions.unshift(tran);
           });
-          StorageService.SetAsync(TRANSACTIONS_KEY, get().transactions);
+          DatabaseService.saveTransaction(tran);
 
           if (isWaiting) {
             (get() as any).startUploads(0);

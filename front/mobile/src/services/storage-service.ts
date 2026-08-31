@@ -23,4 +23,8 @@ export class StorageService {
     const json = JSON.stringify(value);
     await AsyncStorage.setItem(key, json);
   }
+
+  static async RemoveAsync(key: string): Promise<void> {
+    await AsyncStorage.removeItem(key);
+  }
 }
