@@ -34,41 +34,53 @@ func (m BaseTransactionUC) Execute(file *convert.TransactionFile, tran *convert.
 	result := m.processor.Process(file, tran, transPath)
 	os.RemoveAll(filepath.Join(file.SrcPath))
 
-	if !tran.Config.Merge {
-		if err := m.KepubifyResult(tran, result); err != nil {
-			file.SetError(err)
-			return
-		}
+	if tran.Config.Merge {
+		m.postExecMerge(file, tran, transPath, result)
+		return
 	}
 
+	if err := m.KepubifyResult(tran, result); err != nil {
+		file.SetError(err)
+		return
+	}
+
+	if completed := m.addResultAndCheckIfComplete(result, tran, file); !completed {
+		return
+	}
+
+	m.SendAndNotify(tran, result)
+	tran.Status.Set(convert.TransactionDone)
+}
+
+func (m BaseTransactionUC) postExecMerge(file *convert.TransactionFile, tran *convert.Transaction, transPath string, result *convert.TransactionResultFile) {
+	if completed := m.addResultAndCheckIfComplete(result, tran, file); !completed {
+		return
+	}
+
+	tran.Status.Set(convert.TransactionMerging)
+	m.ChopAndMerge(tran, transPath)
+	for _, result := range tran.Results.GetAll() {
+		m.SendAndNotify(tran, result)
+	}
+	tran.Status.Set(convert.TransactionDone)
+}
+
+func (m BaseTransactionUC) addResultAndCheckIfComplete(result *convert.TransactionResultFile, tran *convert.Transaction, file *convert.TransactionFile) bool {
 	stats, err := os.Stat(result.Path)
 	if err != nil {
 		file.SetError(err)
-		return
+		return false
 	}
 	result.Size = stats.Size()
 
 	completed, err := tran.AddResult(result)
 	if err != nil {
 		file.SetError(err)
-		return
+		return false
 	}
 	file.Done()
 
-	if !(tran.Config.Merge && tran.Config.Type == "cbz") {
-		m.SendAndNotify(tran, result)
-		return
-	}
-
-	if !completed {
-		return
-	}
-
-	m.ChopAndMerge(tran, transPath)
-	for _, result := range tran.Results.GetAll() {
-		m.SendAndNotify(tran, result)
-	}
-	tran.Status.Set(convert.TransactionDone)
+	return completed
 }
 
 func (m BaseTransactionUC) ChopAndMerge(tran *convert.Transaction, transPath string) {

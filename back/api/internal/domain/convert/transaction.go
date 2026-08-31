@@ -102,13 +102,5 @@ func (t *Transaction) AddResult(file *TransactionResultFile) (bool, error) {
 	newSize := t.Results.Append(file)
 	completed := newSize >= t.Config.Cant
 
-	if completed {
-		if t.Config.Merge {
-			t.Status.Set(TransactionMerging)
-		} else {
-			t.Status.Set(TransactionDone)
-		}
-	}
-
 	return completed, nil
 }
