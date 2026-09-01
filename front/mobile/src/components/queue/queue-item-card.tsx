@@ -41,7 +41,9 @@ interface Props {
   idx: number;
 }
 
-export default function QueueItemCard({ data, idx }: Props) {
+export default React.memo(QueueItemCard);
+
+function QueueItemCard({ data, idx }: Props) {
   const hasUploads = data.uploads.length > 0;
   const hasItems = (data.items?.length ?? 0) > 0;
   const hasResults = (data.results?.length ?? 0) > 0;
