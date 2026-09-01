@@ -1,5 +1,5 @@
 import { useShallow } from 'zustand/react/shallow';
-import { StyleSheet, View, FlatList } from 'react-native';
+import { StyleSheet, View, FlatList, ActivityIndicator } from 'react-native';
 import { useQueue } from '../../src/hooks/useQueue';
 import SIcon from '../../src/components/icons/SIcon';
 import { colors } from '../../src/theme/colors';
@@ -8,8 +8,18 @@ import SText from '../../src/components/shared/SText';
 import SButton from '../../src/components/shared/SButton';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { useState, useEffect } from 'react';
 
 export default function QueuePage() {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setIsReady(true);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, []);
+
   const { transactions, loadMore } = useQueue(
     useShallow((s: any) => ({
       transactions: s.transactions,
@@ -54,9 +64,24 @@ export default function QueuePage() {
     </View>
   );
 
+  if (!isReady) {
+    return (
+      <View style={{ flex: 1, paddingHorizontal: 24 }}>
+        <SText style={{ fontFamily: 'bold', fontSize: 28, marginBottom: 16 }}>
+          {t('queue.title')}
+        </SText>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1, paddingHorizontal: 24 }}>
-      <SText style={{ fontFamily: 'bold', fontSize: 28, marginBottom: 16 }}>{t('queue.title')}</SText>
+      <SText style={{ fontFamily: 'bold', fontSize: 28, marginBottom: 16 }}>
+        {t('queue.title')}
+      </SText>
       <FlatList
         data={transactions}
         keyExtractor={(item) => item.id}
