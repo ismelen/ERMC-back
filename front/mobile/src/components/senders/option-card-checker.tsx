@@ -1,23 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { colors } from '../../theme/colors';
 import SSwitch from '../shared/SSwitch';
 import SText from '../shared/SText';
 
 interface Props {
-  initialChecked: boolean;
+  checked: boolean;
   onChange(checked: boolean): void;
   label: string;
   text: string;
 }
 
-export default function OptionCardChecker({ initialChecked, onChange, label, text }: Props) {
-  const [checked, setChecked] = useState(initialChecked);
-
-  useEffect(() => {
-    onChange(checked);
-  }, [checked]);
-
+export default function OptionCardChecker({ checked, onChange, label, text }: Props) {
   return (
     <View
       style={{
@@ -35,7 +29,7 @@ export default function OptionCardChecker({ initialChecked, onChange, label, tex
         <SText style={{ fontSize: 14, color: colors.on_surface_variant, flex: 1, flexShrink: 1 }}>
           {text}
         </SText>
-        <SSwitch value={checked} onValueChange={setChecked} />
+        <SSwitch value={checked} onValueChange={onChange} />
       </View>
     </View>
   );

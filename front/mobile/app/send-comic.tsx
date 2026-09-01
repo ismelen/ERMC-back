@@ -1,5 +1,5 @@
 import { Stack, usePathname } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { colors } from '../src/theme/colors';
 import SText from '../src/components/shared/SText';
@@ -14,9 +14,11 @@ import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
 import { useTranslation } from 'react-i18next';
 import { useCloud } from '../src/hooks/useCloud';
+import SConfirmDialog from '../src/components/shared/SConfirmDialog';
 
 export default function SendComicPage() {
-  const { sending, config, setConfig, send } = useSender('cbz');
+  const [showConfirm, setShowConfirm] = useState(false);
+  const { sending, config, setConfig, send, monitoredIdx, unmonitor } = useSender('cbz');
   const { t } = useTranslation();
   const { oauth, folder } = useCloud();
 
@@ -64,12 +66,16 @@ export default function SendComicPage() {
             />
             {config.folder && (
               <OptionCardChecker
-                initialChecked={config.monitoredIdx !== undefined}
+                checked={config.monitoredIdx !== undefined}
                 label={t('sendComic.monitorizeFolder')}
                 text={t('sendComic.monitorizeText')}
-                onChange={(checked) =>
-                  setConfig((s) => ({ ...s, monitoredIdx: checked ? 1 : undefined }))
-                }
+                onChange={(checked) => {
+                  if (!checked && monitoredIdx !== undefined) {
+                    setShowConfirm(true);
+                  } else {
+                    setConfig((s) => ({ ...s, monitoredIdx: checked ? 1 : undefined }));
+                  }
+                }}
               />
             )}
           </View>
@@ -104,7 +110,7 @@ export default function SendComicPage() {
           <View style={{ gap: 5 }}>
             <SText style={styles.title}>{t('sendComic.options')}</SText>
             <OptionCardChecker
-              initialChecked={config.merge ?? false}
+              checked={config.merge ?? false}
               label={t('sendComic.mergeChapters')}
               text={t('sendComic.mergeText')}
               onChange={(checked) => setConfig((s) => ({ ...s, merge: checked }))}
@@ -134,6 +140,21 @@ export default function SendComicPage() {
           {t('sendComic.send')}
         </SText>
       </SButton>
+      <SConfirmDialog
+        visible={showConfirm}
+        title={t('common.confirm', 'Confirm')}
+        message={t(
+          'sendComic.unmonitorConfirm',
+          'Are you sure you want to stop monitoring this folder?'
+        )}
+        confirmText={t('common.ok', 'OK')}
+        cancelText={t('common.cancel', 'Cancel')}
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={() => {
+          setShowConfirm(false);
+          unmonitor();
+        }}
+      />
     </>
   );
 }

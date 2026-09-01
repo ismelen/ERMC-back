@@ -2,10 +2,18 @@ import * as SQLite from 'expo-sqlite';
 import { Transaction } from '../models/transaction';
 
 const DB_NAME = 'inkomi.db';
+let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
+
+async function getDb(): Promise<SQLite.SQLiteDatabase> {
+  if (!dbPromise) {
+    dbPromise = SQLite.openDatabaseAsync(DB_NAME);
+  }
+  return dbPromise;
+}
 
 export class DatabaseService {
   static async initDb(): Promise<void> {
-    const db = await SQLite.openDatabaseAsync(DB_NAME);
+    const db = await getDb();
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS transactions (
         id TEXT PRIMARY KEY,
@@ -20,7 +28,7 @@ export class DatabaseService {
     limit: number,
     cursor?: { timestamp: number; id: string }
   ): Promise<Transaction[]> {
-    const db = await SQLite.openDatabaseAsync(DB_NAME);
+    const db = await getDb();
     let query = 'SELECT data FROM transactions ORDER BY timestamp DESC, id DESC LIMIT ?';
     let params: any[] = [limit];
 
@@ -36,7 +44,7 @@ export class DatabaseService {
   }
 
   static async saveTransaction(tran: Transaction): Promise<void> {
-    const db = await SQLite.openDatabaseAsync(DB_NAME);
+    const db = await getDb();
     await db.runAsync(
       'INSERT OR REPLACE INTO transactions (id, timestamp, status, data) VALUES (?, ?, ?, ?)',
       [tran.id, tran.timestamp, tran.status, JSON.stringify(tran)]
@@ -44,29 +52,30 @@ export class DatabaseService {
   }
 
   static async saveTransactions(trans: Transaction[]): Promise<void> {
-    const db = await SQLite.openDatabaseAsync(DB_NAME);
+    const db = await getDb();
 
-    // Begin transaction for bulk insert
-    await db.execAsync('BEGIN TRANSACTION;');
-    try {
-      const statement = await db.prepareAsync(
+    await db.withExclusiveTransactionAsync(async (txn) => {
+      const statement = await txn.prepareAsync(
         'INSERT OR REPLACE INTO transactions (id, timestamp, status, data) VALUES (?, ?, ?, ?)'
       );
 
-      for (const tran of trans) {
-        await statement.executeAsync([tran.id, tran.timestamp, tran.status, JSON.stringify(tran)]);
+      try {
+        for (const tran of trans) {
+          await statement.executeAsync([
+            tran.id,
+            tran.timestamp,
+            tran.status,
+            JSON.stringify(tran),
+          ]);
+        }
+      } finally {
+        await statement.finalizeAsync();
       }
-
-      await statement.finalizeAsync();
-      await db.execAsync('COMMIT;');
-    } catch (e) {
-      await db.execAsync('ROLLBACK;');
-      throw e;
-    }
+    });
   }
 
   static async deleteTransaction(id: string): Promise<void> {
-    const db = await SQLite.openDatabaseAsync(DB_NAME);
+    const db = await getDb();
     await db.runAsync('DELETE FROM transactions WHERE id = ?', [id]);
   }
 }

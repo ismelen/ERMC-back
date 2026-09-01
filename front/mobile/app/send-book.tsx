@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, ScrollView } from 'react-native';
 import SText from '../src/components/shared/SText';
 import { Stack, usePathname } from 'expo-router';
 import { colors } from '../src/theme/colors';
@@ -13,9 +13,11 @@ import LoadingScreen from '../src/components/shared/loading-screen';
 import { useSender } from '../src/hooks/useSender';
 import { useTranslation } from 'react-i18next';
 import { useCloud } from '../src/hooks/useCloud';
+import SConfirmDialog from '../src/components/shared/SConfirmDialog';
 
 export default function SendBookPage() {
-  const { sending, config, setConfig, send } = useSender('epub');
+  const [showConfirm, setShowConfirm] = useState(false);
+  const { sending, config, setConfig, send, monitoredIdx, unmonitor } = useSender('epub');
   const { t } = useTranslation();
   const { oauth, folder } = useCloud();
 
@@ -38,9 +40,9 @@ export default function SendBookPage() {
           headerTintColor: colors.primary,
         }}
       />
-      <View style={{ flex: 1, paddingBottom: 24, paddingHorizontal: 24 }}>
-        <View style={{ flex: 1, gap: 32 }}>
-          <View>
+      <ScrollView style={{ flex: 1, paddingBottom: 24, paddingHorizontal: 24 }}>
+        <View style={{ flex: 1, gap: 32, paddingBottom: 24 }}>
+          <View style={{ gap: 5 }}>
             <SText style={styles.title}>{t('sendBook.source')}</SText>
             <SourceSelector
               initFolder={config.folder}
@@ -49,14 +51,18 @@ export default function SendBookPage() {
                 setConfig((s) => ({ ...s, folder: folder, files: files }))
               }
             />
-            {config && (
+            {config.folder && (
               <OptionCardChecker
-                initialChecked={config.monitoredIdx != undefined}
+                checked={config.monitoredIdx !== undefined}
                 label={t('sendBook.monitorizeFolder')}
                 text={t('sendBook.monitorizeText')}
-                onChange={(checked) =>
-                  setConfig((s) => ({ ...s, monitoredIdx: checked ? 1 : undefined }))
-                }
+                onChange={(checked) => {
+                  if (!checked && monitoredIdx !== undefined) {
+                    setShowConfirm(true);
+                  } else {
+                    setConfig((s) => ({ ...s, monitoredIdx: checked ? 1 : undefined }));
+                  }
+                }}
               />
             )}
           </View>
@@ -78,29 +84,45 @@ export default function SendBookPage() {
             />
           </View>
         </View>
+      </ScrollView>
 
-        <SButton
-          onPress={() => send()}
-          disabled={isSendDisabled}
+      <SButton
+        onPress={() => send()}
+        disabled={isSendDisabled}
+        style={{
+          backgroundColor: isSendDisabled ? colors.surface_variant : colors.primary_container,
+          margin: 24,
+          paddingVertical: 12,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: 12,
+          boxShadow: colors.boxShadow,
+        }}
+      >
+        <SText
           style={{
-            backgroundColor: isSendDisabled ? colors.surface_variant : colors.primary_container,
-            paddingVertical: 12,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: 12,
-            boxShadow: colors.boxShadow,
+            fontFamily: 'semibold',
+            color: isSendDisabled ? colors.on_surface_variant : colors.on_primary,
           }}
         >
-          <SText
-            style={{
-              fontFamily: 'semibold',
-              color: isSendDisabled ? colors.on_surface_variant : colors.on_primary,
-            }}
-          >
-            {t('sendBook.send')}
-          </SText>
-        </SButton>
-      </View>
+          {t('sendBook.send')}
+        </SText>
+      </SButton>
+      <SConfirmDialog
+        visible={showConfirm}
+        title={t('common.confirm', 'Confirm')}
+        message={t(
+          'sendBook.unmonitorConfirm',
+          'Are you sure you want to stop monitoring this folder?'
+        )}
+        confirmText={t('common.ok', 'OK')}
+        cancelText={t('common.cancel', 'Cancel')}
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={() => {
+          setShowConfirm(false);
+          unmonitor();
+        }}
+      />
     </>
   );
 }

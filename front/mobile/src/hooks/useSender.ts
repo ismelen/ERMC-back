@@ -41,7 +41,7 @@ export function useSender(mode: TransactionMode) {
   const [config, setConfig] = useState<TransactionConfig>({
     title: '',
     author: '',
-    merge: mode === 'md5' ? false : settings.merge,
+    merge: mode === 'cbz' ? settings.merge : false,
     model: settings.model,
     toCloud: settings.toCloud,
     ...initData,
@@ -91,16 +91,16 @@ export function useSender(mode: TransactionMode) {
     }
 
     router.navigate('/(tabs)/queue');
-    if (!monitoredIdx) {
+    if (monitoredIdx === undefined) {
       setSettings({ ...finalConfig, model: settings.model });
       if (finalConfig.model !== settings.model) {
         // TODO: Ask if user wants to change model (dialog)
         setModel(finalConfig.model);
       }
 
-      if (finalConfig.monitoredIdx && finalConfig.folder) addMonitored(finalConfig);
+      if (finalConfig.monitoredIdx !== undefined && finalConfig.folder) addMonitored(finalConfig);
     } else {
-      if (finalConfig.monitoredIdx && finalConfig.folder) {
+      if (finalConfig.monitoredIdx !== undefined && finalConfig.folder) {
         updateMonitored(finalConfig, monitoredIdx);
       } else {
         removeMonitored(monitoredIdx);
@@ -108,6 +108,14 @@ export function useSender(mode: TransactionMode) {
     }
 
     return true;
+  };
+
+  const unmonitor = () => {
+    if (monitoredIdx !== undefined) {
+      removeMonitored(monitoredIdx);
+      setMonitoredIdx(undefined);
+      setConfig((s) => ({ ...s, monitoredIdx: undefined }));
+    }
   };
 
   useEffect(() => {
@@ -131,5 +139,5 @@ export function useSender(mode: TransactionMode) {
     }
   }, [last]);
 
-  return { config, setConfig, sending, send: handleSend };
+  return { config, setConfig, sending, send: handleSend, monitoredIdx, unmonitor };
 }
