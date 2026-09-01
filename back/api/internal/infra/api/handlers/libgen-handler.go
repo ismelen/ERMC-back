@@ -5,6 +5,7 @@ import (
 	"ismelen/inkomi/internal/infra/api/requtil"
 	"ismelen/inkomi/internal/infra/fs"
 	"ismelen/inkomi/internal/shared/uid"
+	"ismelen/inkomi/internal/usecases"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,11 +15,21 @@ import (
 )
 
 type LibgenHandler struct {
-	libgenServ book.LibgenService
+	checkUC    *usecases.CheckBooksSourceUC
+	searchUC   *usecases.SearchBookUC
+	downloadUC *usecases.DownloadBookUC
 }
 
-func NewLibgenHandler(libgenServ book.LibgenService) *LibgenHandler {
-	return &LibgenHandler{libgenServ}
+func NewLibgenHandler(
+	checkUC *usecases.CheckBooksSourceUC,
+	searchUC *usecases.SearchBookUC,
+	downloadUC *usecases.DownloadBookUC,
+) *LibgenHandler {
+	return &LibgenHandler{
+		checkUC:    checkUC,
+		searchUC:   searchUC,
+		downloadUC: downloadUC,
+	}
 }
 
 type CheckMirrorResponse struct {
@@ -26,7 +37,7 @@ type CheckMirrorResponse struct {
 }
 
 func (l *LibgenHandler) HandleCheckMirror(r *http.Request) (*CheckMirrorResponse, error) {
-	active, err := l.libgenServ.CheckMirror(r.Context())
+	active, err := l.checkUC.Execute(r.Context())
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +59,7 @@ func (l *LibgenHandler) HandleSearchBook(r *http.Request) (*[]book.Book, error) 
 		formats = strings.Split(fmtQuery, ",")
 	}
 
-	books, err := l.libgenServ.Search(query, language, formats)
+	books, err := l.searchUC.Execute(query, language, formats)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +69,7 @@ func (l *LibgenHandler) HandleSearchBook(r *http.Request) (*[]book.Book, error) 
 
 func (l *LibgenHandler) HandleDownloadBook(r *http.Request) (*requtil.FileResponse, error) {
 	md5 := chi.URLParam(r, "md5")
-	result, err := l.libgenServ.Download(md5, 3)
+	result, err := l.downloadUC.Execute(md5, 3)
 	if err != nil {
 		return nil, err
 	}

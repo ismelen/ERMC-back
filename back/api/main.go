@@ -40,8 +40,9 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	libgenServ := libgen.New()
-	libgenServ.StartDiscovery(ctx, 12*time.Hour)
+	discoverer := libgen.NewSourceDiscoverer()
+	booksManager := libgen.NewMirrorManager(discoverer)
+	discoverer.Start(ctx, 12*time.Hour)
 
 	pushNotifier := &push.FirebasePushNotifier{}
 	if err := pushNotifier.Init(); err != nil {
@@ -58,14 +59,18 @@ func main() {
 	imgProcessor := infraImage.NewPageProcessor()
 	dropbox := &cloud.DropboxCloud{}
 
+	searchBookUC := usecases.NewSearchBookUC(booksManager)
+	downloadBookUC := usecases.NewDownloadBookUC(booksManager)
+	checkBookSourceUC := usecases.NewCheckBooksSourceUC(booksManager)
+
 	epubUC := usecases.NewEpubTransactionUC(pushNotifier, dropbox)
 	mangaUC := usecases.NewMangaTransactionUC(pushNotifier, imgProcessor, dropbox)
-	md5UC := usecases.NewMd5TransactionUC(pushNotifier, libgenServ, dropbox)
+	md5UC := usecases.NewMd5TransactionUC(pushNotifier, dropbox, downloadBookUC)
 
 	transactionHandler := handlers.NewTransactionHandler(epubUC, mangaUC, md5UC, tranStore, pushNotifier)
 	routes.SetupTransactionRoutes(api, transactionHandler)
 
-	libgenHandler := handlers.NewLibgenHandler(libgenServ)
+	libgenHandler := handlers.NewLibgenHandler(checkBookSourceUC, searchBookUC, downloadBookUC)
 	routes.SetupLibgenRoutes(api, libgenHandler)
 
 	apphandler := handlers.NewAppHandler()

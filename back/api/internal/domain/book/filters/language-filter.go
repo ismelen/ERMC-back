@@ -1,4 +1,4 @@
-package filters
+package booksFilter
 
 import (
 	"ismelen/inkomi/internal/domain/book"

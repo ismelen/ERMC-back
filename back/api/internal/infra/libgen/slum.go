@@ -19,7 +19,7 @@ type slumResponse struct {
 	} `json:"publicGroupList"`
 }
 
-var fallbackMirrors = []book.LibgenMirror{
+var fallbackMirrors = []book.BooksSource{
 	NewPlusMirror("https://libgen.bz"),
 	NewPlusMirror("https://libgen.la"),
 	NewPlusMirror("https://libgen.gl"),
@@ -29,7 +29,7 @@ var fallbackMirrors = []book.LibgenMirror{
 	NewClassicMirror("https://libgen.rs"),
 }
 
-func getMirrors() []book.LibgenMirror {
+func getMirrors() []book.BooksSource {
 	client := &http.Client{Timeout: 8 * time.Second}
 	req, _ := http.NewRequest("GET", "https://open-slum.org/api/status-page/slum", nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0")
@@ -44,7 +44,7 @@ func getMirrors() []book.LibgenMirror {
 		return fallbackMirrors
 	}
 
-	var mirrors []book.LibgenMirror
+	var mirrors []book.BooksSource
 	for _, group := range slum.PublicGroupList {
 		if !strings.Contains(strings.ToLower(group.Name), "libgen") &&
 			!strings.Contains(strings.ToLower(group.Name), "library genesis") {
@@ -58,7 +58,7 @@ func getMirrors() []book.LibgenMirror {
 
 			base := strings.TrimRight(m.URL, "/")
 
-			var mirror book.LibgenMirror
+			var mirror book.BooksSource
 			if strings.Contains(m.Name, "+") {
 				mirror = NewPlusMirror(base)
 			} else {

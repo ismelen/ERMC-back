@@ -1,7 +1,6 @@
 package usecases
 
 import (
-	"ismelen/inkomi/internal/domain/book"
 	"ismelen/inkomi/internal/domain/convert"
 	"ismelen/inkomi/internal/infra/fs"
 	"ismelen/inkomi/internal/shared/uid"
@@ -11,20 +10,20 @@ import (
 
 type MD5UC struct {
 	BaseTransactionUC
-	libgenServ book.LibgenService
+	downloadBookUC *DownloadBookUC
 }
 
 func NewMd5TransactionUC(
 	pushNotifier convert.PushNotifier,
-	libgenServ book.LibgenService,
 	cloud convert.CloudStorage,
+	downloadBookUC *DownloadBookUC,
 ) *MD5UC {
 	t := &MD5UC{
 		BaseTransactionUC: BaseTransactionUC{
 			pushNotifier: pushNotifier,
 			cloud:        cloud,
 		},
-		libgenServ: libgenServ,
+		downloadBookUC: downloadBookUC,
 	}
 
 	t.processor = t
@@ -32,7 +31,7 @@ func NewMd5TransactionUC(
 }
 
 func (m MD5UC) Process(file *convert.TransactionFile, tran *convert.Transaction, transPath string) *convert.TransactionResultFile {
-	result, err := m.libgenServ.Download(file.SrcPath, 3)
+	result, err := m.downloadBookUC.Execute(file.SrcPath, 3)
 	if err != nil {
 		file.SetError(err)
 		return nil
