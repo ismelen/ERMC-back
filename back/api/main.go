@@ -49,8 +49,8 @@ func main() {
 	}
 
 	queue := allocator.NewQueue[convert.Transaction](
-		&allocator.Allocator{},
-		5<<20,
+		allocator.NewAllocator(5<<20),
+		50,
 	)
 
 	tranStore := store.NewTransactionStore(queue)
