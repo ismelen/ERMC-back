@@ -63,6 +63,13 @@
       "done": "Hecho",
       "error": "Error",
       "pending": "Pendiente"
+    },
+    "sections": {
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "thisWeek": "Última semana",
+      "thisMonth": "Último mes",
+      "older": "Más antiguos"
     }
   },
   "search": {

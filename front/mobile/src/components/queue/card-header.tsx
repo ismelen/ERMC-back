@@ -61,9 +61,18 @@ export function CardHeader({ data }: { data: Transaction }) {
         </View>
         <StatusBadge label={t(cfg.labelKey)} bg={cfg.bg} fg={cfg.fg} />
       </View>
-      <View style={[s.row, { gap: 12 }]}>
-        <FormatBadge mode={data.config.mode} />
-        <DestinationBadge toCloud={data.config.toCloud} />
+      <View style={[s.row, { justifyContent: 'space-between' }]}>
+        <View style={[s.row, { gap: 12 }]}>
+          <FormatBadge mode={data.config.mode} />
+          <DestinationBadge toCloud={data.config.toCloud} />
+        </View>
+        <SText style={s.meta}>
+          {new Date(data.timestamp * 1000).toLocaleString(undefined, {
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </SText>
       </View>
     </View>
   );
