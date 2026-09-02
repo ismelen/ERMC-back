@@ -39,7 +39,7 @@ func getFakePages(t *testing.T, tmpDir string, numPages int) []*manga.Page {
 	t.Helper()
 
 	chaptersDir := filepath.Join(tmpDir, "chapters")
-	err := os.MkdirAll(chaptersDir, os.ModeAppend)
+	err := os.MkdirAll(chaptersDir, os.ModePerm)
 	require.NoError(t, err, "mkdir chapters dir")
 
 	pages := make([]*manga.Page, 0, numPages)
