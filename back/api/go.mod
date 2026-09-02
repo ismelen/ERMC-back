@@ -6,6 +6,7 @@ require (
 	firebase.google.com/go/v4 v4.20.0
 	github.com/HugoSmits86/nativewebp v1.3.0
 	github.com/PuerkitoBio/goquery v1.12.0
+	github.com/bitfield/checkepub v0.1.3
 	github.com/disintegration/imaging v1.6.2
 	github.com/facette/natsort v0.0.0-20181210072756-2cd4dd1e2dcb
 	github.com/go-chi/chi/v5 v5.3.0
@@ -15,6 +16,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/pdfcpu/pdfcpu v0.15.0
 	github.com/pgaskin/kepubify/v4 v4.0.4
+	github.com/stretchr/testify v1.12.1
 	golang.org/x/image v0.44.0
 	golang.org/x/sync v0.22.0
 	golang.org/x/text v0.40.0
@@ -60,7 +62,6 @@ require (
 	github.com/pgaskin/kepubify/_/html v0.0.0-20211223234002-6ee2cc632cdc // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
-	github.com/stretchr/testify v1.12.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.43.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.68.0 // indirect
