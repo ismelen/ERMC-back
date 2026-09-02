@@ -25,6 +25,7 @@ func NewQueue[T any](allocator *Allocator, capacity int) *Queue[T] {
 		allocator: allocator,
 		queue:     make([]*item[*T], capacity),
 		capacity:  capacity,
+		index:     -1,
 	}
 }
 
@@ -36,8 +37,8 @@ func (a *Queue[T]) AllocOrPush(value *T, size int32, onExecute func()) (bool, er
 		return false, fmt.Errorf("Transaction too big")
 	}
 
-	nextIdx := a.getNextIdx()
-	if item := a.queue[nextIdx]; item != nil {
+	nextIdx, isEqual := a.getNextIdx()
+	if isEqual || a.queue[nextIdx] != nil {
 		a.mu.Unlock()
 		return false, fmt.Errorf("The queue is full")
 	}
@@ -49,8 +50,12 @@ func (a *Queue[T]) AllocOrPush(value *T, size int32, onExecute func()) (bool, er
 	}
 
 	if allocated := a.allocator.Alloc(size); allocated {
+		a.index = nextIdx
 		a.mu.Unlock()
-		onExecute()
+
+		if onExecute != nil {
+			onExecute()
+		}
 		return true, nil
 	}
 
@@ -78,7 +83,9 @@ func (a *Queue[T]) Free(size int32) {
 			break
 		}
 
-		toExecute = append(toExecute, item.onExecute)
+		if item.onExecute != nil {
+			toExecute = append(toExecute, item.onExecute)
+		}
 		a.queue[idx] = nil
 		a.cant--
 	}
@@ -89,6 +96,9 @@ func (a *Queue[T]) Free(size int32) {
 	}
 }
 
-func (a *Queue[T]) getNextIdx() int {
-	return (a.index + 1) % a.capacity
+func (a *Queue[T]) getNextIdx() (newIndex int, isEqual bool) {
+	newIndex = (a.index + 1) % a.capacity
+	isEqual = newIndex == a.index
+
+	return
 }

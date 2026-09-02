@@ -1,10 +1,13 @@
 package allocator
 
-import "sync/atomic"
+import (
+	"sync"
+)
 
 type Allocator struct {
 	capacity int32
-	current  atomic.Int32
+	current  int32
+	mu       sync.RWMutex
 }
 
 func NewAllocator(capacity int32) *Allocator {
@@ -14,26 +17,34 @@ func NewAllocator(capacity int32) *Allocator {
 }
 
 func (a *Allocator) Alloc(size int32) bool {
-	for {
-		value := a.current.Load()
-		if value+size > a.capacity {
-			return false
-		}
-		if a.current.CompareAndSwap(value, value+size) {
-			return true
-		}
+	if size < 0 {
+		return false
 	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	newSize := a.current + size
+	if newSize > a.capacity {
+		return false
+	}
+
+	a.current = newSize
+	return true
 }
 
 func (a *Allocator) Free(size int32) {
-	for {
-		value := a.current.Load()
-		newSize := value - size
-		if newSize < 0 {
-			newSize = 0
-		}
-		if a.current.CompareAndSwap(value, newSize) {
-			return
-		}
+	if size < 0 {
+		return
 	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	newSize := a.current - size
+	if newSize < 0 {
+		newSize = 0
+	}
+
+	a.current = newSize
 }
