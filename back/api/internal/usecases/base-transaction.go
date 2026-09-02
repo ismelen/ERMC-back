@@ -142,7 +142,7 @@ func (m BaseTransactionUC) MergeFiles(results []*convert.TransactionResultFile, 
 	}
 
 	outPath := filepath.Join(outDir, filename)
-	err := epub.MergeEpubs(results, title, tran.Config.Author, outPath)
+	err := epub.NewEpubMerger().Merge(results, title, tran.Config.Author, outPath)
 	if err != nil {
 		return nil, err
 	}
