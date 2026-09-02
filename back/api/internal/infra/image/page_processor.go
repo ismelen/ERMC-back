@@ -2,6 +2,7 @@ package image
 
 import (
 	"fmt"
+	"ismelen/inkomi/internal/domain/convert"
 	"ismelen/inkomi/internal/domain/manga"
 	"path/filepath"
 )
@@ -10,7 +11,7 @@ type PageProcessor struct{}
 
 func NewPageProcessor() *PageProcessor { return &PageProcessor{} }
 
-func (p *PageProcessor) ProcessPage(path string, idx int, profile *manga.Profile, settings *manga.ImageSettings) (*manga.Page, error) {
+func (p *PageProcessor) ProcessPage(path string, idx int, profile *convert.EReaderProfile, settings *manga.ImageSettings) (*manga.Page, error) {
 	page := manga.NewPage(path)
 	editor, err := NewEditor(
 		path,
