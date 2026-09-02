@@ -1,18 +1,21 @@
 package convert
 
-import "ismelen/inkomi/internal/domain/manga"
+type EReaderProfile struct {
+	Width, Height int
+	IsKepub       bool
+}
 
 // NewProfile returns the manga.Profile for the given device label.
-func NewProfile(label string) (*manga.Profile, error) {
-	profile, ok := Profiles[label]
+func NewProfile(label string) (*EReaderProfile, error) {
+	profile, ok := profiles[label]
 	if !ok {
 		return nil, ErrProfileNotFound
 	}
 	return &profile, nil
 }
 
-// Profiles maps device labels to their screen dimensions and format.
-var Profiles = map[string]manga.Profile{
+// profiles maps device labels to their screen dimensions and format.
+var profiles = map[string]EReaderProfile{
 	"K1":    {Width: 600, Height: 670, IsKepub: false},
 	"K2":    {Width: 600, Height: 670, IsKepub: false},
 	"KDX":   {Width: 824, Height: 1000, IsKepub: false},

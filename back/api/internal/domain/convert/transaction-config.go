@@ -2,7 +2,6 @@ package convert
 
 import (
 	"fmt"
-	"ismelen/inkomi/internal/domain/manga"
 	"regexp"
 	"strconv"
 )
@@ -15,7 +14,7 @@ type TransactionConfig struct {
 	CloudToken  string
 	CloudFolder string
 	NotifyToken string
-	Profile     *manga.Profile
+	Profile     *EReaderProfile
 	Cant        int32
 	Size        int32
 	Type        string // cbz, epub, md5
