@@ -20,7 +20,7 @@ func NewTransactionStore(queue *allocator.Queue[convert.Transaction]) *Transacti
 	}
 }
 
-func (t *TransactionStore) StartTransaction(config *convert.TransactionConfig, transPath string, onAllocated func(id string)) *convert.Transaction {
+func (t *TransactionStore) StartTransaction(config *convert.TransactionConfig, transPath string, onFinallyAllocated func(id string)) *convert.Transaction {
 	id := uid.GetRandomID(8)
 	tran := convert.NewTransaction(id, config, transPath)
 
@@ -30,7 +30,7 @@ func (t *TransactionStore) StartTransaction(config *convert.TransactionConfig, t
 		}
 
 		tran.Status.Set(convert.TransactionWaiting)
-		onAllocated(id)
+		onFinallyAllocated(id)
 	})
 	if err != nil {
 		tran.Cancel()
