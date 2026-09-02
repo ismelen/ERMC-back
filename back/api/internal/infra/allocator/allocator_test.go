@@ -8,6 +8,8 @@ import (
 )
 
 func TestAllocator_ShouldAllocUpToCapacity(t *testing.T) {
+	t.Parallel()
+
 	// Arrange
 	a := NewAllocator(5)
 
@@ -19,6 +21,8 @@ func TestAllocator_ShouldAllocUpToCapacity(t *testing.T) {
 }
 
 func TestAllocator_ShouldNotAllocOverCapacity(t *testing.T) {
+	t.Parallel()
+
 	// Arrange
 	a := NewAllocator(5)
 
@@ -31,6 +35,8 @@ func TestAllocator_ShouldNotAllocOverCapacity(t *testing.T) {
 }
 
 func TestAllocator_WithMemoryAllocated_FreeShouldReduceUsage(t *testing.T) {
+	t.Parallel()
+
 	// Arrange
 	a := NewAllocator(5)
 
@@ -45,6 +51,8 @@ func TestAllocator_WithMemoryAllocated_FreeShouldReduceUsage(t *testing.T) {
 }
 
 func TestAllocator_FreeMoreThanCapacityShouldntGoNegative(t *testing.T) {
+	t.Parallel()
+
 	// Arrange
 	a := NewAllocator(5)
 
@@ -57,6 +65,8 @@ func TestAllocator_FreeMoreThanCapacityShouldntGoNegative(t *testing.T) {
 }
 
 func TestAllocator_ShouldNotAllocateNegativeSize(t *testing.T) {
+	t.Parallel()
+
 	// Arrange
 	a := NewAllocator(5)
 
@@ -68,6 +78,8 @@ func TestAllocator_ShouldNotAllocateNegativeSize(t *testing.T) {
 }
 
 func TestAllcoator_ShouldNotFreeNegativeSize(t *testing.T) {
+	t.Parallel()
+
 	// Arrange
 	a := NewAllocator(5)
 
@@ -81,6 +93,8 @@ func TestAllcoator_ShouldNotFreeNegativeSize(t *testing.T) {
 }
 
 func TestAllocator_ConcurrentAlloc(t *testing.T) {
+	t.Parallel()
+
 	const (
 		capacity   = 50
 		goroutines = 100

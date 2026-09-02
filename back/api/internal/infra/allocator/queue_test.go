@@ -7,16 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// helper: a *int used as the queue value type
-type qval = int
-
-var val qval = 42
-
-func newTestQueue(allocCap int32, queueCap int) (*Queue[qval], *Allocator) {
-	a := NewAllocator(allocCap)
-	q := NewQueue[qval](a, queueCap)
-	return q, a
-}
+var val int = 42
 
 func onExecute(dst *bool) func() {
 	return func() {
@@ -25,8 +16,10 @@ func onExecute(dst *bool) func() {
 }
 
 func TestQueue_WithNoItems_ShouldAllocDirectly(t *testing.T) {
+	t.Parallel()
+
 	// Arrange
-	q, _ := newTestQueue(10, 5)
+	q := NewQueue[int](NewAllocator(10), 5)
 	executed := false
 
 	// Act
@@ -39,8 +32,11 @@ func TestQueue_WithNoItems_ShouldAllocDirectly(t *testing.T) {
 }
 
 func TestQueue_WithAllocFull_ShouldEnqueue(t *testing.T) {
+	t.Parallel()
+
 	// Arrange
-	q, a := newTestQueue(4, 5)
+	a := NewAllocator(4)
+	q := NewQueue[int](a, 5)
 	executed := false
 	require.True(t, a.Alloc(4), "arrange: could not fill allocator")
 
@@ -54,8 +50,10 @@ func TestQueue_WithAllocFull_ShouldEnqueue(t *testing.T) {
 }
 
 func TestQueue_WithQueueFull_ShouldNotAllocNorEnqueueAndReturnError(t *testing.T) {
+	t.Parallel()
+
 	// Arrange
-	q, _ := newTestQueue(4, 1)
+	q := NewQueue[int](NewAllocator(4), 1)
 	executed := false
 
 	ok, err := q.AllocOrPush(&val, 1, nil)
@@ -72,8 +70,10 @@ func TestQueue_WithQueueFull_ShouldNotAllocNorEnqueueAndReturnError(t *testing.T
 }
 
 func TestQueue_WithBigSizeTry_ShouldReturnError(t *testing.T) {
+	t.Parallel()
+
 	// Arrange
-	q, _ := newTestQueue(1, 2)
+	q := NewQueue[int](NewAllocator(1), 2)
 	executed := false
 
 	// Act
@@ -97,8 +97,10 @@ func TestQueue_FreeWithItemsOnQueueThatFits_ShouldTryAllocQueueItems(t *testing.
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
 			// Arrange
-			q, _ := newTestQueue(2, 3)
+			q := NewQueue[int](NewAllocator(2), 3)
 			q.AllocOrPush(&val, 2, nil)
 			fstExecuted, sndExecuted := false, false
 

@@ -101,7 +101,7 @@ const NAVEnd = `</ol>
 // OPF
 const OPFStart = `<?xml version="1.0" encoding="UTF-8"?>
 <package version="3.0" unique-identifier="BookID" 
-xmlns="http://www.idpf.org/2007/opf">
+xmlns="http://www.idpf.org/2007/opf" prefix="rendition: http://www.idpf.org/2013/rendition">
 <metadata xmlns:opf="http://www.idpf.org/2007/opf" 
 xmlns:dc="http://purl.org/dc/elements/1.1/">
 <dc:title>%s</dc:title>
