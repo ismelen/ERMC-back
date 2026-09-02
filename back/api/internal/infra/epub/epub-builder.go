@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
+	"ismelen/inkomi/internal/domain/convert"
 	"ismelen/inkomi/internal/domain/manga"
 	fileBuilder "ismelen/inkomi/internal/infra/epub/file-builder"
 	"ismelen/inkomi/internal/shared/strutil"
@@ -18,7 +19,7 @@ import (
 
 type EpubBuilder struct {
 	settings *manga.ImageSettings
-	profile  *manga.Profile
+	profile  *convert.EReaderProfile
 	builders builders
 	writer   *zip.Writer
 	out      *os.File
@@ -28,7 +29,7 @@ type EpubBuilder struct {
 	mu       sync.Mutex
 }
 
-func New() *EpubBuilder { return &EpubBuilder{} }
+func NewEpubBuilder() *EpubBuilder { return &EpubBuilder{} }
 
 type builders struct {
 	ncx, nav, navElems, opf, opfRefs *fileBuilder.FileBuilder
@@ -44,7 +45,7 @@ const (
 	PAGE_LEFT  = "left"
 )
 
-func (b *EpubBuilder) SetSettings(settings *manga.ImageSettings, profile *manga.Profile) manga.BookBuilder {
+func (b *EpubBuilder) SetSettings(settings *manga.ImageSettings, profile *convert.EReaderProfile) manga.BookBuilder {
 	b.settings = settings
 	b.profile = profile
 	return b
@@ -67,7 +68,6 @@ func (b *EpubBuilder) Start(name string, outDir string) manga.BookBuilder {
 	b.writer = zip.NewWriter(out)
 	b.name = name
 	b.pageSide = pageSide
-	b.mu = sync.Mutex{}
 
 	b.startBuilders()
 	b.addHeaders()
