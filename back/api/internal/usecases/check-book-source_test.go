@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"ismelen/inkomi/internal/test/mocks"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,17 +10,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"ismelen/inkomi/internal/testutil"
 )
 
-func newCheckUC(srv *httptest.Server, hasMirror bool, refreshResult bool) (*CheckBooksSourceUC, *testutil.BooksProviderMock) {
+func newCheckUC(srv *httptest.Server, hasMirror bool, refreshResult bool) (*CheckBooksSourceUC, *mocks.BooksProviderMock) {
 	url := ""
 	if srv != nil {
 		url = srv.URL
 	}
-	src := testutil.NewBooksSourceMock(url)
-	prov := &testutil.BooksProviderMock{
+	src := mocks.NewBooksSourceMock(url)
+	prov := &mocks.BooksProviderMock{
 		Source:        src,
 		HasMirror:     hasMirror,
 		RefreshResult: refreshResult,
@@ -27,7 +26,7 @@ func newCheckUC(srv *httptest.Server, hasMirror bool, refreshResult bool) (*Chec
 	return NewCheckBooksSourceUC(prov), prov
 }
 
-func TestCheckBooksSourceUC_MirrorAlive(t *testing.T) {
+func TestCheckBooksSourceUC_WithMirrorAlive_ShouldReturnOk(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -42,7 +41,7 @@ func TestCheckBooksSourceUC_MirrorAlive(t *testing.T) {
 	assert.False(t, prov.RefreshCalled)
 }
 
-func TestCheckBooksSourceUC_MirrorDead_RefreshCalled(t *testing.T) {
+func TestCheckBooksSourceUC_WithMirrorDead_RefreshCalled(t *testing.T) {
 	t.Parallel()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusServiceUnavailable)

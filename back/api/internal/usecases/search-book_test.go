@@ -9,17 +9,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"ismelen/inkomi/internal/domain/book"
-	"ismelen/inkomi/internal/testutil"
+	"ismelen/inkomi/internal/test/mocks"
 )
 
-// newSearchUC is a helper that wires up a StubBooksProvider + StubBooksSource
-// and returns the use-case together with the provider so tests can set fields.
-func newSearchUC(hasMirror bool, books []book.Book, searchErr error) (*SearchBookUC, *testutil.BooksProviderMock) {
-	src := testutil.NewBooksSourceMock("http://test.example")
+func newSearchUC(hasMirror bool, books []book.Book, searchErr error) (*SearchBookUC, *mocks.BooksProviderMock) {
+	src := mocks.NewBooksSourceMock("http://test.example")
 	src.SearchResult = books
 	src.SearchErr = searchErr
 
-	prov := &testutil.BooksProviderMock{
+	prov := &mocks.BooksProviderMock{
 		Source:    src,
 		HasMirror: hasMirror,
 	}

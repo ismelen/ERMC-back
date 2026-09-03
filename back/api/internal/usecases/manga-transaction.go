@@ -20,13 +20,11 @@ type GetChapterFunc = func(file string, chaptersDir string) (*manga.Chapter, err
 type MangaTransactionUC struct {
 	BaseTransactionUC
 	imageSettings *manga.ImageSettings
-	imgProcessor  manga.ImageProcessor
 	getChapter    GetChapterFunc
 }
 
 func NewMangaTransactionUC(
 	pushNotifier convert.PushNotifier,
-	imgProcessor manga.ImageProcessor,
 	cloud convert.CloudStorage,
 ) *MangaTransactionUC {
 	t := &MangaTransactionUC{
@@ -35,7 +33,6 @@ func NewMangaTransactionUC(
 			cloud:        cloud,
 		},
 		imageSettings: manga.NewDefaultImageSettings(),
-		imgProcessor:  imgProcessor,
 	}
 	t.processor = t
 	return t
@@ -44,14 +41,23 @@ func NewMangaTransactionUC(
 func (c MangaTransactionUC) GetChapter(file string, chaptersDir string) (*manga.Chapter, error) {
 	ext := filepath.Ext(file)
 
+	var filename, chapterPath string
+	var pages []string
+	var err error
+
 	switch ext {
 	case ".pdf":
-		return fs.PdfToChapter(file, chaptersDir)
+		filename, chapterPath, pages, err = fs.UnzipPdf(file, chaptersDir)
 	case ".cbz":
-		return fs.FileToChapter(file, chaptersDir)
+		filename, chapterPath, pages, err = fs.UnzipFile(file, chaptersDir)
+	default:
+		return nil, fmt.Errorf("Not valid format")
 	}
 
-	return nil, fmt.Errorf("Not valid format")
+	if err != nil {
+		return nil, err
+	}
+	return manga.NewChapter(filename, chapterPath, pages), nil
 }
 
 func (c MangaTransactionUC) Process(file *convert.TransactionFile, tran *convert.Transaction, transPath string) *convert.TransactionResultFile {
@@ -83,7 +89,7 @@ func (c MangaTransactionUC) Process(file *convert.TransactionFile, tran *convert
 			if err := gctx.Err(); err != nil {
 				return fmt.Errorf("Job canceled")
 			}
-			page, err := c.imgProcessor.ProcessPage(path, idx+1, tran.Config.Profile, c.imageSettings)
+			page, err := c.ProcessPage(path, idx+1, tran.Config.Profile, c.imageSettings)
 			if err != nil {
 				return err
 			}

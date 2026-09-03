@@ -7,7 +7,6 @@ import (
 	"ismelen/inkomi/internal/infra/api/handlers"
 	"ismelen/inkomi/internal/infra/api/routes"
 	"ismelen/inkomi/internal/infra/cloud"
-	infraImage "ismelen/inkomi/internal/infra/image"
 	"ismelen/inkomi/internal/infra/libgen"
 	"ismelen/inkomi/internal/infra/push"
 	"ismelen/inkomi/internal/infra/store"
@@ -56,7 +55,6 @@ func main() {
 
 	tranStore := store.NewTransactionStore(queue)
 
-	imgProcessor := infraImage.NewPageProcessor()
 	dropbox := &cloud.DropboxCloud{}
 
 	searchBookUC := usecases.NewSearchBookUC(booksManager)
@@ -64,7 +62,7 @@ func main() {
 	checkBookSourceUC := usecases.NewCheckBooksSourceUC(booksManager)
 
 	epubUC := usecases.NewEpubTransactionUC(pushNotifier, dropbox)
-	mangaUC := usecases.NewMangaTransactionUC(pushNotifier, imgProcessor, dropbox)
+	mangaUC := usecases.NewMangaTransactionUC(pushNotifier, dropbox)
 	md5UC := usecases.NewMd5TransactionUC(pushNotifier, dropbox, downloadBookUC)
 
 	transactionHandler := handlers.NewTransactionHandler(epubUC, mangaUC, md5UC, tranStore, pushNotifier)

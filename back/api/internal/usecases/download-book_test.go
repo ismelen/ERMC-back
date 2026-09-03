@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"ismelen/inkomi/internal/domain/book"
-	"ismelen/inkomi/internal/testutil"
+	"ismelen/inkomi/internal/test/mocks"
 )
 
 func makeDownload() *book.LibgenDownload {
@@ -20,8 +20,8 @@ func makeDownload() *book.LibgenDownload {
 	}
 }
 
-func newDownloadUC(hasMirror bool, src *testutil.BooksSourceMock) (*DownloadBookUC, *testutil.BooksProviderMock) {
-	prov := &testutil.BooksProviderMock{
+func newDownloadUC(hasMirror bool, src *mocks.BooksSourceMock) (*DownloadBookUC, *mocks.BooksProviderMock) {
+	prov := &mocks.BooksProviderMock{
 		Source:    src,
 		HasMirror: hasMirror,
 	}
@@ -30,7 +30,7 @@ func newDownloadUC(hasMirror bool, src *testutil.BooksSourceMock) (*DownloadBook
 
 func TestDownloadBookUC_ZeroRetries_Error(t *testing.T) {
 	t.Parallel()
-	src := testutil.NewBooksSourceMock("http://test.example")
+	src := mocks.NewBooksSourceMock("http://test.example")
 	uc, _ := newDownloadUC(true, src)
 
 	result, err := uc.Execute("abc123", 0)
@@ -40,7 +40,7 @@ func TestDownloadBookUC_ZeroRetries_Error(t *testing.T) {
 
 func TestDownloadBookUC_NoMirror_Error(t *testing.T) {
 	t.Parallel()
-	src := testutil.NewBooksSourceMock("http://test.example")
+	src := mocks.NewBooksSourceMock("http://test.example")
 	uc, _ := newDownloadUC(false, src)
 
 	_, err := uc.Execute("abc123", 3)
@@ -50,7 +50,7 @@ func TestDownloadBookUC_NoMirror_Error(t *testing.T) {
 
 func TestDownloadBookUC_Success(t *testing.T) {
 	t.Parallel()
-	src := testutil.NewBooksSourceMock("http://test.example")
+	src := mocks.NewBooksSourceMock("http://test.example")
 	src.DownloadResult = makeDownload()
 	uc, _ := newDownloadUC(true, src)
 
@@ -63,7 +63,7 @@ func TestDownloadBookUC_Success(t *testing.T) {
 func TestDownloadBookUC_RetriesAndSucceeds(t *testing.T) {
 	t.Parallel()
 	downloadErr := errors.New("temporary failure")
-	src := testutil.NewBooksSourceMock("http://test.example")
+	src := mocks.NewBooksSourceMock("http://test.example")
 	src.DownloadErr = downloadErr
 	src.DownloadResult = makeDownload()
 	src.WithDownloadFailN(2)
@@ -78,7 +78,7 @@ func TestDownloadBookUC_RetriesAndSucceeds(t *testing.T) {
 func TestDownloadBookUC_ExhaustsRetries(t *testing.T) {
 	t.Parallel()
 	downloadErr := errors.New("always fails")
-	src := testutil.NewBooksSourceMock("http://test.example")
+	src := mocks.NewBooksSourceMock("http://test.example")
 	src.DownloadErr = downloadErr
 	src.WithDownloadFailN(999) // always fail
 
