@@ -30,31 +30,43 @@ func newDownloadUC(hasMirror bool, src *mocks.BooksSourceMock) (*DownloadBookUC,
 
 func TestDownloadBookUC_ZeroRetries_Error(t *testing.T) {
 	t.Parallel()
+	// Arrange
 	src := mocks.NewBooksSourceMock("http://test.example")
 	uc, _ := newDownloadUC(true, src)
 
+	// Act
 	result, err := uc.Execute("abc123", 0)
+	
+	// Assert
 	require.Error(t, err)
 	assert.Nil(t, result)
 }
 
 func TestDownloadBookUC_NoMirror_Error(t *testing.T) {
 	t.Parallel()
+	// Arrange
 	src := mocks.NewBooksSourceMock("http://test.example")
 	uc, _ := newDownloadUC(false, src)
 
+	// Act
 	_, err := uc.Execute("abc123", 3)
+	
+	// Assert
 	require.Error(t, err)
 	assert.Contains(t, strings.ToLower(err.Error()), "mirror")
 }
 
 func TestDownloadBookUC_Success(t *testing.T) {
 	t.Parallel()
+	// Arrange
 	src := mocks.NewBooksSourceMock("http://test.example")
 	src.DownloadResult = makeDownload()
 	uc, _ := newDownloadUC(true, src)
 
+	// Act
 	result, err := uc.Execute("abc123", 3)
+	
+	// Assert
 	require.NoError(t, err)
 	require.NotNil(t, result)
 	assert.Equal(t, "test.epub", result.Filename)
@@ -62,6 +74,7 @@ func TestDownloadBookUC_Success(t *testing.T) {
 
 func TestDownloadBookUC_RetriesAndSucceeds(t *testing.T) {
 	t.Parallel()
+	// Arrange
 	downloadErr := errors.New("temporary failure")
 	src := mocks.NewBooksSourceMock("http://test.example")
 	src.DownloadErr = downloadErr
@@ -70,13 +83,17 @@ func TestDownloadBookUC_RetriesAndSucceeds(t *testing.T) {
 
 	uc, _ := newDownloadUC(true, src)
 
+	// Act
 	result, err := uc.Execute("abc123", 3)
+	
+	// Assert
 	require.NoError(t, err)
 	assert.NotNil(t, result)
 }
 
 func TestDownloadBookUC_ExhaustsRetries(t *testing.T) {
 	t.Parallel()
+	// Arrange
 	downloadErr := errors.New("always fails")
 	src := mocks.NewBooksSourceMock("http://test.example")
 	src.DownloadErr = downloadErr
@@ -84,7 +101,10 @@ func TestDownloadBookUC_ExhaustsRetries(t *testing.T) {
 
 	uc, _ := newDownloadUC(true, src)
 
+	// Act
 	result, err := uc.Execute("abc123", 2)
+	
+	// Assert
 	require.Error(t, err)
 	assert.Nil(t, result)
 }

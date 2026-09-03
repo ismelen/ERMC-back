@@ -28,6 +28,7 @@ func newCheckUC(srv *httptest.Server, hasMirror bool, refreshResult bool) (*Chec
 
 func TestCheckBooksSourceUC_WithMirrorAlive_ShouldReturnOk(t *testing.T) {
 	t.Parallel()
+	// Arrange
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -35,7 +36,10 @@ func TestCheckBooksSourceUC_WithMirrorAlive_ShouldReturnOk(t *testing.T) {
 
 	uc, prov := newCheckUC(srv, true, false)
 
+	// Act
 	ok, err := uc.Execute(context.Background())
+	
+	// Assert
 	require.NoError(t, err)
 	assert.True(t, ok)
 	assert.False(t, prov.RefreshCalled)
@@ -43,6 +47,7 @@ func TestCheckBooksSourceUC_WithMirrorAlive_ShouldReturnOk(t *testing.T) {
 
 func TestCheckBooksSourceUC_WithMirrorDead_RefreshCalled(t *testing.T) {
 	t.Parallel()
+	// Arrange
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusServiceUnavailable)
 	}))
@@ -50,13 +55,17 @@ func TestCheckBooksSourceUC_WithMirrorDead_RefreshCalled(t *testing.T) {
 
 	uc, prov := newCheckUC(srv, true, false)
 
+	// Act
 	_, err := uc.Execute(context.Background())
+	
+	// Assert
 	require.NoError(t, err)
 	assert.True(t, prov.RefreshCalled)
 }
 
 func TestCheckBooksSourceUC_MirrorDead_CooldownActive(t *testing.T) {
 	t.Parallel()
+	// Arrange
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusServiceUnavailable)
 	}))
@@ -68,7 +77,10 @@ func TestCheckBooksSourceUC_MirrorDead_CooldownActive(t *testing.T) {
 	uc.lastCheck = time.Now()
 	uc.mu.Unlock()
 
+	// Act
 	ok, err := uc.Execute(context.Background())
+	
+	// Assert
 	require.NoError(t, err)
 	assert.False(t, ok)
 	assert.False(t, prov.RefreshCalled)
@@ -76,9 +88,13 @@ func TestCheckBooksSourceUC_MirrorDead_CooldownActive(t *testing.T) {
 
 func TestCheckBooksSourceUC_NoMirror_RefreshSucceeds(t *testing.T) {
 	t.Parallel()
+	// Arrange
 	uc, prov := newCheckUC(nil, false, true)
 
+	// Act
 	ok, err := uc.Execute(context.Background())
+	
+	// Assert
 	require.NoError(t, err)
 	assert.True(t, ok)
 	assert.True(t, prov.RefreshCalled)
@@ -86,9 +102,13 @@ func TestCheckBooksSourceUC_NoMirror_RefreshSucceeds(t *testing.T) {
 
 func TestCheckBooksSourceUC_NoMirror_RefreshFails(t *testing.T) {
 	t.Parallel()
+	// Arrange
 	uc, prov := newCheckUC(nil, false, false)
 
+	// Act
 	ok, err := uc.Execute(context.Background())
+	
+	// Assert
 	require.NoError(t, err)
 	assert.False(t, ok)
 	assert.True(t, prov.RefreshCalled)

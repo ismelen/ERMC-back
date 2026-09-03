@@ -28,6 +28,8 @@ func createTestImage(path string, width, height int) error {
 }
 
 func TestProcessPage_Split(t *testing.T) {
+	t.Parallel()
+	// Arrange
 	tempDir := t.TempDir()
 
 	uc := usecases.MangaTransactionUC{}
@@ -93,10 +95,14 @@ func TestProcessPage_Split(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+			// Arrange
 			path := filepath.Join(tempDir, "wide_"+tc.name+".jpg")
 			createTestImage(path, 1600, 1200)
 
+			// Act
 			page, err := uc.ProcessPage(path, 1, profile, tc.settings)
+
+			// Assert
 			if err != nil {
 				t.Fatalf("ProcessPage failed: %v", err)
 			}

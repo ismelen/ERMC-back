@@ -95,6 +95,7 @@ func TestAllcoator_ShouldNotFreeNegativeSize(t *testing.T) {
 func TestAllocator_ConcurrentAlloc(t *testing.T) {
 	t.Parallel()
 
+	// Arrange
 	const (
 		capacity   = 50
 		goroutines = 100
@@ -107,6 +108,7 @@ func TestAllocator_ConcurrentAlloc(t *testing.T) {
 		trueCount int
 	)
 
+	// Act
 	wg.Add(goroutines)
 	for i := 0; i < goroutines; i++ {
 		go func() {
@@ -121,5 +123,6 @@ func TestAllocator_ConcurrentAlloc(t *testing.T) {
 	}
 	wg.Wait()
 
+	// Assert
 	assert.Equal(t, capacity, trueCount, "expected exactly %d successful allocs", capacity)
 }

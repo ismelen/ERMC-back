@@ -86,6 +86,8 @@ func TestQueue_WithBigSizeTry_ShouldReturnError(t *testing.T) {
 }
 
 func TestQueue_FreeWithItemsOnQueueThatFits_ShouldTryAllocQueueItems(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name                                     string
 		fstCap, sndCap                           int32

@@ -1,28 +1,20 @@
 package mocks
 
-import (
-	"ismelen/inkomi/internal/domain/convert"
-	"sync"
-)
+import "ismelen/inkomi/internal/domain/convert"
 
-type PushNotifierMock struct {
-	mu       sync.Mutex
-	messages []convert.PushMessage
+type MockPushNotifier struct {
+	SendCalled bool
+	LastToken  string
+	LastData   convert.PushMessage
 }
 
-func (s *PushNotifierMock) Init() error { return nil }
-
-func (s *PushNotifierMock) Send(token string, msg convert.PushMessage) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.messages = append(s.messages, msg)
+func (m *MockPushNotifier) Init() error {
 	return nil
 }
 
-func (s *PushNotifierMock) Messages() []convert.PushMessage {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	out := make([]convert.PushMessage, len(s.messages))
-	copy(out, s.messages)
-	return out
+func (m *MockPushNotifier) Send(token string, data convert.PushMessage) error {
+	m.SendCalled = true
+	m.LastToken = token
+	m.LastData = data
+	return nil
 }

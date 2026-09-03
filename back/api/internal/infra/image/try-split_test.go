@@ -27,11 +27,13 @@ func createTestImage(path string, width, height int) error {
 }
 
 func TestTrySplit(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 
 	// Test 1: No split if image orientation matches target orientation
 	t.Run("NoSplit_MatchingOrientation", func(t *testing.T) {
 		t.Parallel()
+		// Arrange
 		path := filepath.Join(tempDir, "tall.jpg")
 		createTestImage(path, 800, 1200)
 		editor, err := infra_image.NewEditor(path, 600, 800, false)
@@ -39,7 +41,10 @@ func TestTrySplit(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		// Act
 		res := editor.TrySplit(false)
+
+		// Assert
 		if len(res) != 1 {
 			t.Fatalf("Expected 1 part, got %d", len(res))
 		}
@@ -51,6 +56,7 @@ func TestTrySplit(t *testing.T) {
 	// Test 2: Rotated split when it fits target
 	t.Run("Rotated_FitsTarget", func(t *testing.T) {
 		t.Parallel()
+		// Arrange
 		path := filepath.Join(tempDir, "wide_fits.jpg")
 		// Width 1200, height 800. Target is 800x1200.
 		// rotated means w <= targetH (1200 <= 1200) and h <= targetW (800 <= 800)
@@ -60,7 +66,10 @@ func TestTrySplit(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		// Act
 		res := editor.TrySplit(true)
+
+		// Assert
 		if len(res) != 1 {
 			t.Fatalf("Expected 1 part, got %d", len(res))
 		}
@@ -72,6 +81,7 @@ func TestTrySplit(t *testing.T) {
 	// Test 3: Normal Split
 	t.Run("NormalSplit", func(t *testing.T) {
 		t.Parallel()
+		// Arrange
 		path := filepath.Join(tempDir, "wide_split.jpg")
 		createTestImage(path, 1600, 1200) // target is 800x1200
 		editor, err := infra_image.NewEditor(path, 800, 1200, false)
@@ -79,7 +89,10 @@ func TestTrySplit(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		// Act
 		res := editor.TrySplit(false)
+
+		// Assert
 		if len(res) != 3 {
 			t.Fatalf("Expected 3 parts, got %d", len(res))
 		}

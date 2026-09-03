@@ -120,6 +120,8 @@ func TestTransactionStore_OnStart_WithAlmostFullQueueShouldRunOnAllocateAfterFre
 }
 
 func TestTransactionStore_OnGetTransactionWithId_ShouldReturnExpected(t *testing.T) {
+	t.Parallel()
+	// Arrange
 	s := store.NewTransactionStore(
 		allocator.NewQueue[convert.Transaction](
 			allocator.NewAllocator(2),
@@ -142,7 +144,10 @@ func TestTransactionStore_OnGetTransactionWithId_ShouldReturnExpected(t *testing
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
+			// Act
 			tran, err := s.GetTransaction(c.id)
+
+			// Assert
 			assert.Equal(t, c.expected, tran)
 
 			if c.shouldThrowError {

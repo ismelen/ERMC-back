@@ -9,6 +9,9 @@ import (
 )
 
 func TestEpubBuilder_OnBuild_ContainsRequiredFiles(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
 	path := buildFakeEpub(t, "test-required-files", 0, true)
 	r := openFakeZip(t, path)
 
@@ -24,7 +27,10 @@ func TestEpubBuilder_OnBuild_ContainsRequiredFiles(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
+			// Act
 			entry := getFakeZipEntry(r, c.path)
+			
+			// Assert
 			assert.NotNil(t, entry)
 		})
 	}
@@ -51,6 +57,8 @@ func TestEpubBuilder_OnBuild_ShouldExistsAsXHTMLAsPagesAdded(t *testing.T) {
 }
 
 func TestEpubBuilder_OnRightToLeft_OPFShouldContainKey(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name string
 		rtl  bool
@@ -83,9 +91,10 @@ func TestEpubBuilder_OnBuild_ShouldBuildValidEpub(t *testing.T) {
 	// Arrange
 	path := buildFakeEpub(t, "validation-test", 10, true)
 
-	// Assert
+	// Act
 	result, err := checkepub.Check(path)
 
+	// Assert
 	assert.NoError(t, err)
 	assert.Equal(t, result.Status, checkepub.StatusValid)
 	assert.Len(t, result.Errors, 0)
