@@ -26,20 +26,21 @@ func (c *Chapter) GetOrderedPagePaths(availableExts ...string) []string {
 		return c.PagePaths
 	}
 
-	sort.Slice(c.PagePaths, func(i, j int) bool {
-		return c.PagePaths[i] < c.PagePaths[j]
-	})
-
 	var validPaths []string
+pathsFor:
 	for _, path := range c.PagePaths {
 		ext := filepath.Ext(path)
 		for _, avExt := range availableExts {
 			if avExt == ext {
-				continue
+				validPaths = append(validPaths, path)
+				continue pathsFor
 			}
 		}
-		validPaths = append(validPaths, path)
 	}
+
+	sort.Slice(validPaths, func(i, j int) bool {
+		return validPaths[i] < validPaths[j]
+	})
 
 	c.PagePaths = validPaths
 	c.ordered = true

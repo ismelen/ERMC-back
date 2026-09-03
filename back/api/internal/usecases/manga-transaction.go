@@ -108,6 +108,10 @@ func (c MangaTransactionUC) Process(file *convert.TransactionFile, tran *convert
 	}
 
 	path, err := builder.Build()
+	if err != nil {
+		file.SetError(err)
+		return nil
+	}
 	filename := filepath.Base(path)
 
 	return convert.NewTransactionResultFile(uid.GetRandomID(6), filename, path, file.Size, []*convert.TransactionFile{file})

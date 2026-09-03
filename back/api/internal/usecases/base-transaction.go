@@ -34,6 +34,10 @@ func (m BaseTransactionUC) Execute(file *convert.TransactionFile, tran *convert.
 	result := m.processor.Process(file, tran, transPath)
 	os.RemoveAll(filepath.Join(file.SrcPath))
 
+	if result == nil {
+		return
+	}
+
 	if tran.Config.Merge {
 		m.postExecMerge(file, tran, transPath, result)
 		return
@@ -53,6 +57,10 @@ func (m BaseTransactionUC) Execute(file *convert.TransactionFile, tran *convert.
 }
 
 func (m BaseTransactionUC) postExecMerge(file *convert.TransactionFile, tran *convert.Transaction, transPath string, result *convert.TransactionResultFile) {
+	if result == nil {
+		return
+	}
+
 	if completed := m.addResultAndCheckIfComplete(result, tran, file); !completed {
 		return
 	}

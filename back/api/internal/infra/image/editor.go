@@ -4,6 +4,10 @@ import (
 	"image"
 	"ismelen/inkomi/internal/domain/manga"
 
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+
 	"github.com/disintegration/imaging"
 	_ "golang.org/x/image/webp"
 )
