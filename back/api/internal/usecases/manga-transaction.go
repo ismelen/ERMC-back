@@ -61,6 +61,7 @@ func (c MangaTransactionUC) GetChapter(file string, chaptersDir string) (*manga.
 }
 
 func (c MangaTransactionUC) Process(file *convert.TransactionFile, tran *convert.Transaction, transPath string) *convert.TransactionResultFile {
+	defer os.RemoveAll(filepath.Join(file.SrcPath))
 	dir := filepath.Dir(file.SrcPath)
 	builder := epub.NewEpubBuilder().
 		SetSettings(c.imageSettings, tran.Config.Profile).

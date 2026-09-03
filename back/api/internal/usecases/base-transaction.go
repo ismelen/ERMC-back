@@ -32,7 +32,6 @@ type BaseTransactionUC struct {
 func (m BaseTransactionUC) Execute(file *convert.TransactionFile, tran *convert.Transaction, transPath string) {
 	file.Processing()
 	result := m.processor.Process(file, tran, transPath)
-	os.RemoveAll(filepath.Join(file.SrcPath))
 
 	if result == nil {
 		return
