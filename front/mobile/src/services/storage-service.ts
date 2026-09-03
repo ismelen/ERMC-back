@@ -12,6 +12,10 @@ export class StorageService {
     await SecureStorage.setItemAsync(key, value);
   }
 
+  static async RemoveSecureAsync(key: string): Promise<void> {
+    await SecureStorage.deleteItemAsync(key);
+  }
+
   static async GetAsync<T>(key: string): Promise<T | undefined> {
     const json = await AsyncStorage.getItem(key);
     if (json === null) return undefined;

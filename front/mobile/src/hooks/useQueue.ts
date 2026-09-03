@@ -300,6 +300,11 @@ export const useQueue = create(
             ? await useCloud.getState().getCloudInfo(`${pathname}?last=true`)
             : undefined;
 
+          if (config.toCloud && !cloud) {
+            useCloud.getState().setShowFolderAlert(true);
+            return false;
+          }
+
           const tran = await TransactionService.startTransaction(config, cloud, notifyToken);
           if (!tran) return false;
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { colors } from '../src/theme/colors';
+import SIcon from '../src/components/icons/SIcon';
 import { StyleSheet, View } from 'react-native';
 import SText from '../src/components/shared/SText';
 import SSelect from '../src/components/shared/SSelect';
@@ -18,7 +19,7 @@ import { useCloud } from '../src/hooks/useCloud';
 import SConfirmDialog from '../src/components/shared/SConfirmDialog';
 
 export default function SendLibgen() {
-  const { sending, config, setConfig, send, saveState } = useSender('md5');
+  const { sending, config, setConfig, send, clear: clearSender } = useSender('md5');
   const { t } = useTranslation();
   const { oauth, folder, showAuthConfirm, resolveAuthConfirm } = useCloud(
     useShallow((s) => ({
@@ -61,6 +62,16 @@ export default function SendLibgen() {
             backgroundColor: colors.background,
           },
           headerTintColor: colors.primary,
+          headerRight: () => (
+            <SButton
+              onPress={() => {
+                clearSender();
+                clear();
+              }}
+            >
+              <SIcon name="delete" size={24} color={colors.primary} type="outlined" />
+            </SButton>
+          ),
         }}
       />
       <View style={{ flex: 1, paddingBottom: 24, paddingHorizontal: 24 }}>
@@ -92,7 +103,6 @@ export default function SendLibgen() {
             <DestinationSelector
               toCloud={config.toCloud}
               onChange={(toCloud) => setConfig((s) => ({ ...s, toCloud: toCloud }))}
-              onConnect={saveState}
             />
           </View>
         </ScrollView>

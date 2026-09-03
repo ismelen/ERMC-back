@@ -1,4 +1,3 @@
-// components/DropboxFolderPicker.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -7,16 +6,19 @@ import {
   Modal,
   Pressable,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
   ActivityIndicator,
 } from 'react-native';
 import { useCloud } from '../../hooks/useCloud';
 import { usePathname } from 'expo-router';
+import { colors } from '../../theme/colors';
+import SText from '../shared/SText';
+import SButton from '../shared/SButton';
+import SIcon from '../icons/SIcon';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
-const DRAWER_HEIGHT = SCREEN_HEIGHT * 0.75;
+const DRAWER_HEIGHT = SCREEN_HEIGHT * 0.85;
 
 interface DropboxFolder {
   id: string;
@@ -134,88 +136,109 @@ export function DropboxFolderPickerModal() {
 
   return (
     <Modal visible={showDialog} transparent animationType="none" onRequestClose={close}>
-      {/* Backdrop */}
       <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={close} />
       </Animated.View>
 
-      {/* Drawer */}
       <Animated.View style={[styles.drawer, { transform: [{ translateY }] }]}>
-        {/* Handle */}
         <View style={styles.handle} />
 
-        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Seleccionar carpeta</Text>
-          <TouchableOpacity onPress={close} hitSlop={12}>
-            <Text style={styles.closeBtn}>✕</Text>
+          <SText style={styles.title}>Seleccionar carpeta</SText>
+          <TouchableOpacity onPress={close} hitSlop={12} style={{ padding: 5 }}>
+            <SIcon name="close" size={24} color={colors.on_surface_variant} />
           </TouchableOpacity>
         </View>
 
-        {/* Breadcrumbs */}
         <View style={styles.breadcrumbRow}>
           <TouchableOpacity onPress={() => navigateTo('', '')}>
-            <Text style={[styles.breadcrumb, currentPath === '' && styles.breadcrumbActive]}>
+            <SText style={[styles.breadcrumb, currentPath === '' && styles.breadcrumbActive]}>
               Dropbox
-            </Text>
+            </SText>
           </TouchableOpacity>
           {breadcrumbs.map((b, i) => (
             <React.Fragment key={b.path}>
-              <Text style={styles.breadcrumbSep}>›</Text>
+              <SText style={styles.breadcrumbSep}>›</SText>
               <TouchableOpacity onPress={() => navigateTo(b.path, b.name)}>
-                <Text
+                <SText
                   style={[
                     styles.breadcrumb,
                     i === breadcrumbs.length - 1 && styles.breadcrumbActive,
                   ]}
                 >
                   {b.name}
-                </Text>
+                </SText>
               </TouchableOpacity>
             </React.Fragment>
           ))}
         </View>
 
-        {/* Botón seleccionar carpeta actual */}
-        <TouchableOpacity style={styles.selectCurrentBtn} onPress={handleSelectCurrent}>
-          <Text style={styles.selectCurrentIcon}>✓</Text>
-          <Text style={styles.selectCurrentText}>
-            {currentPath
-              ? `Seleccionar "${breadcrumbs.at(-1)?.name ?? currentPath}"`
-              : 'Seleccionar raíz de Dropbox'}
-          </Text>
-        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          {loading ? (
+            <ActivityIndicator style={styles.loader} color={colors.primary} size="large" />
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <SText style={styles.errorText}>{error}</SText>
+              <SButton onPress={() => navigateTo(currentPath, '')} style={styles.retryBtn}>
+                <SText style={{ color: colors.on_primary, fontFamily: 'semibold' }}>
+                  Reintentar
+                </SText>
+              </SButton>
+            </View>
+          ) : (
+            <FlatList
+              data={folders}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContent}
+              ListEmptyComponent={<SText style={styles.emptyText}>Esta carpeta está vacía</SText>}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.folderRow}
+                  onPress={() => navigateTo(item.path_lower, item.name)}
+                >
+                  <SIcon name="folder" size={28} color={colors.primary} />
+                  <SText style={styles.folderName} numberOfLines={1}>
+                    {item.name}
+                  </SText>
+                  <SIcon
+                    name="chevron_right"
+                    size={24}
+                    color={colors.outline_variant}
+                    type="outlined"
+                  />
+                </TouchableOpacity>
+              )}
+            />
+          )}
+        </View>
 
-        {/* Lista de carpetas */}
-        {loading ? (
-          <ActivityIndicator style={styles.loader} color="#0061FE" />
-        ) : error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={() => navigateTo(currentPath, '')}>
-              <Text style={styles.retryText}>Reintentar</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <FlatList
-            data={folders}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={<Text style={styles.emptyText}>Esta carpeta está vacía</Text>}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.folderRow}
-                onPress={() => navigateTo(item.path_lower, item.name)}
-              >
-                <Text style={styles.folderIcon}>📁</Text>
-                <Text style={styles.folderName} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text style={styles.folderArrow}>›</Text>
-              </TouchableOpacity>
-            )}
-          />
-        )}
+        <View style={styles.bottomBar}>
+          <SButton
+            onPress={handleSelectCurrent}
+            style={[
+              styles.selectBtn,
+              currentPath === '' && { backgroundColor: colors.surface_variant },
+            ]}
+            disabled={currentPath === ''}
+          >
+            <SText
+              style={[
+                styles.selectBtnText,
+                currentPath === '' && { color: colors.on_surface_variant },
+              ]}
+            >
+              {currentPath
+                ? `Usar "${breadcrumbs.at(-1)?.name ?? currentPath}"`
+                : 'No se puede usar la raíz'}
+            </SText>
+            <SIcon
+              name="check"
+              size={20}
+              color={currentPath === '' ? colors.on_surface_variant : colors.on_primary}
+              type="outlined"
+            />
+          </SButton>
+        </View>
       </Animated.View>
     </Modal>
   );
@@ -224,7 +247,7 @@ export function DropboxFolderPickerModal() {
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   drawer: {
     position: 'absolute',
@@ -232,17 +255,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: DRAWER_HEIGHT,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: colors.surface_container_lowest,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
   },
   handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#D1D1D6',
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.outline_variant,
     alignSelf: 'center',
-    marginTop: 10,
+    marginTop: 12,
   },
   header: {
     flexDirection: 'row',
@@ -253,59 +276,33 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   title: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#111',
-  },
-  closeBtn: {
-    fontSize: 16,
-    color: '#999',
-    fontWeight: '500',
+    fontSize: 18,
+    fontFamily: 'bold',
+    color: colors.on_surface,
   },
   breadcrumbRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
     paddingHorizontal: 20,
-    paddingBottom: 12,
+    paddingBottom: 16,
     gap: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surface_container,
   },
   breadcrumb: {
-    fontSize: 13,
-    color: '#0061FE',
+    fontSize: 14,
+    color: colors.primary,
+    fontFamily: 'semibold',
   },
   breadcrumbActive: {
-    color: '#555',
-    fontWeight: '500',
+    color: colors.on_surface_variant,
+    fontFamily: 'bold',
   },
   breadcrumbSep: {
-    fontSize: 13,
-    color: '#C7C7CC',
-    marginHorizontal: 2,
-  },
-  selectCurrentBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginBottom: 8,
-    paddingVertical: 11,
-    paddingHorizontal: 14,
-    backgroundColor: '#EEF4FF',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#0061FE',
-    gap: 8,
-  },
-  selectCurrentIcon: {
-    fontSize: 15,
-    color: '#0061FE',
-    fontWeight: '700',
-  },
-  selectCurrentText: {
     fontSize: 14,
-    color: '#0061FE',
-    fontWeight: '500',
-    flexShrink: 1,
+    color: colors.outline_variant,
+    marginHorizontal: 4,
   },
   loader: {
     marginTop: 40,
@@ -313,47 +310,64 @@ const styles = StyleSheet.create({
   errorContainer: {
     alignItems: 'center',
     marginTop: 40,
-    gap: 10,
+    gap: 16,
   },
   errorText: {
-    fontSize: 14,
-    color: '#E24B4A',
+    fontSize: 15,
+    color: colors.error,
     textAlign: 'center',
     paddingHorizontal: 24,
+    fontFamily: 'semibold',
   },
-  retryText: {
-    fontSize: 14,
-    color: '#0061FE',
-    fontWeight: '500',
+  retryBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   listContent: {
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
   folderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: '#F0F0F5',
-    gap: 12,
-  },
-  folderIcon: {
-    fontSize: 20,
+    borderColor: colors.surface_container_high,
+    gap: 16,
   },
   folderName: {
     flex: 1,
-    fontSize: 15,
-    color: '#111',
-  },
-  folderArrow: {
-    fontSize: 20,
-    color: '#C7C7CC',
+    fontSize: 16,
+    color: colors.on_surface,
+    fontFamily: 'medium',
   },
   emptyText: {
     textAlign: 'center',
-    color: '#999',
-    fontSize: 14,
+    color: colors.outline,
+    fontSize: 15,
     marginTop: 40,
+  },
+  bottomBar: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.surface_container,
+    backgroundColor: colors.surface_container_lowest,
+  },
+  selectBtn: {
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 14,
+    gap: 8,
+    boxShadow: colors.boxShadow,
+  },
+  selectBtnText: {
+    color: colors.on_primary,
+    fontSize: 16,
+    fontFamily: 'bold',
   },
 });

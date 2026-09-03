@@ -9,7 +9,7 @@ interface Props {
   title: string;
   message: string;
   onConfirm: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
   confirmText?: string;
   cancelText?: string;
 }
@@ -30,9 +30,11 @@ export default function SConfirmDialog({
           <SText style={styles.title}>{title}</SText>
           <SText style={styles.message}>{message}</SText>
           <View style={styles.buttonContainer}>
-            <SButton style={styles.cancelButton} onPress={onCancel}>
-              <SText style={styles.cancelButtonText}>{cancelText}</SText>
-            </SButton>
+            {onCancel && (
+              <SButton style={styles.cancelButton} onPress={onCancel}>
+                <SText style={styles.cancelButtonText}>{cancelText}</SText>
+              </SButton>
+            )}
             <SButton style={styles.confirmButton} onPress={onConfirm}>
               <SText style={styles.confirmButtonText}>{confirmText}</SText>
             </SButton>

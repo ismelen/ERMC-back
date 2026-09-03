@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { colors } from '../../theme/colors';
 import SButton from '../shared/SButton';
 import SText from '../shared/SText';
@@ -8,15 +8,16 @@ import { usePathname } from 'expo-router';
 import { useCloud } from '../../hooks/useCloud';
 import { useShallow } from 'zustand/react/shallow';
 import SIcon from '../icons/SIcon';
+import CloudConfig from '../shared/cloud-config';
 
 interface Props {
   toCloud: boolean;
   onChange(toCloud: boolean): void;
-  onConnect?(): Promise<void>;
 }
 
-export default function DestinationSelector({ toCloud, onChange, onConnect }: Props) {
+export default function DestinationSelector({ toCloud, onChange }: Props) {
   const [cloudDestination, setCloudDestination] = useState(toCloud);
+  const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
 
   const destinations: { labelKey: string; value: boolean }[] = [
@@ -78,107 +79,7 @@ export default function DestinationSelector({ toCloud, onChange, onConnect }: Pr
         ))}
       </View>
 
-      {cloudDestination && (
-        <View style={{ gap: 10 }}>
-          <View
-            style={{
-              boxShadow: colors.boxShadow,
-              borderRadius: 12,
-              backgroundColor: colors.surface_container_lowest,
-              padding: 10,
-            }}
-          >
-            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-              <SIcon name="cloud" color={colors.primary} size={32} type="outlined" />
-              <SText style={{ fontSize: 18, flex: 1, fontFamily: 'semibold' }}>Dropbox</SText>
-              <SButton
-                onPress={async () => {
-                  if (oauth?.email) {
-                    logout();
-                  } else {
-                    if (onConnect) await onConnect();
-                    getToken(`${pathname}?last=true`, true);
-                  }
-                }}
-                style={{
-                  borderWidth: 1,
-                  borderColor: colors.primary_fixed,
-                  alignSelf: 'flex-start',
-                  paddingHorizontal: 14,
-                  paddingVertical: 7,
-                  borderRadius: 12,
-                }}
-              >
-                <SText style={{ fontFamily: 'semibold', color: colors.primary }}>
-                  {oauth?.email ? t('settings.disconnect') : t('settings.connect')}
-                </SText>
-              </SButton>
-            </View>
-            {oauth?.email && (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: 5,
-                  alignItems: 'center',
-                  marginTop: 5,
-                }}
-              >
-                <SIcon name="check_circle" color={colors.primary} size={14} />
-                <SText style={{ fontSize: 12, color: colors.primary, fontFamily: 'semibold' }}>
-                  {t('settings.connectedAs', { email: oauth.email })}
-                </SText>
-              </View>
-            )}
-          </View>
-
-          {oauth?.email && (
-            <View
-              style={{
-                boxShadow: colors.boxShadow,
-                backgroundColor: colors.surface_container_lowest,
-                borderRadius: 12,
-                padding: 10,
-              }}
-            >
-              <SText style={{ fontSize: 14, fontFamily: 'semibold', marginBottom: 2 }}>
-                {t('settings.folder')}
-              </SText>
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <View
-                  style={{
-                    flex: 1,
-                    borderWidth: 0.5,
-                    borderColor: colors.outline,
-                    borderRadius: 12,
-                    padding: 10,
-                  }}
-                >
-                  <SText>{folder ?? t('settings.selectFolder')}</SText>
-                </View>
-                <SButton
-                  onPress={() => getFolder(true)}
-                  style={{
-                    backgroundColor: colors.primary,
-                    paddingHorizontal: 14,
-                    paddingVertical: 7,
-                    borderRadius: 12,
-                    justifyContent: 'center',
-                  }}
-                >
-                  <SText
-                    style={{
-                      color: colors.on_primary,
-                      fontFamily: 'semibold',
-                    }}
-                  >
-                    {t('settings.browse')}
-                  </SText>
-                </SButton>
-              </View>
-            </View>
-          )}
-        </View>
-      )}
+      {cloudDestination && <CloudConfig />}
     </View>
   );
 }

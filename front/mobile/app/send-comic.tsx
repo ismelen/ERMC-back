@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { colors } from '../src/theme/colors';
 import SText from '../src/components/shared/SText';
 import SourceSelector from '../src/components/senders/source-selector';
+import SIcon from '../src/components/icons/SIcon';
 import DestinationSelector from '../src/components/senders/destination-selector';
 import OptionCardChecker from '../src/components/senders/option-card-checker';
 import SButton from '../src/components/shared/SButton';
@@ -19,7 +20,15 @@ import { useShallow } from 'zustand/react/shallow';
 
 export default function SendComicPage() {
   const [showConfirm, setShowConfirm] = useState(false);
-  const { sending, config, setConfig, send, monitoredIdx, unmonitor, saveState } = useSender('cbz');
+  const {
+    sending,
+    config,
+    setConfig,
+    send,
+    monitoredIdx,
+    unmonitor,
+    clear: clearSender,
+  } = useSender('cbz');
   const { t } = useTranslation();
   const { oauth, folder, showAuthConfirm, resolveAuthConfirm } = useCloud(
     useShallow((s) => ({
@@ -47,6 +56,11 @@ export default function SendComicPage() {
             backgroundColor: colors.background,
           },
           headerTintColor: colors.primary,
+          headerRight: () => (
+            <SButton onPress={clearSender}>
+              <SIcon name="delete" size={24} color={colors.primary} type="outlined" />
+            </SButton>
+          ),
         }}
       />
       <ScrollView style={{ flex: 1, paddingBottom: 24, paddingHorizontal: 24 }}>
@@ -112,7 +126,6 @@ export default function SendComicPage() {
             <DestinationSelector
               toCloud={config.toCloud}
               onChange={(toCloud) => setConfig((s) => ({ ...s, toCloud: toCloud }))}
-              onConnect={saveState}
             />
           </View>
 
