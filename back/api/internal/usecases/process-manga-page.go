@@ -43,6 +43,10 @@ func (p *MangaTransactionUC) ProcessPage(path string, idx int, profile *convert.
 		partEditors = partEditors[:2]
 	}
 
+	if settings.RightToLeft && len(partEditors) >= 2 && partEditors[0].SplitOperation == manga.SplitToLeft {
+		partEditors[0], partEditors[1] = partEditors[1], partEditors[0]
+	}
+
 	for _, partEditor := range partEditors {
 		partEditor.Resize()
 		part := manga.NewPagePart(

@@ -29,8 +29,7 @@ func (ip *ImageEditor) TrySplit(rotated bool) []*ImageEditor {
 		var leftBox, rightBox image.Rectangle
 		if w < h {
 			leftBox = image.Rect(0, 0, w, h/2)
-			rightBox = image.Rect(0, w/2, w, h)
-		} else {
+			rightBox = image.Rect(0, h/2, w, h)
 			leftBox = image.Rect(0, 0, w/2, h)
 			rightBox = image.Rect(w/2, 0, w, h)
 		}
