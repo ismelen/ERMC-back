@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestEpubBuilder_OnBuild_ContainsRequiredFiles(t *testing.T) {
+func TestEpubBuilder_Build_Normal_ContainsRequiredFiles(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -36,7 +36,7 @@ func TestEpubBuilder_OnBuild_ContainsRequiredFiles(t *testing.T) {
 	}
 }
 
-func TestEpubBuilder_OnBuild_ShouldExistsAsXHTMLAsPagesAdded(t *testing.T) {
+func TestEpubBuilder_Build_PagesAdded_ShouldExistAsXHTML(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -56,7 +56,7 @@ func TestEpubBuilder_OnBuild_ShouldExistsAsXHTMLAsPagesAdded(t *testing.T) {
 	assert.Equal(t, xhtmlFound, pages)
 }
 
-func TestEpubBuilder_OnRightToLeft_OPFShouldContainKey(t *testing.T) {
+func TestEpubBuilder_Build_OnRightToLeft_OPFShouldContainKey(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
@@ -85,7 +85,7 @@ func TestEpubBuilder_OnRightToLeft_OPFShouldContainKey(t *testing.T) {
 	}
 }
 
-func TestEpubBuilder_OnBuild_ShouldBuildValidEpub(t *testing.T) {
+func TestEpubBuilder_Build_Normal_ShouldBuildValidEpub(t *testing.T) {
 	t.Parallel()
 
 	// Arrange

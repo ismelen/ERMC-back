@@ -28,7 +28,7 @@ func newDownloadUC(hasMirror bool, src *mocks.BooksSourceMock) (*DownloadBookUC,
 	return NewDownloadBookUC(prov), prov
 }
 
-func TestDownloadBookUC_ZeroRetries_Error(t *testing.T) {
+func TestDownloadBookUC_Execute_ZeroRetries_Error(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	src := mocks.NewBooksSourceMock("http://test.example")
@@ -42,7 +42,7 @@ func TestDownloadBookUC_ZeroRetries_Error(t *testing.T) {
 	assert.Nil(t, result)
 }
 
-func TestDownloadBookUC_NoMirror_Error(t *testing.T) {
+func TestDownloadBookUC_Execute_NoMirror_Error(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	src := mocks.NewBooksSourceMock("http://test.example")
@@ -56,7 +56,7 @@ func TestDownloadBookUC_NoMirror_Error(t *testing.T) {
 	assert.Contains(t, strings.ToLower(err.Error()), "mirror")
 }
 
-func TestDownloadBookUC_Success(t *testing.T) {
+func TestDownloadBookUC_Execute_Normal_Success(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	src := mocks.NewBooksSourceMock("http://test.example")
@@ -72,7 +72,7 @@ func TestDownloadBookUC_Success(t *testing.T) {
 	assert.Equal(t, "test.epub", result.Filename)
 }
 
-func TestDownloadBookUC_RetriesAndSucceeds(t *testing.T) {
+func TestDownloadBookUC_Execute_RetriesAndSucceeds_ShouldSucceed(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	downloadErr := errors.New("temporary failure")
@@ -91,7 +91,7 @@ func TestDownloadBookUC_RetriesAndSucceeds(t *testing.T) {
 	assert.NotNil(t, result)
 }
 
-func TestDownloadBookUC_ExhaustsRetries(t *testing.T) {
+func TestDownloadBookUC_Execute_ExhaustsRetries_ShouldError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	downloadErr := errors.New("always fails")

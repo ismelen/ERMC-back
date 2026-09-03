@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMD5UC_Process(t *testing.T) {
+func TestMD5TransactionUC_Process_Normal_ShouldProcess(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tempDir := t.TempDir()

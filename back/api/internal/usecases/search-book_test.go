@@ -24,7 +24,7 @@ func newSearchUC(hasMirror bool, books []book.Book, searchErr error) (*SearchBoo
 	return NewSearchBookUC(prov), prov
 }
 
-func TestSearchBookUC_NoMirror_ReturnsError(t *testing.T) {
+func TestSearchBookUC_Execute_NoMirror_ReturnsError(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	uc, _ := newSearchUC(false, nil, nil)
@@ -37,7 +37,7 @@ func TestSearchBookUC_NoMirror_ReturnsError(t *testing.T) {
 	assert.Contains(t, strings.ToLower(err.Error()), "mirror")
 }
 
-func TestSearchBookUC_FiltersByLanguage(t *testing.T) {
+func TestSearchBookUC_Execute_FiltersByLanguage_ShouldFilter(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	books := []book.Book{
@@ -55,7 +55,7 @@ func TestSearchBookUC_FiltersByLanguage(t *testing.T) {
 	assert.Equal(t, "English", result[0].Language)
 }
 
-func TestSearchBookUC_FiltersByFormat(t *testing.T) {
+func TestSearchBookUC_Execute_FiltersByFormat_ShouldFilter(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	books := []book.Book{
@@ -73,7 +73,7 @@ func TestSearchBookUC_FiltersByFormat(t *testing.T) {
 	assert.Equal(t, "epub", result[0].Extension)
 }
 
-func TestSearchBookUC_Deduplicates(t *testing.T) {
+func TestSearchBookUC_Execute_Deduplicates_ShouldDeduplicate(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	// Two books with the same title (after normalization) and same MD5 should collapse to one.
@@ -91,7 +91,7 @@ func TestSearchBookUC_Deduplicates(t *testing.T) {
 	assert.Len(t, result, 1)
 }
 
-func TestSearchBookUC_MirrorError_Propagated(t *testing.T) {
+func TestSearchBookUC_Execute_MirrorError_ShouldPropagate(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	searchErr := errors.New("mirror down")
@@ -104,7 +104,7 @@ func TestSearchBookUC_MirrorError_Propagated(t *testing.T) {
 	require.ErrorIs(t, err, searchErr)
 }
 
-func TestSearchBookUC_EmptyLanguage_ReturnsAll(t *testing.T) {
+func TestSearchBookUC_Execute_EmptyLanguage_ReturnsAll(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	books := []book.Book{

@@ -27,7 +27,7 @@ func createTestImage(path string, width, height int) error {
 	return jpeg.Encode(f, img, nil)
 }
 
-func TestProcessPage_Split(t *testing.T) {
+func TestProcessMangaPageUC_Process_Split_ShouldSplit(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tempDir := t.TempDir()

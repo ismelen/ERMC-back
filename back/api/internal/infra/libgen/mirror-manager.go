@@ -15,7 +15,7 @@ func NewMirrorManager(discoverer book.BookSourceDiscoverer) *MirrorManager {
 		discoverer: discoverer,
 	}
 
-	mm.discoverer.SetOnUpdate(func(bs *book.BooksSource) {
+	mm.discoverer.SetOnUpdate(func(bs book.BooksSource) {
 		mm.mirror.Store(bs)
 	})
 
@@ -34,7 +34,10 @@ func (m *MirrorManager) GetMirror() (book.BooksSource, bool) {
 
 func (m *MirrorManager) Refresh() bool {
 	source := m.discoverer.UpdateSource()
-	m.mirror.Store(source)
+	if source != nil {
+		m.mirror.Store(source)
+		return true
+	}
 
-	return source != nil
+	return false
 }

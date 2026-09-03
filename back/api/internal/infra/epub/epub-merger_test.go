@@ -20,7 +20,7 @@ func makeResultFile(path string) *convert.TransactionResultFile {
 	return convert.NewTransactionResultFile("test-id", filename, path, 0, nil)
 }
 
-func TestMergeEpubs_WithNoEpubsToMerge_ShouldThrowError(t *testing.T) {
+func TestEpubMerger_MergeEpubs_WithNoEpubsToMerge_ShouldThrowError(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -36,7 +36,7 @@ func TestMergeEpubs_WithNoEpubsToMerge_ShouldThrowError(t *testing.T) {
 	assert.Error(t, errEmpty, "expected non-nil error for empty paths slice, got nil")
 }
 
-func TestMergeEpubs_SingleFile_ValidOutput(t *testing.T) {
+func TestEpubMerger_MergeEpubs_SingleFile_ValidOutput(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -56,7 +56,7 @@ func TestMergeEpubs_SingleFile_ValidOutput(t *testing.T) {
 	assert.Len(t, result.Errors, 0)
 }
 
-func TestMergeEpubs_WithTwoFiles_SpineHasTwoEntries(t *testing.T) {
+func TestEpubMerger_MergeEpubs_WithTwoFiles_SpineHasTwoEntries(t *testing.T) {
 	t.Parallel()
 
 	// Arrange

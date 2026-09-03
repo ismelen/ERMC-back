@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestEpubTransactionUC_Process(t *testing.T) {
+func TestEpubTransactionUC_Process_Normal_ShouldProcess(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tempDir := t.TempDir()

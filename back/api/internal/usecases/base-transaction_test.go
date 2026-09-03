@@ -10,7 +10,7 @@ import (
 	"ismelen/inkomi/internal/test/mocks"
 )
 
-func TestBaseTransactionUC_Execute(t *testing.T) {
+func TestBaseTransactionUC_Execute_Normal_ShouldProcess(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tempDir := t.TempDir()
@@ -63,7 +63,7 @@ func TestBaseTransactionUC_Execute(t *testing.T) {
 	assert.Equal(t, convert.TransactionDone, tran.Status.Get(), "Expected transaction status to be Done")
 }
 
-func TestBaseTransactionUC_SendAndNotify(t *testing.T) {
+func TestBaseTransactionUC_Execute_SendAndNotify_ShouldNotify(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	mockPush := &mocks.MockPushNotifier{}

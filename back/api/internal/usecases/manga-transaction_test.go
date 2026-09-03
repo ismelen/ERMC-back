@@ -43,7 +43,7 @@ func createTestCBZ(t *testing.T, path string) {
 	}
 }
 
-func TestMangaTransactionUC_Process(t *testing.T) {
+func TestMangaTransactionUC_Process_Normal_ShouldProcess(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	tempDir := t.TempDir()

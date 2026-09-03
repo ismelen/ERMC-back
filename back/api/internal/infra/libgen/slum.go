@@ -29,9 +29,11 @@ var fallbackMirrors = []book.BooksSource{
 	NewClassicMirror("https://libgen.rs"),
 }
 
-func getMirrors() []book.BooksSource {
+var slumURL = "https://open-slum.org/api/status-page/slum"
+
+var getMirrors = func() []book.BooksSource {
 	client := &http.Client{Timeout: 8 * time.Second}
-	req, _ := http.NewRequest("GET", "https://open-slum.org/api/status-page/slum", nil)
+	req, _ := http.NewRequest("GET", slumURL, nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0")
 
 	resp, err := client.Do(req)

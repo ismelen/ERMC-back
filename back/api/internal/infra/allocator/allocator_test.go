@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAllocator_ShouldAllocUpToCapacity(t *testing.T) {
+func TestAllocator_Alloc_UpToCapacity_ShouldAlloc(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -20,7 +20,7 @@ func TestAllocator_ShouldAllocUpToCapacity(t *testing.T) {
 	assert.True(t, allocated, "expected Alloc(5) to return true on capacity 5")
 }
 
-func TestAllocator_ShouldNotAllocOverCapacity(t *testing.T) {
+func TestAllocator_Alloc_OverCapacity_ShouldNotAlloc(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -34,7 +34,7 @@ func TestAllocator_ShouldNotAllocOverCapacity(t *testing.T) {
 	assert.False(t, allocated, "expected Alloc(6) to return false on capacity 5")
 }
 
-func TestAllocator_WithMemoryAllocated_FreeShouldReduceUsage(t *testing.T) {
+func TestAllocator_Free_WithMemoryAllocated_ShouldReduceUsage(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -50,7 +50,7 @@ func TestAllocator_WithMemoryAllocated_FreeShouldReduceUsage(t *testing.T) {
 	assert.True(t, allocatedSnd, "expected Alloc(5) to succeed after Free(5)")
 }
 
-func TestAllocator_FreeMoreThanCapacityShouldntGoNegative(t *testing.T) {
+func TestAllocator_Free_MoreThanCapacity_ShouldntGoNegative(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -64,7 +64,7 @@ func TestAllocator_FreeMoreThanCapacityShouldntGoNegative(t *testing.T) {
 	assert.True(t, allocated, "expected Alloc(5) to succeed; Free should not go below 0")
 }
 
-func TestAllocator_ShouldNotAllocateNegativeSize(t *testing.T) {
+func TestAllocator_Alloc_NegativeSize_ShouldNotAllocate(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -77,7 +77,7 @@ func TestAllocator_ShouldNotAllocateNegativeSize(t *testing.T) {
 	assert.False(t, allocated, "expected Alloc(-5) to fail")
 }
 
-func TestAllcoator_ShouldNotFreeNegativeSize(t *testing.T) {
+func TestAllocator_Free_NegativeSize_ShouldNotFree(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -92,7 +92,7 @@ func TestAllcoator_ShouldNotFreeNegativeSize(t *testing.T) {
 	assert.False(t, allocated, "expected Alloc(5) to fail after Free(-5) with previous Alloc(5)")
 }
 
-func TestAllocator_ConcurrentAlloc(t *testing.T) {
+func TestAllocator_Alloc_Concurrent_ShouldSucceed(t *testing.T) {
 	t.Parallel()
 
 	// Arrange

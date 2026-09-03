@@ -26,7 +26,7 @@ func newCheckUC(srv *httptest.Server, hasMirror bool, refreshResult bool) (*Chec
 	return NewCheckBooksSourceUC(prov), prov
 }
 
-func TestCheckBooksSourceUC_WithMirrorAlive_ShouldReturnOk(t *testing.T) {
+func TestCheckBooksSourceUC_Execute_WithMirrorAlive_ShouldReturnOk(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +45,7 @@ func TestCheckBooksSourceUC_WithMirrorAlive_ShouldReturnOk(t *testing.T) {
 	assert.False(t, prov.RefreshCalled)
 }
 
-func TestCheckBooksSourceUC_WithMirrorDead_RefreshCalled(t *testing.T) {
+func TestCheckBooksSourceUC_Execute_WithMirrorDead_RefreshCalled(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +63,7 @@ func TestCheckBooksSourceUC_WithMirrorDead_RefreshCalled(t *testing.T) {
 	assert.True(t, prov.RefreshCalled)
 }
 
-func TestCheckBooksSourceUC_MirrorDead_CooldownActive(t *testing.T) {
+func TestCheckBooksSourceUC_Execute_MirrorDead_CooldownActive(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +86,7 @@ func TestCheckBooksSourceUC_MirrorDead_CooldownActive(t *testing.T) {
 	assert.False(t, prov.RefreshCalled)
 }
 
-func TestCheckBooksSourceUC_NoMirror_RefreshSucceeds(t *testing.T) {
+func TestCheckBooksSourceUC_Execute_NoMirror_RefreshSucceeds(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	uc, prov := newCheckUC(nil, false, true)
@@ -100,7 +100,7 @@ func TestCheckBooksSourceUC_NoMirror_RefreshSucceeds(t *testing.T) {
 	assert.True(t, prov.RefreshCalled)
 }
 
-func TestCheckBooksSourceUC_NoMirror_RefreshFails(t *testing.T) {
+func TestCheckBooksSourceUC_Execute_NoMirror_RefreshFails(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	uc, prov := newCheckUC(nil, false, false)

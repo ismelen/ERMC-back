@@ -16,7 +16,7 @@ type SourceDiscoverer struct {
 	singleUpdater singleflight.Group
 	lastCheckMu   sync.RWMutex
 	lastCheck     time.Time
-	onUpdate      func(*book.BooksSource)
+	onUpdate      func(book.BooksSource)
 }
 
 func NewSourceDiscoverer() *SourceDiscoverer {
@@ -25,13 +25,17 @@ func NewSourceDiscoverer() *SourceDiscoverer {
 
 func (s *SourceDiscoverer) Start(ctx context.Context, interval time.Duration) {
 	go func() {
-		s.onUpdate(s.UpdateSource())
+		if source := s.UpdateSource(); source != nil {
+			s.onUpdate(source)
+		}
 
 		ticker := time.NewTicker(interval)
 		for {
 			select {
 			case <-ticker.C:
-				s.onUpdate(s.UpdateSource())
+				if source := s.UpdateSource(); source != nil {
+					s.onUpdate(source)
+				}
 			case <-ctx.Done():
 				ticker.Stop()
 				return
@@ -40,11 +44,11 @@ func (s *SourceDiscoverer) Start(ctx context.Context, interval time.Duration) {
 	}()
 }
 
-func (s *SourceDiscoverer) SetOnUpdate(onUpdate func(*book.BooksSource)) {
+func (s *SourceDiscoverer) SetOnUpdate(onUpdate func(book.BooksSource)) {
 	s.onUpdate = onUpdate
 }
 
-func (s *SourceDiscoverer) UpdateSource() *book.BooksSource {
+func (s *SourceDiscoverer) UpdateSource() book.BooksSource {
 	mirror, err, _ := s.singleUpdater.Do("refresh", func() (any, error) {
 		mirrors := getMirrors()
 
@@ -59,7 +63,7 @@ func (s *SourceDiscoverer) UpdateSource() *book.BooksSource {
 		}
 
 		log.Printf("New mirror: %s", fastest.GetURL())
-		return &fastest, nil
+		return fastest, nil
 	})
 
 	if err != nil {
@@ -67,7 +71,7 @@ func (s *SourceDiscoverer) UpdateSource() *book.BooksSource {
 		return nil
 	}
 
-	return mirror.(*book.BooksSource)
+	return mirror.(book.BooksSource)
 }
 
 func (s *SourceDiscoverer) getFastestMirror(mirrors []book.BooksSource) (book.BooksSource, bool) {

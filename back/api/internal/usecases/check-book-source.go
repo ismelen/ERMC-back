@@ -34,6 +34,10 @@ func (c *CheckBooksSourceUC) Execute(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 
+	c.mu.Lock()
+	c.lastCheck = time.Now()
+	c.mu.Unlock()
+
 	if updated := c.provider.Refresh(); !updated {
 		return false, nil
 	}

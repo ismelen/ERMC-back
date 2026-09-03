@@ -15,7 +15,7 @@ func onExecute(dst *bool) func() {
 	}
 }
 
-func TestQueue_WithNoItems_ShouldAllocDirectly(t *testing.T) {
+func TestQueue_Enqueue_WithNoItems_ShouldAllocDirectly(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -31,7 +31,7 @@ func TestQueue_WithNoItems_ShouldAllocDirectly(t *testing.T) {
 	assert.True(t, executed)
 }
 
-func TestQueue_WithAllocFull_ShouldEnqueue(t *testing.T) {
+func TestQueue_Enqueue_WithAllocFull_ShouldEnqueue(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -49,7 +49,7 @@ func TestQueue_WithAllocFull_ShouldEnqueue(t *testing.T) {
 	assert.False(t, executed)
 }
 
-func TestQueue_WithQueueFull_ShouldNotAllocNorEnqueueAndReturnError(t *testing.T) {
+func TestQueue_Enqueue_WithQueueFull_ShouldReturnError(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -69,7 +69,7 @@ func TestQueue_WithQueueFull_ShouldNotAllocNorEnqueueAndReturnError(t *testing.T
 	assert.False(t, executed)
 }
 
-func TestQueue_WithBigSizeTry_ShouldReturnError(t *testing.T) {
+func TestQueue_Enqueue_WithBigSizeTry_ShouldReturnError(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -85,7 +85,7 @@ func TestQueue_WithBigSizeTry_ShouldReturnError(t *testing.T) {
 	assert.False(t, executed)
 }
 
-func TestQueue_FreeWithItemsOnQueueThatFits_ShouldTryAllocQueueItems(t *testing.T) {
+func TestQueue_Free_WithItemsOnQueueThatFits_ShouldTryAllocQueueItems(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {

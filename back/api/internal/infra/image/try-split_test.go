@@ -26,7 +26,7 @@ func createTestImage(path string, width, height int) error {
 	return jpeg.Encode(f, img, nil)
 }
 
-func TestTrySplit(t *testing.T) {
+func TestImageEditor_TrySplit_Normal_ShouldSplit(t *testing.T) {
 	t.Parallel()
 	tempDir := t.TempDir()
 

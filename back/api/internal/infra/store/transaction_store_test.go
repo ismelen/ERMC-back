@@ -19,7 +19,7 @@ func minimalConfig(t *testing.T, size int32) *convert.TransactionConfig {
 	}
 }
 
-func TestTransactionStore_OnStart_WithEmptyQueueShouldAllocImmediately(t *testing.T) {
+func TestTransactionStore_Start_WithEmptyQueue_ShouldAllocImmediately(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -41,7 +41,7 @@ func TestTransactionStore_OnStart_WithEmptyQueueShouldAllocImmediately(t *testin
 	assert.Equal(t, finallyAllocated, 0)
 }
 
-func TestTransactionStore_OnStart_WithFullQueueShouldCancelTransaction(t *testing.T) {
+func TestTransactionStore_Start_WithFullQueue_ShouldCancelTransaction(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -66,7 +66,7 @@ func TestTransactionStore_OnStart_WithFullQueueShouldCancelTransaction(t *testin
 	assert.Equal(t, finallyAllocated, 0)
 }
 
-func TestTransactionStore_OnStart_WithAlmostFullQueueShouldBeEnqueued(t *testing.T) {
+func TestTransactionStore_Start_WithAlmostFullQueue_ShouldBeEnqueued(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -91,7 +91,7 @@ func TestTransactionStore_OnStart_WithAlmostFullQueueShouldBeEnqueued(t *testing
 	assert.Equal(t, 0, finallyAllocated)
 }
 
-func TestTransactionStore_OnStart_WithAlmostFullQueueShouldRunOnAllocateAfterFree(t *testing.T) {
+func TestTransactionStore_Start_WithAlmostFullQueue_ShouldRunOnAllocateAfterFree(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -119,7 +119,7 @@ func TestTransactionStore_OnStart_WithAlmostFullQueueShouldRunOnAllocateAfterFre
 	assert.Equal(t, finallyAllocated, 1)
 }
 
-func TestTransactionStore_OnGetTransactionWithId_ShouldReturnExpected(t *testing.T) {
+func TestTransactionStore_GetTransactionWithId_Normal_ShouldReturnExpected(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	s := store.NewTransactionStore(
