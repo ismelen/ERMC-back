@@ -6,6 +6,7 @@ import (
 	"ismelen/inkomi/internal/domain/book"
 	"ismelen/inkomi/internal/domain/convert"
 	"ismelen/inkomi/internal/test/mocks"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -34,10 +35,13 @@ func TestMD5TransactionUC_Process_Normal_ShouldProcess(t *testing.T) {
 
 	uc := NewMd5TransactionUC(mockPush, mockCloud, downloadUC)
 
+	md5Path := filepath.Join(tempDir, "some-md5-hash")
+	os.WriteFile(md5Path, []byte("dummy md5 source"), 0644)
+
 	file := &convert.TransactionFile{
 		Id:      "file1",
 		Name:    "test_md5",
-		SrcPath: "some-md5-hash",
+		SrcPath: md5Path,
 		Size:    0,
 	}
 	tran := &convert.Transaction{
@@ -54,4 +58,7 @@ func TestMD5TransactionUC_Process_Normal_ShouldProcess(t *testing.T) {
 		expectedPath := filepath.Join(tempDir, "tran1", "file1", "downloaded_book.epub")
 		assert.Equal(t, expectedPath, result.Path, "Expected path to match")
 	}
+
+	_, err := os.Stat(md5Path)
+	assert.NoError(t, err, "Expected source file to not be removed by MD5TransactionUC")
 }

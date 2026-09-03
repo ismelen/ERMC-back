@@ -5,9 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"ismelen/inkomi/internal/domain/convert"
 	"ismelen/inkomi/internal/test/mocks"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBaseTransactionUC_Execute_Normal_ShouldProcess(t *testing.T) {
@@ -55,9 +56,6 @@ func TestBaseTransactionUC_Execute_Normal_ShouldProcess(t *testing.T) {
 
 	// Assert
 	assert.True(t, mockPush.SendCalled, "Expected push notification to be sent")
-	
-	_, err := os.Stat(srcFile)
-	assert.True(t, os.IsNotExist(err), "Expected source file to be removed, but it still exists")
 
 	assert.Equal(t, convert.TransactionFileDone, file.Status(), "Expected file status to be Done")
 	assert.Equal(t, convert.TransactionDone, tran.Status.Get(), "Expected transaction status to be Done")

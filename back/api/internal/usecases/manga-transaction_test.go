@@ -82,4 +82,7 @@ func TestMangaTransactionUC_Process_Normal_ShouldProcess(t *testing.T) {
 		_, err := os.Stat(result.Path)
 		assert.False(t, os.IsNotExist(err), "Expected output epub to exist at %s", result.Path)
 	}
+
+	_, err := os.Stat(cbzPath)
+	assert.True(t, os.IsNotExist(err), "Expected source file to be removed by MangaTransactionUC")
 }
