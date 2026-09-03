@@ -4,7 +4,6 @@ import { immer } from 'zustand/middleware/immer';
 import { StorageService } from '../services/storage-service';
 import { AuthService, OAuthData } from '../services/auth-serivice';
 import { CloudService } from '../services/cloud-service';
-import { usePathname } from 'expo-router';
 
 const FOLDER_PATH_KEY = 'folder_path_key';
 const OAUTH_KEY = 'oauth_tokens';
@@ -19,11 +18,13 @@ interface State {
   oauth?: OAuthData;
   showDialog: boolean;
   onFolderSelect?(data?: string): void;
+  showAuthConfirm: boolean;
+  onAuthConfirm?(confirmed: boolean): void;
 }
 
 export const useCloud = create(
   immer(
-    combine({ showDialog: false } as State, (set, get) => ({
+    combine({ showDialog: false, showAuthConfirm: false } as State, (set, get) => ({
       async init() {
         const json = await StorageService.GetSecureAsync(OAUTH_KEY);
         const oauth: OAuthData = json ? JSON.parse(json) : {};
@@ -36,7 +37,7 @@ export const useCloud = create(
       logout() {
         StorageService.SetSecureAsync(OAUTH_KEY, JSON.stringify({}));
         StorageService.SetSecureAsync(FOLDER_PATH_KEY, '');
-        set({ oauth: undefined, showDialog: false, folder: undefined });
+        set({ oauth: undefined, showDialog: false, showAuthConfirm: false, folder: undefined });
       },
 
       async getCloudInfo(pathName?: string, forced?: boolean): Promise<CloudInfo | undefined> {
@@ -69,8 +70,32 @@ export const useCloud = create(
         return path;
       },
 
+      /** Shows an in-app confirmation dialog before opening the Dropbox auth browser. */
+      async requestAuthConfirm(): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+          set({ showAuthConfirm: true, onAuthConfirm: resolve });
+        });
+      },
+
+      resolveAuthConfirm(confirmed: boolean) {
+        const cb = get().onAuthConfirm;
+        set({ showAuthConfirm: false, onAuthConfirm: undefined });
+        cb?.(confirmed);
+      },
+
       async getToken(returnPath?: string, forced?: boolean): Promise<string | undefined> {
-        const oauth = await CloudService.getToken(get().oauth, forced, returnPath);
+        const current = get().oauth;
+        const { refresh, expiresAt, token } = current ?? {};
+        const needsLogin = !token || forced || !expiresAt || expiresAt <= Date.now();
+        const needsBrowserLogin = needsLogin && (!refresh || forced);
+
+        if (needsBrowserLogin) {
+          // Ask the user before opening the external Dropbox auth browser
+          const confirmed = await useCloud.getState().requestAuthConfirm();
+          if (!confirmed) return;
+        }
+
+        const oauth = await CloudService.getToken(current, forced, returnPath);
 
         set({ oauth: { ...oauth } });
         StorageService.SetSecureAsync(OAUTH_KEY, JSON.stringify(oauth ?? {}));

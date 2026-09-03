@@ -14,12 +14,21 @@ import { useSender } from '../src/hooks/useSender';
 import { useTranslation } from 'react-i18next';
 import { useCloud } from '../src/hooks/useCloud';
 import SConfirmDialog from '../src/components/shared/SConfirmDialog';
+import { useShallow } from 'zustand/react/shallow';
 
 export default function SendBookPage() {
   const [showConfirm, setShowConfirm] = useState(false);
-  const { sending, config, setConfig, send, monitoredIdx, unmonitor } = useSender('epub');
+  const { sending, config, setConfig, send, monitoredIdx, unmonitor, saveState } =
+    useSender('epub');
   const { t } = useTranslation();
-  const { oauth, folder } = useCloud();
+  const { oauth, folder, showAuthConfirm, resolveAuthConfirm } = useCloud(
+    useShallow((s) => ({
+      oauth: s.oauth,
+      folder: s.folder,
+      showAuthConfirm: s.showAuthConfirm,
+      resolveAuthConfirm: s.resolveAuthConfirm,
+    }))
+  );
 
   const isSendDisabled = config.toCloud ? !oauth?.email || !folder : false;
 
@@ -81,6 +90,17 @@ export default function SendBookPage() {
             <DestinationSelector
               toCloud={config.toCloud}
               onChange={(toCloud) => setConfig((s) => ({ ...s, toCloud: toCloud }))}
+              onConnect={saveState}
+            />
+          </View>
+
+          <View style={{ gap: 5 }}>
+            <SText style={styles.title}>{t('sendBook.options')}</SText>
+            <OptionCardChecker
+              checked={config.deleteOriginals ?? false}
+              label={t('common.deleteOriginals')}
+              text={t('common.deleteOriginalsText')}
+              onChange={(checked) => setConfig((s) => ({ ...s, deleteOriginals: checked }))}
             />
           </View>
         </View>
@@ -122,6 +142,15 @@ export default function SendBookPage() {
           setShowConfirm(false);
           unmonitor();
         }}
+      />
+      <SConfirmDialog
+        visible={showAuthConfirm}
+        title={t('common.authConfirmTitle')}
+        message={t('common.authConfirmMessage')}
+        confirmText={t('common.authConfirmOk')}
+        cancelText={t('common.cancel')}
+        onCancel={() => resolveAuthConfirm(false)}
+        onConfirm={() => resolveAuthConfirm(true)}
       />
     </>
   );

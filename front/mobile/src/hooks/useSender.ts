@@ -10,13 +10,12 @@
 import { useShallow } from 'zustand/react/shallow';
 import { TransactionConfig, TransactionMode } from '../models/transaction-config';
 import { useObjectNavigation } from './useObjectNavigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSettings } from './useSettings';
 import { useQueue } from './useQueue';
 import { router, useLocalSearchParams, usePathname } from 'expo-router';
 import { useMonitoredFolders } from './useMonitoredFolders';
 import { StorageService } from '../services/storage-service';
-import { setLocalesAsync } from '@expo/config-plugins/build/android/Locales.js';
 
 interface State {
   config: TransactionConfig;
@@ -59,6 +58,9 @@ export function useSender(mode: TransactionMode) {
 
   const send = useQueue((s) => s.send);
   const [sending, setSending] = useState(false);
+  // Guard: ensures the OAuth-return auto-send fires exactly once per navigation round-trip
+  const oauthRetryFired = useRef(false);
+
   const handleSend = async (
     files?: any[],
     overrideConfig?: TransactionConfig
@@ -70,22 +72,21 @@ export function useSender(mode: TransactionMode) {
 
     if (settings.model) {
       const differentModel = finalConfig.model !== settings.model;
-      if (differentModel) alert('Different model selected'); // TODO: Better dialogs with cancel...
+      if (differentModel) alert('Different model selected');
     }
 
     setSending(true);
+    await StorageService.SetAsync('oauth_return', 'true');
     await StorageService.SetAsync<State>(LAST_STATE, {
       config: finalConfig,
       sending: true,
       monitoredIdx: monitoredIdx,
     });
 
-    // Refresh pathname because it might be different if called inside useEffect
     const done = await send(finalConfig, router.canGoBack() ? pathname : undefined);
     setSending(false);
 
     if (!done) {
-      // If we failed (e.g. user cancelled login), clear LAST_STATE so it doesn't loop
       await StorageService.SetAsync<State>(LAST_STATE, { config: finalConfig, sending: false });
       return false;
     }
@@ -94,10 +95,8 @@ export function useSender(mode: TransactionMode) {
     if (monitoredIdx === undefined) {
       setSettings({ ...finalConfig, model: settings.model });
       if (finalConfig.model !== settings.model) {
-        // TODO: Ask if user wants to change model (dialog)
         setModel(finalConfig.model);
       }
-
       if (finalConfig.monitoredIdx !== undefined && finalConfig.folder) addMonitored(finalConfig);
     } else {
       if (finalConfig.monitoredIdx !== undefined && finalConfig.folder) {
@@ -125,19 +124,33 @@ export function useSender(mode: TransactionMode) {
     }
     clear();
 
-    if (last === 'true') {
-      StorageService.GetAsync<State>(LAST_STATE).then((e) => {
-        if (!e) return;
-        setConfig(e.config);
-        setMonitoredIdx(e.monitoredIdx);
+    StorageService.GetAsync<string>('oauth_return').then((isReturn) => {
+      if ((String(last) === 'true' || isReturn === 'true') && !oauthRetryFired.current) {
+        oauthRetryFired.current = true;
+        StorageService.RemoveAsync('oauth_return');
+        StorageService.GetAsync<State>(LAST_STATE).then(async (e) => {
+          if (!e) return;
+          setConfig(e.config);
+          setMonitoredIdx(e.monitoredIdx);
 
-        if (e.sending) {
-          // We just returned from auth, try sending again automatically
-          handleSend(undefined, e.config);
-        }
-      });
-    }
+          if (e.sending) {
+            // Clear the sending flag BEFORE retrying so a second failure does not loop
+            await StorageService.SetAsync<State>(LAST_STATE, { ...e, sending: false });
+            handleSend(undefined, e.config);
+          }
+        });
+      }
+    });
   }, [last]);
 
-  return { config, setConfig, sending, send: handleSend, monitoredIdx, unmonitor };
+  const saveState = async () => {
+    await StorageService.SetAsync('oauth_return', 'true');
+    await StorageService.SetAsync<State>(LAST_STATE, {
+      config,
+      sending: false,
+      monitoredIdx,
+    });
+  };
+
+  return { config, setConfig, sending, send: handleSend, monitoredIdx, unmonitor, saveState };
 }

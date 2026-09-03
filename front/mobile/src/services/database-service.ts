@@ -74,6 +74,17 @@ export class DatabaseService {
     });
   }
 
+  static async getPendingDeletion(): Promise<Transaction[]> {
+    const db = await getDb();
+    const result = await db.getAllAsync<{ data: string }>(
+      "SELECT data FROM transactions WHERE status = 'done'",
+      []
+    );
+    return result
+      .map((row) => JSON.parse(row.data) as Transaction)
+      .filter((t) => t.config.deleteOriginals && !t.originalsDeleted);
+  }
+
   static async deleteTransaction(id: string): Promise<void> {
     const db = await getDb();
     await db.runAsync('DELETE FROM transactions WHERE id = ?', [id]);

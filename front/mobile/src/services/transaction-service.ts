@@ -31,6 +31,7 @@ export class TransactionService {
             config.files.map((e) => e.size ?? 0).reduce((prev, current) => prev + current) >> 10,
         }),
       });
+
       const data: Transaction = await res.json();
 
       if (res.status !== 200) {

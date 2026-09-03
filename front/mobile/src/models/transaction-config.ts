@@ -10,6 +10,7 @@ export interface TransactionConfig {
   folder?: TransactionSource;
   mode: TransactionMode;
   monitoredIdx?: number;
+  deleteOriginals?: boolean;
 }
 
 export type TransactionMode = 'md5' | 'epub' | 'cbz';

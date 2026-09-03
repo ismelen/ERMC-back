@@ -2,7 +2,7 @@
   "settings": {
     "title": "Ajustes",
     "readerModel": "MODELO DE LECTOR",
-    "cloudSync": "SINCRONIZACI\u00d3N EN LA NUBE",
+    "cloudSync": "SINCRONIZACIÓN EN LA NUBE",
     "connect": "Conectar",
     "disconnect": "Desconectar",
     "connectedAs": "Conectado como {{email}}",
@@ -12,21 +12,21 @@
     "language": "IDIOMA"
   },
   "home": {
-    "sendComic": "Enviar C\u00f3mic",
+    "sendComic": "Enviar Cómic",
     "sendComicSubtitle": "Convierte .cbz o .pdf a .epub y envía al dispositivo",
     "sendComicTag": ".cbz / .pdf a .epub",
     "sendBook": "Enviar Libro",
     "sendBookSubtitle": "Gestiona y transfiere archivos .epub",
-    "sendBookTag": "Gesti\u00f3n .epub",
+    "sendBookTag": "Gestión .epub",
     "monitoredFolders": "Carpetas monitorizadas",
     "newFiles": "{{count}} ARCHIVOS NUEVOS",
     "synced": "SINCRONIZADO"
   },
   "queue": {
     "title": "Transacciones",
-    "empty": "Tu cola est\u00e1 vac\u00eda",
+    "empty": "Tu cola está vacía",
     "emptySubtitle1": "Empieza enviando algo.",
-    "emptySubtitle2": "Tus subidas activas y completadas aparecer\u00e1n aqu\u00ed.",
+    "emptySubtitle2": "Tus subidas activas y completadas aparecerán aquí.",
     "sendSomething": "Enviar algo",
     "uploads": "Subidas",
     "items": "Elementos",
@@ -34,10 +34,10 @@
     "format": "Formato:",
     "cloud": "Nube",
     "local": "Local",
-    "cancelTitle": "Cancelar transacci\u00f3n",
-    "cancelMessage": "\u00bfSeguro que quieres cancelar esta transacci\u00f3n?",
+    "cancelTitle": "Cancelar transacción",
+    "cancelMessage": "¿Seguro que quieres cancelar esta transacción?",
     "no": "No",
-    "yesCancel": "S\u00ed, cancelar",
+    "yesCancel": "Sí, cancelar",
     "cancel": "Cancelar",
     "downloadAll": "Descargar todos los resultados",
     "downloading": "Descargando...",
@@ -74,7 +74,7 @@
   },
   "search": {
     "title": "Buscar",
-    "placeholder": "Buscar por t\u00edtulo, autor o g\u00e9nero...",
+    "placeholder": "Buscar por título, autor o género...",
     "sendBooks": "Enviar libros ({{count}})",
     "serviceDown": "Servicio no disponible en este momento."
   },
@@ -83,22 +83,25 @@
     "source": "ORIGEN",
     "readerModel": "MODELO DE LECTOR",
     "destination": "DESTINO",
+    "options": "OPCIONES",
     "send": "Enviar",
     "monitorizeFolder": "Monitorizar carpeta",
-    "monitorizeText": "Monitoriza los cambios en esta carpeta"
+    "monitorizeText": "Monitoriza los cambios en esta carpeta",
+    "unmonitorConfirm": "¿Seguro que quieres dejar de monitorizar esta carpeta?"
   },
   "sendComic": {
-    "title": "Enviar C\u00f3mic",
+    "title": "Enviar Cómic",
     "source": "ORIGEN",
     "readerModel": "MODELO DE LECTOR",
     "metadata": "METADATOS",
     "destination": "DESTINO",
     "options": "OPCIONES",
-    "mergeChapters": "Combinar cap\u00edtulos",
-    "mergeText": "Combina m\u00faltiples cap\u00edtulos en un solo volumen",
+    "mergeChapters": "Combinar capítulos",
+    "mergeText": "Combina múltiples capítulos en un solo volumen",
     "send": "Enviar",
     "monitorizeFolder": "Monitorizar carpeta",
-    "monitorizeText": "Monitoriza los cambios en esta carpeta"
+    "monitorizeText": "Monitoriza los cambios en esta carpeta",
+    "unmonitorConfirm": "¿Seguro que quieres dejar de monitorizar esta carpeta?"
   },
   "sendLibgen": {
     "title": "Enviar Libros",
@@ -108,19 +111,29 @@
     "send": "Enviar"
   },
   "loading": {
-    "sendingBook": "Enviando tu libro\u2026",
-    "optimizing": "Optimizando para tu e-reader. No tardar\u00e1 mucho."
+    "sendingBook": "Enviando tu libro…",
+    "optimizing": "Optimizando para tu e-reader. No tardará mucho."
   },
   "destination": {
     "local": "Local",
     "cloud": "Nube"
   },
   "metadata": {
-    "title": "T\u00edtulo",
+    "title": "Título",
     "author": "Autor"
   },
   "languages": {
     "en": "English",
-    "es": "Espa\u00f1ol"
+    "es": "Español"
+  },
+  "common": {
+    "deleteOriginals": "Eliminar archivos originales",
+    "deleteOriginalsText": "Elimina los archivos del dispositivo al completarse la transacción",
+    "confirm": "Confirmar",
+    "ok": "OK",
+    "cancel": "Cancelar",
+    "authConfirmTitle": "Iniciar sesión en Dropbox",
+    "authConfirmMessage": "Para enviar a la nube, la app necesita redirigirte a Dropbox para que inicies sesión o concedas permisos. ¿Quieres continuar?",
+    "authConfirmOk": "Continuar"
   }
 }

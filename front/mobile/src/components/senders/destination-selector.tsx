@@ -12,9 +12,10 @@ import SIcon from '../icons/SIcon';
 interface Props {
   toCloud: boolean;
   onChange(toCloud: boolean): void;
+  onConnect?(): Promise<void>;
 }
 
-export default function DestinationSelector({ toCloud, onChange }: Props) {
+export default function DestinationSelector({ toCloud, onChange, onConnect }: Props) {
   const [cloudDestination, setCloudDestination] = useState(toCloud);
   const { t } = useTranslation();
 
@@ -91,7 +92,14 @@ export default function DestinationSelector({ toCloud, onChange }: Props) {
               <SIcon name="cloud" color={colors.primary} size={32} type="outlined" />
               <SText style={{ fontSize: 18, flex: 1, fontFamily: 'semibold' }}>Dropbox</SText>
               <SButton
-                onPress={() => (oauth?.email ? logout() : getToken(pathname, true))}
+                onPress={async () => {
+                  if (oauth?.email) {
+                    logout();
+                  } else {
+                    if (onConnect) await onConnect();
+                    getToken(`${pathname}?last=true`, true);
+                  }
+                }}
                 style={{
                   borderWidth: 1,
                   borderColor: colors.primary_fixed,

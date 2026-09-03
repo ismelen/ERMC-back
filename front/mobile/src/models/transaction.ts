@@ -14,4 +14,5 @@ export interface Transaction {
   items: TransactionFile[];
   results: TransactionResult[];
   uploads: TransactionUpload[];
+  originalsDeleted?: boolean;
 }

@@ -64,7 +64,15 @@ export class FilesystemService {
     }
   }
 
-  static async deleteFile(path: string) {
-    new File(path).delete();
+  static async deleteFile(path: string): Promise<void> {
+    try {
+      new File(path).delete();
+    } catch {
+      // Silently ignore if already deleted or inaccessible
+    }
+  }
+
+  static async deleteOriginals(files: TransactionSource[]): Promise<void> {
+    await Promise.allSettled(files.map((f) => FilesystemService.deleteFile(f.src)));
   }
 }

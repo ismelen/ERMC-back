@@ -9,6 +9,7 @@ import { NotificationService } from '../services/notification-service';
 import { StorageService } from '../services/storage-service';
 import { TransactionService } from '../services/transaction-service';
 import { DatabaseService } from '../services/database-service';
+import { FilesystemService } from '../services/filesystem-service';
 import { useCloud } from './useCloud';
 
 export const TRANSACTIONS_KEY = 'transactions';
@@ -35,6 +36,23 @@ export const useQueue = create(
 
           const trans = await DatabaseService.getTransactions(3);
           set({ transactions: trans ?? [] });
+
+          // Check for any completed transactions that still need their originals deleted
+          (get() as any).syncPendingDeletions();
+        },
+
+        async syncPendingDeletions() {
+          const pending = await DatabaseService.getPendingDeletion();
+          for (const tran of pending) {
+            await FilesystemService.deleteOriginals(tran.config.files);
+            const updated: Transaction = { ...tran, originalsDeleted: true };
+            await DatabaseService.saveTransaction(updated);
+            // Update in-memory state if the transaction is already loaded
+            set((state) => {
+              const idx = state.transactions.findIndex((t) => t.id === tran.id);
+              if (idx !== -1) state.transactions[idx].originalsDeleted = true;
+            });
+          }
         },
 
         async loadMore() {
@@ -84,6 +102,20 @@ export const useQueue = create(
             state.transactions[idx] = updated;
           });
           DatabaseService.saveTransaction(get().transactions[idx]);
+
+          // If the transaction just finished and the user asked to delete originals, do it now
+          if (
+            updated.status === 'done' &&
+            updated.config.deleteOriginals &&
+            !updated.originalsDeleted
+          ) {
+            await FilesystemService.deleteOriginals(updated.config.files);
+            const marked: Transaction = { ...updated, originalsDeleted: true };
+            DatabaseService.saveTransaction(marked);
+            set((state) => {
+              state.transactions[idx].originalsDeleted = true;
+            });
+          }
         },
 
         async startUploads(idx: number) {

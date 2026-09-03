@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { colors, hexToRgba } from '../../theme/colors';
 import { BookMetadata } from '../../models/book-metadata';
@@ -20,13 +20,25 @@ export default function MetadataSection({ initialMetadata, onChange }: Props) {
   }, [metadata]);
 
   useEffect(() => {
-    if (initialMetadata?.title !== undefined) {
-      setMetadata((s) => ({ ...s, title: initialMetadata.title }));
+    if (initialMetadata?.title !== undefined || initialMetadata?.author !== undefined) {
+      setMetadata((s) => ({
+        ...s,
+        title: initialMetadata.title ?? s.title,
+        author: initialMetadata.author ?? s.author,
+      }));
     }
-  }, [initialMetadata?.title]);
+  }, [initialMetadata?.title, initialMetadata?.author]);
 
   return (
-    <View style={{ boxShadow: colors.boxShadow, borderRadius: 12, padding: 15, gap: 8 }}>
+    <View
+      style={{
+        boxShadow: colors.boxShadow,
+        borderRadius: 12,
+        padding: 15,
+        gap: 8,
+        backgroundColor: colors.surface_container_lowest,
+      }}
+    >
       <View style={styles.section}>
         <SText style={styles.label}>{t('metadata.title')}</SText>
         <STextInput

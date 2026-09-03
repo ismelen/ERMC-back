@@ -15,11 +15,19 @@ import { useSender } from '../src/hooks/useSender';
 import { Stack, usePathname } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useCloud } from '../src/hooks/useCloud';
+import SConfirmDialog from '../src/components/shared/SConfirmDialog';
 
 export default function SendLibgen() {
-  const { sending, config, setConfig, send } = useSender('md5');
+  const { sending, config, setConfig, send, saveState } = useSender('md5');
   const { t } = useTranslation();
-  const { oauth, folder } = useCloud();
+  const { oauth, folder, showAuthConfirm, resolveAuthConfirm } = useCloud(
+    useShallow((s) => ({
+      oauth: s.oauth,
+      folder: s.folder,
+      showAuthConfirm: s.showAuthConfirm,
+      resolveAuthConfirm: s.resolveAuthConfirm,
+    }))
+  );
 
   const isSendDisabled = config.toCloud ? !oauth?.email || !folder : false;
 
@@ -84,6 +92,7 @@ export default function SendLibgen() {
             <DestinationSelector
               toCloud={config.toCloud}
               onChange={(toCloud) => setConfig((s) => ({ ...s, toCloud: toCloud }))}
+              onConnect={saveState}
             />
           </View>
         </ScrollView>
@@ -114,6 +123,15 @@ export default function SendLibgen() {
           </SText>
         </SButton>
       </View>
+      <SConfirmDialog
+        visible={showAuthConfirm}
+        title={t('common.authConfirmTitle')}
+        message={t('common.authConfirmMessage')}
+        confirmText={t('common.authConfirmOk')}
+        cancelText={t('common.cancel')}
+        onCancel={() => resolveAuthConfirm(false)}
+        onConfirm={() => resolveAuthConfirm(true)}
+      />
     </>
   );
 }
