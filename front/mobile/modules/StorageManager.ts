@@ -22,11 +22,12 @@ const StorageManager: IStorageManager = {
     if (Platform.Version >= 30) {
       try {
         // Intenta acceder a una ruta que solo está disponible con MANAGE_EXTERNAL_STORAGE
-        const RNFS = await import('react-native-fs');
+        const { Directory } = await import('expo-file-system');
 
         // Si podemos listar el directorio raíz, tenemos el permiso
         try {
-          await RNFS.default.readDir('/storage/emulated/0/');
+          const dir = new Directory('file:///storage/emulated/0/');
+          dir.list();
           return true;
         } catch (error) {
           return false;
@@ -57,7 +58,7 @@ const StorageManager: IStorageManager = {
 
     try {
       const packageName = await StorageManager.getPackageName();
-      
+
       // Usar IntentLauncher para abrir la configuración específica
       await IntentLauncher.startActivityAsync(
         IntentLauncher.ActivityAction.MANAGE_ALL_FILES_ACCESS_PERMISSION,

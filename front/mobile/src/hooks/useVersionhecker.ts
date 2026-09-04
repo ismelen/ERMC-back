@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { APP_VERSION, BACKEND_API_URL, BACKEND_URL } from '../constants';
 import { Platform } from 'react-native';
 import { File, Paths } from 'expo-file-system';
-import { downloadFile } from 'react-native-fs';
 import { startActivityAsync } from 'expo-intent-launcher';
 
 interface State {
