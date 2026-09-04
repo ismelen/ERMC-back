@@ -47,12 +47,11 @@ func (m BaseTransactionUC) Execute(file *convert.TransactionFile, tran *convert.
 		return
 	}
 
-	if completed := m.addResultAndCheckIfComplete(result, tran, file); !completed {
-		return
-	}
-
 	m.SendAndNotify(tran, result)
-	tran.Status.Set(convert.TransactionDone)
+
+	if completed := m.addResultAndCheckIfComplete(result, tran, file); completed {
+		tran.Status.Set(convert.TransactionDone)
+	}
 }
 
 func (m BaseTransactionUC) postExecMerge(file *convert.TransactionFile, tran *convert.Transaction, transPath string, result *convert.TransactionResultFile) {
