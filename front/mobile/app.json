@@ -53,6 +53,8 @@
       "expo-router",
       "./plugins/withManageExternalStorage.js",
       "./plugins/withForegroundService.js",
+      "./plugins/withApkSizeReduction.js",
+      "./plugins/withCustomProguard.js",
       "expo-web-browser",
       "expo-secure-store",
       "@react-native-firebase/app"
