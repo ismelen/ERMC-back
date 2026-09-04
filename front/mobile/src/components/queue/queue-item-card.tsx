@@ -138,9 +138,7 @@ function QueueItemCard({ data, idx }: Props) {
           <View style={{ flex: 1 }}>
             <DownloadAllButton tran={data} idx={idx} />
           </View>
-          <View style={{ flex: 1 }}>
-            <ShareAllButton tran={data} />
-          </View>
+          <ShareAllButton tran={data} />
         </View>
       )}
 

@@ -134,9 +134,9 @@ export function DownloadAllButton({ tran, idx }: { tran: Transaction; idx: numbe
   return (
     <SButton onPress={handleDownloadAll} disabled={loading} style={s.downloadAllBtn}>
       {loading ? (
-        <ActivityIndicator size={20} color={colors.on_primary} />
+        <ActivityIndicator size={18} color={colors.on_primary_container} />
       ) : (
-        <SIcon name="download" color={colors.on_primary} size={22} type="outlined" />
+        <SIcon name="download" color={colors.on_primary_container} size={18} type="outlined" />
       )}
       <SText style={s.downloadAllText}>
         {loading ? t('queue.downloading') : t('queue.downloadAll')}
@@ -149,7 +149,7 @@ export function RedoButton({ onPress }: { onPress(): void }) {
   const { t } = useTranslation();
   return (
     <SButton onPress={onPress} style={s.redoBtn}>
-      <SIcon name="refresh" color={colors.primary} size={22} type="outlined" />
+      <SIcon name="refresh" color={colors.primary} size={18} type="outlined" />
       <SText style={s.redoText}>{t('queue.redo', 'Reenviar')}</SText>
     </SButton>
   );
@@ -179,13 +179,10 @@ export function ShareAllButton({ tran }: { tran: Transaction }) {
   return (
     <SButton onPress={handleShareAll} disabled={loading} style={s.shareAllBtn}>
       {loading ? (
-        <ActivityIndicator size={20} color={colors.on_primary} />
+        <ActivityIndicator size={18} color={colors.on_primary_container} />
       ) : (
-        <SIcon name="share" color={colors.on_primary} size={22} type="outlined" />
+        <SIcon name="share" color={colors.on_primary_container} size={18} type="outlined" />
       )}
-      <SText style={s.shareAllText}>
-        {loading ? t('queue.sharing', 'Compartiendo') : t('queue.shareAll', 'Compartir')}
-      </SText>
     </SButton>
   );
 }
@@ -197,17 +194,17 @@ const s = StyleSheet.create({
   },
   downloadAllBtn: {
     backgroundColor: colors.primary_container,
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 12,
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
   },
   downloadAllText: {
-    fontFamily: 'semibold',
-    color: colors.on_primary,
-    fontSize: 15,
+    fontFamily: 'medium',
+    color: colors.on_primary_container,
+    fontSize: 14,
   },
   cancelBtn: {
     paddingVertical: 10,
@@ -255,16 +252,9 @@ const s = StyleSheet.create({
   },
   shareAllBtn: {
     backgroundColor: colors.primary_container,
-    paddingVertical: 14,
+    aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 12,
-    flexDirection: 'row',
-    gap: 8,
-  },
-  shareAllText: {
-    fontFamily: 'semibold',
-    color: colors.on_primary,
-    fontSize: 15,
   },
 });
