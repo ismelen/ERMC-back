@@ -47,9 +47,11 @@ func (m BaseTransactionUC) Execute(file *convert.TransactionFile, tran *convert.
 		return
 	}
 
+	completed := m.addResultAndCheckIfComplete(result, tran, file)
+
 	m.SendAndNotify(tran, result)
 
-	if completed := m.addResultAndCheckIfComplete(result, tran, file); completed {
+	if completed {
 		tran.Status.Set(convert.TransactionDone)
 	}
 }
