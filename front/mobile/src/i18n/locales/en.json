@@ -134,6 +134,11 @@
     "cancel": "Cancel",
     "authConfirmTitle": "Sign in to Dropbox",
     "authConfirmMessage": "To send to the cloud, the app needs to redirect you to Dropbox to sign in or grant permissions. Do you want to continue?",
-    "authConfirmOk": "Continue"
+    "authConfirmOk": "Continue",
+    "error": "Error"
+  },
+  "error": {
+    "auth_failed_title": "Authentication Error",
+    "auth_failed_message": "Your session has expired or the token is invalid. Please log in again to Dropbox to continue."
   }
 }

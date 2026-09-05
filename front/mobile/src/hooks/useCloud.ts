@@ -22,12 +22,19 @@ interface State {
   onAuthConfirm?(confirmed: boolean): void;
   showFolderAlert: boolean;
   setShowFolderAlert(show: boolean): void;
+  showAuthError: boolean;
+  setShowAuthError(show: boolean): void;
 }
 
 export const useCloud = create(
   immer(
     combine(
-      { showDialog: false, showAuthConfirm: false, showFolderAlert: false } as State,
+      {
+        showDialog: false,
+        showAuthConfirm: false,
+        showFolderAlert: false,
+        showAuthError: false,
+      } as State,
       (set, get) => ({
         async init() {
           const json = await StorageService.GetSecureAsync(OAUTH_KEY);
@@ -94,6 +101,10 @@ export const useCloud = create(
           set({ showFolderAlert: show });
         },
 
+        setShowAuthError(show: boolean) {
+          set({ showAuthError: show });
+        },
+
         async getToken(returnPath?: string, forced?: boolean): Promise<string | undefined> {
           const current = get().oauth;
           const { refresh, expiresAt, token } = current ?? {};
@@ -107,6 +118,13 @@ export const useCloud = create(
           }
 
           const oauth = await CloudService.getToken(current, forced, returnPath);
+
+          if (!oauth && !needsBrowserLogin) {
+            // It failed to use the refresh token
+            get().logout();
+            get().setShowAuthError(true);
+            return undefined;
+          }
 
           set({ oauth: { ...oauth } });
           StorageService.SetSecureAsync(OAUTH_KEY, JSON.stringify(oauth ?? {}));

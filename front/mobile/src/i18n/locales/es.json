@@ -134,6 +134,11 @@
     "cancel": "Cancelar",
     "authConfirmTitle": "Iniciar sesión en Dropbox",
     "authConfirmMessage": "Para enviar a la nube, la app necesita redirigirte a Dropbox para que inicies sesión o concedas permisos. ¿Quieres continuar?",
-    "authConfirmOk": "Continuar"
+    "authConfirmOk": "Continuar",
+    "error": "Error"
+  },
+  "error": {
+    "auth_failed_title": "Error de autenticación",
+    "auth_failed_message": "Tu sesión ha expirado o el token es inválido. Por favor, vuelve a iniciar sesión en Dropbox para continuar."
   }
 }

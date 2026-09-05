@@ -124,11 +124,9 @@ function QueueItemCard({ data, idx }: Props) {
       {/* Results */}
       {hasResults && (
         <Section sectionKey="queue.results">
-          <View style={{ gap: 4, flexDirection: 'column' }}>
-            {data.results.map((result) => (
-              <ResultRow key={result.id} result={result} tran={data} idx={idx} />
-            ))}
-          </View>
+          {data.results.map((result) => (
+            <ResultRow key={result.id} result={result} tran={data} idx={idx} />
+          ))}
         </Section>
       )}
 
@@ -159,7 +157,11 @@ function Section({ sectionKey, children }: { sectionKey: string; children: React
   return (
     <View style={{ gap: 6 }}>
       <SText style={s.sectionTitle}>{t(sectionKey)}</SText>
-      <ScrollView style={{ maxHeight: SECTION_MAX_HEIGHT }} nestedScrollEnabled>
+      <ScrollView
+        style={{ maxHeight: SECTION_MAX_HEIGHT }}
+        nestedScrollEnabled
+        contentContainerStyle={{ gap: 4 }}
+      >
         {children}
       </ScrollView>
     </View>

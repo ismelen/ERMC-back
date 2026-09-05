@@ -28,6 +28,8 @@ import { StorageService } from '../src/services/storage-service';
 import { useVersionChecker } from '../src/hooks/useVersionhecker';
 import { useShallow } from 'zustand/react/shallow';
 import { Transaction } from '../src/models/transaction';
+import SConfirmDialog from '../src/components/shared/SConfirmDialog';
+import { useTranslation } from 'react-i18next';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -73,6 +75,7 @@ async function processNotification(data: any): Promise<Transaction[] | undefined
 }
 
 export default function RootLayout() {
+  const { t } = useTranslation();
   const initQueue = useQueue((s) => s.init);
   const initCloud = useCloud((s) => s.init);
   const initSettings = useSettings((s) => s.init);
@@ -136,6 +139,16 @@ export default function RootLayout() {
         }}
       />
       <DropboxFolderPickerModal />
+      <SConfirmDialog
+        visible={useCloud((s) => s.showAuthError)}
+        title={t('error.auth_failed_title', 'Authentication Error')}
+        message={t(
+          'error.auth_failed_message',
+          'Your session has expired or the token is invalid. Please log in again to continue.'
+        )}
+        confirmText={t('common.ok', 'OK')}
+        onConfirm={() => useCloud.getState().setShowAuthError(false)}
+      />
     </GestureHandlerRootView>
   );
 }
